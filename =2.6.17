@@ -1,0 +1,67 @@
+Channels:
+ - conda-forge
+ - nvidia
+ - pytorch
+ - pyg
+ - pytorch3d
+Platform: linux-64
+Collecting package metadata (repodata.json): ...working... done
+Solving environment: ...working... done
+
+## Package Plan ##
+
+  environment location: /srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot
+
+  added / updated specs:
+    - pinocchio
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    assimp-5.3.1               |       hfb0e8fe_2         3.4 MB  conda-forge
+    console_bridge-1.0.2       |       h924138e_1          18 KB  conda-forge
+    eigen-3.4.0                |       h00ab1b0_0         1.0 MB  conda-forge
+    eigenpy-3.3.0              |   py39hb1babde_0         1.5 MB  conda-forge
+    hpp-fcl-2.4.1              |   py39h359ec1e_0         1.4 MB  conda-forge
+    libboost-1.82.0            |       h6fcfa73_6         2.5 MB  conda-forge
+    libboost-devel-1.82.0      |       h00ab1b0_6          35 KB  conda-forge
+    libboost-headers-1.82.0    |       ha770c72_6        13.1 MB  conda-forge
+    libboost-python-1.82.0     |   py39hda80f44_6         117 KB  conda-forge
+    libboost-python-devel-1.82.0|   py39h8003fee_6          17 KB  conda-forge
+    octomap-1.9.8              |       h924138e_0         258 KB  conda-forge
+    pinocchio-2.7.0            |   py39hd3d7af6_0         3.8 MB  conda-forge
+    qhull-2020.2               |       h4bd325d_2         1.9 MB  conda-forge
+    tinyxml2-10.0.0            |       h59595ed_0         118 KB  conda-forge
+    urdfdom-4.0.0              |       hee28ff1_1         104 KB  conda-forge
+    urdfdom_headers-1.1.1      |       h00ab1b0_0          19 KB  conda-forge
+    ------------------------------------------------------------
+                                           Total:        29.3 MB
+
+The following NEW packages will be INSTALLED:
+
+  assimp             conda-forge/linux-64::assimp-5.3.1-hfb0e8fe_2 
+  console_bridge     conda-forge/linux-64::console_bridge-1.0.2-h924138e_1 
+  eigen              conda-forge/linux-64::eigen-3.4.0-h00ab1b0_0 
+  eigenpy            conda-forge/linux-64::eigenpy-3.3.0-py39hb1babde_0 
+  hpp-fcl            conda-forge/linux-64::hpp-fcl-2.4.1-py39h359ec1e_0 
+  libboost           conda-forge/linux-64::libboost-1.82.0-h6fcfa73_6 
+  libboost-devel     conda-forge/linux-64::libboost-devel-1.82.0-h00ab1b0_6 
+  libboost-headers   conda-forge/linux-64::libboost-headers-1.82.0-ha770c72_6 
+  libboost-python    conda-forge/linux-64::libboost-python-1.82.0-py39hda80f44_6 
+  libboost-python-d~ conda-forge/linux-64::libboost-python-devel-1.82.0-py39h8003fee_6 
+  octomap            conda-forge/linux-64::octomap-1.9.8-h924138e_0 
+  pinocchio          conda-forge/linux-64::pinocchio-2.7.0-py39hd3d7af6_0 
+  qhull              conda-forge/linux-64::qhull-2020.2-h4bd325d_2 
+  tinyxml2           conda-forge/linux-64::tinyxml2-10.0.0-h59595ed_0 
+  urdfdom            conda-forge/linux-64::urdfdom-4.0.0-hee28ff1_1 
+  urdfdom_headers    conda-forge/linux-64::urdfdom_headers-1.1.1-h00ab1b0_0 
+
+
+Proceed ([y]/n)? 
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: ...working... done
+Verifying transaction: ...working... done
+Executing transaction: ...working... done

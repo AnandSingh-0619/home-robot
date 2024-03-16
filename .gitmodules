@@ -15,7 +15,7 @@
 	url = https://github.com/cpaxton/contact_graspnet.git
 [submodule "spot-sim2real"]
 	path = src/third_party/spot-sim2real
-	url = git@github.com:jdvakil/spot-sim2real.git
+	url = https://github.com/facebookresearch/spot-sim2real.git
 	branch = no_habitat
 [submodule "src/third_party/MiDaS"]
 	path = src/third_party/MiDaS
@@ -25,4 +25,4 @@
 	url = https://github.com/IDEA-Research/Grounded-Segment-Anything
 [submodule "src/third_party/spot-sim2real"]
 	path = src/third_party/spot-sim2real
-	url = git@github.com:Jdvakil/spot-sim2real.git
+	url = https://github.com/facebookresearch/spot-sim2real.git
