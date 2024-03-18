@@ -1,0 +1,13 @@
+defaults:
+  - /habitat-baselines/habitat_baselines/config/ovmm: rl_skill
+
+habitat:
+  gym:
+    obs_keys:
+      - head_depth
+      - start_receptacle
+      - yolo_object_segmentation
+      - start_yolo_recep_segmentation
+      - object_embedding
+      - joint
+

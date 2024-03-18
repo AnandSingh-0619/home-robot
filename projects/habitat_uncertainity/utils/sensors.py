@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 
-import pickle
+
 from typing import Any, Optional
 
 import numpy as np
@@ -14,20 +14,8 @@ from gym import spaces
 from habitat.core.embodied_task import Measure
 from habitat.core.registry import registry
 from habitat.core.simulator import Sensor, SensorTypes
-from habitat.datasets.ovmm.ovmm_dataset import OVMMDatasetV0, OVMMEpisode
-from habitat.tasks.ovmm.sub_tasks.nav_to_obj_sensors import (
-    OVMMNavToObjSucc,
-    OVMMRotDistToGoal,
-    TargetIoUCoverage,
-)
-from habitat.tasks.ovmm.sub_tasks.place_sensors import OVMMPlaceSuccess
-from habitat.tasks.rearrange.sub_tasks.nav_to_obj_sensors import (
-    DistToGoal,
-    NavToPosSucc,
-)
-from habitat.tasks.rearrange.sub_tasks.pick_sensors import RearrangePickSuccess
 
-from YOLOPerception import predict as YOLO_pred
+from utils.YOLO_pred import YOLOPerception as YOLO_pred 
 
 @registry.register_sensor
 class YOLO_ObjectSegmentationSensor(Sensor):
@@ -73,11 +61,64 @@ class YOLO_ObjectSegmentationSensor(Sensor):
         )
 
     def get_observation(self, observations, *args, episode, task, **kwargs):
+        classes = []
+        for g in episode.candidate_objects_hard:
+            category = self._sim.scene_obj_ids[g.object_category]
+            classes.append(category)
+            
+        segmentation_sensor = YOLO_pred.predict(
+            obs=observations,
+            vocab = classes,
+            depth_threshold=None,
+            draw_instance_predictions=False,
+        )
 
-        segmentation_sensor = YOLO_pred(
+        return segmentation_sensor
+
+
+@registry.register_sensor
+class YOLO_RecepSegmentationSensor(YOLO_ObjectSegmentationSensor):
+    cls_uuid: str = "yolo_recep_segmentation"
+
+    def _get_recep_goals(self, episode):
+        raise NotImplementedError
+
+    def get_observation(self, observations, *args, episode, task, **kwargs):
+        recep_goals = self._get_recep_goals(episode)
+        classes = []
+        for g in recep_goals:
+            category = g.object_category
+            classes.append(category)
+
+        segmentation_sensor = YOLO_pred.predict(
+            obs=observations,
+            vocab = classes,
+            depth_threshold=None,
+            draw_instance_predictions=False,
+        )
+        return segmentation_sensor
+
+
+    def get_observation(self, observations, *args, episode, task, **kwargs):
+
+        segmentation_sensor = YOLO_pred.predict(
             obs=observations,
             depth_threshold=None,
             draw_instance_predictions=False,
         )
 
         return segmentation_sensor
+
+@registry.register_sensor
+class StartYOLORecepSegmentationSensor(YOLO_RecepSegmentationSensor):
+    cls_uuid: str = "start_yolo_recep_segmentation"
+
+    def _get_recep_goals(self, episode):
+        return episode.candidate_start_receps
+
+@registry.register_sensor
+class GoalYOLORecepSegmentationSensor(YOLO_RecepSegmentationSensor):
+    cls_uuid: str = "goal_yolo_recep_segmentation"
+
+    def _get_recep_goals(self, episode):
+        return episode.candidate_goal_receps

@@ -27,7 +27,6 @@ class YOLOPerception(PerceptionModule):
     def __init__(
         self,
         yolo_model_id="yolo_world/l",
-        custom_vocabulary: List[str] = "['', 'dog', 'grass', 'sky']",
         checkpoint_file: str = MOBILE_SAM_CHECKPOINT_PATH,
         sem_gpu_id=0,
         verbose: bool = False,
@@ -38,8 +37,6 @@ class YOLOPerception(PerceptionModule):
 
         Arguments:
             yolo_model_id: one of "yolo_world/l" or "yolo_world/s" for large or small
-            custom_vocabulary: if vocabulary="custom", this should be a comma-separated
-             list of classes (as a single string)
             checkpoint_file: path to model checkpoint
             sem_gpu_id: GPU ID to load the model on, -1 for CPU
             verbose: whether to print out debug information
@@ -57,15 +54,15 @@ class YOLOPerception(PerceptionModule):
 
         self.cpu_device = torch.device("cpu")
         self.model = YOLOWorld(yolo_model_id)
-        self.model.set_classes(custom_vocabulary)  #check format of vocabulary
+         #check format of vocabulary
         self.confidence_threshold = confidence_threshold
         self.sam_model = SAM(checkpoint_file)
-        self.custom_vocabulary = custom_vocabulary
-
+        
 
     def predict(
         self,
         obs: Observations,
+        vocab: List[str],
         depth_threshold: Optional[float] = None,
         draw_instance_predictions: bool = True,
     ) -> Observations:
@@ -81,6 +78,7 @@ class YOLOPerception(PerceptionModule):
             obs.task_observations["semantic_frame"]: segmentation visualization
              image of shape (H, W, 3)
         """
+        self.model.set_classes(vocab)
         nms_threshold=0.8
         if draw_instance_predictions:
             raise NotImplementedError
@@ -129,15 +127,15 @@ class YOLOPerception(PerceptionModule):
             detections.mask, detections.class_id, (height, width)
         )
 
-        obs.semantic = semantic_map.astype(int)
-        obs.instance = instance_map.astype(int)
-        if obs.task_observations is None:
-            obs.task_observations = dict()
-        obs.task_observations["instance_map"] = instance_map
-        obs.task_observations["instance_classes"] = detections.class_id
-        obs.task_observations["instance_scores"] = detections.confidence
-        obs.task_observations["semantic_frame"] = None
-        return obs
+        # obs.semantic = semantic_map.astype(int)
+        # obs.instance = instance_map.astype(int)
+        # if obs.task_observations is None:
+        #     obs.task_observations = dict()
+        # obs.task_observations["instance_map"] = instance_map
+        # obs.task_observations["instance_classes"] = detections.class_id
+        # obs.task_observations["instance_scores"] = detections.confidence
+        # obs.task_observations["semantic_frame"] = None
+        return instance_map
     
 
     # Prompting SAM with detected boxes
