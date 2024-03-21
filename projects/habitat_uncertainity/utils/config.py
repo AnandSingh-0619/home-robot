@@ -20,6 +20,10 @@ cs = ConfigStore.instance()
 # Sensors
 ##########################################################################
 @dataclass
+class YOLO_SensorConfig(LabSensorConfig):
+    type: str = "yolo_segmentation"
+
+@dataclass
 class YOLO_ObjectSegmentationSensorConfig(LabSensorConfig):
     type: str = "yolo_object_segmentation"
 
@@ -33,6 +37,12 @@ class GoalYOLORecepSegmentationSensorConfig(YOLO_ObjectSegmentationSensorConfig)
  # -----------------------------------------------------------------------------
 # Register configs in the Hydra ConfigStore
 # -----------------------------------------------------------------------------
+cs.store(
+    package="habitat.task.lab_sensors.yolo_segmentation",
+    group="habitat/task/lab_sensors",
+    name="yolo_segmentation",
+    node=YOLO_SensorConfig,
+)
 
 cs.store(
     package="habitat.task.lab_sensors.yolo_object_segmentation",
@@ -64,3 +74,4 @@ class HabitatConfigPlugin(SearchPathPlugin):
             provider="habitat_baselines",
             path="pkg://habitat_baselines/config/",
         )
+        

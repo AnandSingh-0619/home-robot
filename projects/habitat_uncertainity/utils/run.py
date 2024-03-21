@@ -8,7 +8,7 @@ import torch
 from habitat import get_config
 from habitat.config import read_write
 from habitat.config.default_structured_configs import register_hydra_plugin
-from utils.config import YOLO_ObjectSegmentationSensorConfig, HabitatConfigPlugin
+from config import HabitatConfigPlugin
 
 from habitat_baselines.run import execute_exp
 
@@ -94,14 +94,14 @@ def main():
         edit_config(config, args)
 
     
-    execute_exp(config, args.run_type)
+    execute_exp(config, "train")
 
 def edit_config(config, args):
 
-    if not hasattr(config.habitat.task.lab_sensors, "yolo_object_segmentation"):
-        config.habitat.task.lab_sensors.update(
-            {"yolo_object_segmentation": YOLO_ObjectSegmentationSensorConfig()}
-        )
+    # if not hasattr(config.habitat.task.lab_sensors, "yolo_object_segmentation"):
+    #     config.habitat.task.lab_sensors.update(
+    #         {"yolo_object_segmentation": YOLO_ObjectSegmentationSensorConfig()}
+    #     )
     if args.debug:
         assert osp.isdir(os.environ["JUNK"]), (
             "Environment variable directory $JUNK does not exist "

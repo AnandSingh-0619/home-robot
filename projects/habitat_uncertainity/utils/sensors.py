@@ -14,8 +14,93 @@ from gym import spaces
 from habitat.core.embodied_task import Measure
 from habitat.core.registry import registry
 from habitat.core.simulator import Sensor, SensorTypes
-
+from habitat.tasks.ovmm.sub_tasks.nav_to_obj_task import OVMMDynNavRLEnv
 from utils.YOLO_pred import YOLOPerception as YOLO_pred 
+
+CLASSES = [
+    "action_figure", "android_figure", "apple", "backpack", "baseballbat",
+    "basket", "basketball", "bath_towel", "battery_charger", "board_game",
+    "book", "bottle", "bowl", "box", "bread", "bundt_pan", "butter_dish",
+    "c-clamp", "cake_pan", "can", "can_opener", "candle", "candle_holder",
+    "candy_bar", "canister", "carrying_case", "casserole", "cellphone", "clock",
+    "cloth", "credit_card", "cup", "cushion", "dish", "doll", "dumbbell", "egg",
+    "electric_kettle", "electronic_cable", "file_sorter", "folder", "fork",
+    "gaming_console", "glass", "hammer", "hand_towel", "handbag", "hard_drive",
+    "hat", "helmet", "jar", "jug", "kettle", "keychain", "knife", "ladle", "lamp",
+    "laptop", "laptop_cover", "laptop_stand", "lettuce", "lunch_box",
+    "milk_frother_cup", "monitor_stand", "mouse_pad", "multiport_hub",
+    "newspaper", "pan", "pen", "pencil_case", "phone_stand", "picture_frame",
+    "pitcher", "plant_container", "plant_saucer", "plate", "plunger", "pot",
+    "potato", "ramekin", "remote", "salt_and_pepper_shaker", "scissors",
+    "screwdriver", "shoe", "soap", "soap_dish", "soap_dispenser", "spatula",
+    "spectacles", "spicemill", "sponge", "spoon", "spray_bottle", "squeezer",
+    "statue", "stuffed_toy", "sushi_mat", "tape", "teapot", "tennis_racquet",
+    "tissue_box", "toiletry", "tomato", "toy_airplane", "toy_animal", "toy_bee",
+    "toy_cactus", "toy_construction_set", "toy_fire_truck", "toy_food",
+    "toy_fruits", "toy_lamp", "toy_pineapple", "toy_rattle", "toy_refrigerator",
+    "toy_sink", "toy_sofa", "toy_swing", "toy_table", "toy_vehicle", "tray",
+    "utensil_holder_cup", "vase", "video_game_cartridge", "watch", "watering_can",
+    "wine_bottle", "bathtub", "bed", "bench", "cabinet", "chair", "chest_of_drawers",
+    "couch", "counter", "filing_cabinet", "hamper", "serving_cart", "shelves",
+    "shoe_rack", "sink", "stand", "stool", "table", "toilet", "trunk", "wardrobe",
+    "washer_dryer"
+]
+
+@registry.register_sensor
+class YOLO_Sensor(Sensor):
+    cls_uuid: str = "yolo_segmentation"
+    panoptic_uuid: str = "head_panoptic"
+
+    def __init__(
+        self,
+        sim,
+        config,
+        *args: Any,
+        **kwargs: Any,
+    ):
+        self._config = config
+        self._blank_out_prob = self._config.blank_out_prob
+        self._sim = sim
+        self._object_ids_start = self._sim.habitat_config.object_ids_start
+        self._resolution = (
+            sim.agents[0]
+            ._sensors[self.panoptic_uuid]
+            .specification()
+            .resolution
+        )
+        self.classes =149
+
+        super().__init__(config=config)
+
+    def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
+        return self.cls_uuid
+
+    def _get_sensor_type(self, *args: Any, **kwargs: Any):
+        return SensorTypes.TENSOR
+
+    def _get_observation_space(self, *args, **kwargs):
+        return spaces.Box(
+            shape=(
+                self.classes,     #size is equal to number of classes
+                self._resolution[0],
+                self._resolution[1],
+            ),
+            low=0,
+            high=1,
+            dtype=np.uint8,
+        )
+
+    def get_observation(self, observations, *args, episode, task, **kwargs):
+
+            
+        segmentation_sensor = YOLO_pred.predict(
+            obs=observations,
+            depth_threshold=None,
+            draw_instance_predictions=False,
+        )
+
+        return segmentation_sensor
+
 
 @registry.register_sensor
 class YOLO_ObjectSegmentationSensor(Sensor):
@@ -61,19 +146,14 @@ class YOLO_ObjectSegmentationSensor(Sensor):
         )
 
     def get_observation(self, observations, *args, episode, task, **kwargs):
-        classes = []
-        for g in episode.candidate_objects_hard:
-            category = self._sim.scene_obj_ids[g.object_category]
-            classes.append(category)
-            
-        segmentation_sensor = YOLO_pred.predict(
-            obs=observations,
-            vocab = classes,
-            depth_threshold=None,
-            draw_instance_predictions=False,
-        )
-
-        return segmentation_sensor
+        
+        category = self._sim.scene_obj_ids[episode.candidate_objects_hard[0].object_category]
+        classes = CLASSES       
+        class_id = classes.index(category)
+        yolo_segmentation_sensor = observations["yolo_segmentation"]
+        segmentation_mask = yolo_segmentation_sensor[class_id,:,:]
+        
+        return segmentation_mask
 
 
 @registry.register_sensor
@@ -85,29 +165,15 @@ class YOLO_RecepSegmentationSensor(YOLO_ObjectSegmentationSensor):
 
     def get_observation(self, observations, *args, episode, task, **kwargs):
         recep_goals = self._get_recep_goals(episode)
-        classes = []
-        for g in recep_goals:
-            category = g.object_category
-            classes.append(category)
+        category = recep_goals[0].object_category
+        classes = CLASSES       
+        class_id = classes.index(category)
+        yolo_segmentation_sensor = observations["yolo_segmentation"]
+        segmentation_mask = yolo_segmentation_sensor[class_id,:,:] 
 
-        segmentation_sensor = YOLO_pred.predict(
-            obs=observations,
-            vocab = classes,
-            depth_threshold=None,
-            draw_instance_predictions=False,
-        )
-        return segmentation_sensor
+        return segmentation_mask
 
 
-    def get_observation(self, observations, *args, episode, task, **kwargs):
-
-        segmentation_sensor = YOLO_pred.predict(
-            obs=observations,
-            depth_threshold=None,
-            draw_instance_predictions=False,
-        )
-
-        return segmentation_sensor
 
 @registry.register_sensor
 class StartYOLORecepSegmentationSensor(YOLO_RecepSegmentationSensor):
@@ -122,3 +188,170 @@ class GoalYOLORecepSegmentationSensor(YOLO_RecepSegmentationSensor):
 
     def _get_recep_goals(self, episode):
         return episode.candidate_goal_receps
+    
+
+# @registry.register_sensor
+# class OVMMNavGoalYOLOSegmentationSensor(Sensor):
+#     cls_uuid: str = "ovmm_nav_goal_yolo_segmentation"
+#     panoptic_uuid: str = "head_panoptic"
+
+#     def __init__(
+#         self,
+#         sim,
+#         config,
+#         dataset,
+#         task,
+#         *args: Any,
+#         **kwargs: Any,
+#     ):
+#         self._config = config
+#         self._sim = sim
+#         self._object_ids_start = self._sim.habitat_config.object_ids_start
+#         self._is_nav_to_obj = task.is_nav_to_obj
+#         self._blank_out_prob = self._config.blank_out_prob
+#         self.resolution = (
+#             sim.agents[0]
+#             ._sensors[self.panoptic_uuid]
+#             .specification()
+#             .resolution
+#         )
+#         self._num_channels = 2 if self._is_nav_to_obj else 1
+#         self._resolution = (
+#             sim.agents[0]
+#             ._sensors[self.panoptic_uuid]
+#             .specification()
+#             .resolution
+#         )
+#         super().__init__(config=config)
+
+#     def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
+#         return self.cls_uuid
+
+#     def _get_sensor_type(self, *args: Any, **kwargs: Any):
+#         return SensorTypes.TENSOR
+
+#     def _get_observation_space(self, *args, **kwargs):
+#         return spaces.Box(
+#             shape=(
+#                 self._resolution[0],
+#                 self._resolution[1],
+#                 self._num_channels,
+#             ),
+#             low=0,
+#             high=1,
+#             dtype=np.int32,
+#         )
+
+#     def _get_obs_channel(self, pan_obs, max_obs_val, goals, goals_type):
+#         pan_obs = pan_obs.squeeze(axis=-1)
+#         obs = np.zeros_like(pan_obs)
+#         for goal in goals:
+#             if goals_type == "obj":
+#                 obj_category = self._sim.scene_obj_ids[goal.object_category]
+#             elif goals_type == "rec":
+#                 rom = self._sim.get_rigid_object_manager()
+#                 handle = self._sim.receptacles[
+#                     goal.object_name
+#                 ].parent_object_handle
+#                 obj_id = rom.get_object_id_by_handle(handle)
+#             instance_id = obj_id + self._object_ids_start
+
+
+#             obs[pan_obs == instance_id] = 1
+#         return obs
+
+#     def get_observation(
+#         self, observations, *args, episode, task: OVMMDynNavRLEnv, **kwargs
+#     ):
+#         pan_obs = observations[self.panoptic_uuid]
+#         max_obs_val = np.max(pan_obs)
+#         obs = np.zeros(
+#             (self.resolution[0], self.resolution[1], self._num_channels),
+#             dtype=np.int32,
+#         )
+#         if self._is_nav_to_obj:
+#             obs[..., 0] = self._get_obs_channel(
+#                 pan_obs,
+#                 max_obs_val,
+#                 episode.candidate_objects_hard,
+#                 "obj",
+#             )
+#             obs[..., 1] = self._get_obs_channel(
+#                 pan_obs,
+#                 max_obs_val,
+#                 episode.candidate_start_receps,
+#                 "rec",
+#             )
+#         else:
+#             obs[..., 0] = self._get_obs_channel(
+#                 pan_obs,
+#                 max_obs_val,
+#                 episode.candidate_goal_receps,
+#                 "rec",
+#             )
+
+#         return obs
+
+
+# @registry.register_sensor
+# class ReceptacleSegmentationSensor(Sensor):
+#     cls_uuid: str = "receptacle_segmentation"
+#     panoptic_uuid: str = "head_panoptic"
+
+#     def __init__(
+#         self,
+#         sim,
+#         config,
+#         *args: Any,
+#         **kwargs: Any,
+#     ):
+#         self._config = config
+#         self._sim = sim
+#         self._object_ids_start = self._sim.habitat_config.object_ids_start
+#         self._blank_out_prob = self._config.blank_out_prob
+#         self.resolution = (
+#             sim.agents[0]
+#             ._sensors[self.panoptic_uuid]
+#             .specification()
+#             .resolution
+#         )
+#         super().__init__(config=config)
+
+#     def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
+#         return self.cls_uuid
+
+#     def _get_sensor_type(self, *args: Any, **kwargs: Any):
+#         return SensorTypes.SEMANTIC
+
+#     def _get_observation_space(self, *args, **kwargs):
+#         return spaces.Box(
+#             shape=(
+#                 self.resolution[0],
+#                 self.resolution[1],
+#                 1,
+#             ),
+#             low=np.iinfo(np.uint32).min,
+#             high=np.iinfo(np.uint32).max,
+#             dtype=np.int32,
+#         )
+
+#     def get_observation(
+#         self, observations, *args, episode, task: OVMMDynNavRLEnv, **kwargs
+#     ):
+#         obs = np.copy(observations[self.panoptic_uuid])
+#         obj_id_map = np.zeros(np.max(obs) + 1, dtype=np.int32)
+#         assert (
+#             task.loaded_receptacle_categories
+#         ), "Empty receptacle semantic IDs, task didn't cache them."
+#         for obj_id, semantic_id in task.receptacle_semantic_ids.items():
+#             instance_id = obj_id + self._object_ids_start
+#             # Skip if receptacle is not in the agent's viewport or if the instance
+#             # is selected to be blanked out randomly
+#             if (
+#                 instance_id >= obj_id_map.shape[0]
+#                 or np.random.random() < self._blank_out_prob
+#             ):
+#                 continue
+#             obj_id_map[instance_id] = semantic_id
+#         obs = obj_id_map[obs]
+#         return obs

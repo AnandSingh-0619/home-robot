@@ -20,6 +20,34 @@ from home_robot.core.interfaces import Observations
 
 PARENT_DIR = Path(__file__).resolve().parent
 MOBILE_SAM_CHECKPOINT_PATH = str(PARENT_DIR / "pretrained_wt" / "mobile_sam.pt")
+CLASSES = [
+    "action_figure", "android_figure", "apple", "backpack", "baseballbat",
+    "basket", "basketball", "bath_towel", "battery_charger", "board_game",
+    "book", "bottle", "bowl", "box", "bread", "bundt_pan", "butter_dish",
+    "c-clamp", "cake_pan", "can", "can_opener", "candle", "candle_holder",
+    "candy_bar", "canister", "carrying_case", "casserole", "cellphone", "clock",
+    "cloth", "credit_card", "cup", "cushion", "dish", "doll", "dumbbell", "egg",
+    "electric_kettle", "electronic_cable", "file_sorter", "folder", "fork",
+    "gaming_console", "glass", "hammer", "hand_towel", "handbag", "hard_drive",
+    "hat", "helmet", "jar", "jug", "kettle", "keychain", "knife", "ladle", "lamp",
+    "laptop", "laptop_cover", "laptop_stand", "lettuce", "lunch_box",
+    "milk_frother_cup", "monitor_stand", "mouse_pad", "multiport_hub",
+    "newspaper", "pan", "pen", "pencil_case", "phone_stand", "picture_frame",
+    "pitcher", "plant_container", "plant_saucer", "plate", "plunger", "pot",
+    "potato", "ramekin", "remote", "salt_and_pepper_shaker", "scissors",
+    "screwdriver", "shoe", "soap", "soap_dish", "soap_dispenser", "spatula",
+    "spectacles", "spicemill", "sponge", "spoon", "spray_bottle", "squeezer",
+    "statue", "stuffed_toy", "sushi_mat", "tape", "teapot", "tennis_racquet",
+    "tissue_box", "toiletry", "tomato", "toy_airplane", "toy_animal", "toy_bee",
+    "toy_cactus", "toy_construction_set", "toy_fire_truck", "toy_food",
+    "toy_fruits", "toy_lamp", "toy_pineapple", "toy_rattle", "toy_refrigerator",
+    "toy_sink", "toy_sofa", "toy_swing", "toy_table", "toy_vehicle", "tray",
+    "utensil_holder_cup", "vase", "video_game_cartridge", "watch", "watering_can",
+    "wine_bottle", "bathtub", "bed", "bench", "cabinet", "chair", "chest_of_drawers",
+    "couch", "counter", "filing_cabinet", "hamper", "serving_cart", "shelves",
+    "shoe_rack", "sink", "stand", "stool", "table", "toilet", "trunk", "wardrobe",
+    "washer_dryer"
+]
 
 
 
@@ -62,7 +90,6 @@ class YOLOPerception(PerceptionModule):
     def predict(
         self,
         obs: Observations,
-        vocab: List[str],
         depth_threshold: Optional[float] = None,
         draw_instance_predictions: bool = True,
     ) -> Observations:
@@ -78,6 +105,7 @@ class YOLOPerception(PerceptionModule):
             obs.task_observations["semantic_frame"]: segmentation visualization
              image of shape (H, W, 3)
         """
+        vocab = CLASSES
         self.model.set_classes(vocab)
         nms_threshold=0.8
         if draw_instance_predictions:
@@ -126,6 +154,7 @@ class YOLOPerception(PerceptionModule):
         semantic_map, instance_map = self.overlay_masks(
             detections.mask, detections.class_id, (height, width)
         )
+        masks_tensor = self.create_masks_tensor(semantic_map, len(vocab))
 
         # obs.semantic = semantic_map.astype(int)
         # obs.instance = instance_map.astype(int)
@@ -135,7 +164,7 @@ class YOLOPerception(PerceptionModule):
         # obs.task_observations["instance_classes"] = detections.class_id
         # obs.task_observations["instance_scores"] = detections.confidence
         # obs.task_observations["semantic_frame"] = None
-        return instance_map
+        return masks_tensor
     
 
     # Prompting SAM with detected boxes
@@ -160,22 +189,31 @@ class YOLOPerception(PerceptionModule):
 
         return np.array(result_masks)
     
-    def overlay_masks(
+    def overlay_masks(self,
         masks: np.ndarray, class_idcs: np.ndarray, shape: Tuple[int, int]
-        ) -> np.ndarray:
+    ) -> np.ndarray:
         """Overlays the masks of objects
-        Determines the order of masks based on mask size
+        Masks are overlaid based on the order of class_idcs.
         """
-        mask_sizes = [np.sum(mask) for mask in masks]
-        sorted_mask_idcs = np.argsort(mask_sizes)
-
         semantic_mask = np.zeros(shape)
-        instance_mask = -np.ones(shape)
-        for i_mask in sorted_mask_idcs[::-1]:  # largest to smallest
-            semantic_mask[masks[i_mask].astype(bool)] = class_idcs[i_mask]
-            instance_mask[masks[i_mask].astype(bool)] = i_mask
+        instance_mask = np.zeros(shape)
+
+        for mask_idx, class_idx in enumerate(class_idcs):
+            if mask_idx < len(masks):
+                mask = masks[mask_idx]
+                semantic_mask[mask.astype(bool)] = class_idx + 1
+                instance_mask[mask.astype(bool)] = mask_idx
+            else:
+                break
 
         return semantic_mask, instance_mask
+    
+    def create_masks_tensor(self, semantic_map: np.ndarray, num_classes: int) -> np.ndarray:
+        masks_tensor = np.zeros((num_classes,) + semantic_map.shape, dtype=np.uint8)
+        for class_idx in range(1, num_classes + 1):
+            masks_tensor[class_idx - 1] = (semantic_map == class_idx).astype(np.uint8)
+        return masks_tensor
+
     def filter_depth(
         mask: np.ndarray, depth: np.ndarray, depth_threshold: Optional[float] = None
     ) -> np.ndarray:

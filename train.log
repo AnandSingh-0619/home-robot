@@ -18,3 +18,27 @@
 2024-03-18 01:16:07,321 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
 2024-03-18 01:16:07,321 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
 2024-03-18 01:16:11,521 agent number of parameters: 9485655
+2024-03-20 16:07:41,794 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-20 16:07:41,795 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-03-20 16:07:41,814 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-03-20 16:07:52,082 agent number of parameters: 9485655
+2024-03-20 16:45:12,512 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-20 16:45:12,513 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-03-20 16:45:12,514 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-03-20 16:45:15,640 agent number of parameters: 9485655
+2024-03-20 16:51:22,459 update: 10	fps: 26.673	
+2024-03-20 16:51:22,459 Num updates: 10	Num frames 5120
+2024-03-20 16:51:22,460 Average window size: 10  articulated_agent_force.accum: 0.000  articulated_agent_force.instant: 0.000  did_pick_object: 0.017  did_violate_hold_constraint: 0.000  ee_to_object_distance.0: 0.878  ee_to_rest_distance: 0.266  force_terminate: 0.000  num_steps: 3.599  pick_distance_to_goal: 0.749  pick_distance_to_goal_reward: -0.013  pick_reward: -0.040  pick_success: 0.013  reward: -0.074  robot_collisions.obj_scene_colls: 0.000  robot_collisions.robot_obj_colls: 0.000  robot_collisions.robot_scene_colls: 0.001  robot_collisions.total_collisions: 0.001  robot_collisions_terminate: 0.000
+2024-03-20 16:51:22,460 	Perf Stats: trainer.rollout_collect: 18.088 trainer.sample_action: 0.007 trainer.obs_insert: 0.000 trainer.step_env: 0.127 trainer.update_stats: 0.005 trainer.update_agent: 0.707
+2024-03-20 17:04:23,934 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-20 17:04:23,935 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-03-20 17:04:23,936 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-03-20 17:04:27,136 agent number of parameters: 9485655
+2024-03-20 17:07:28,315 update: 10	fps: 30.114	
+2024-03-20 17:07:28,316 Num updates: 10	Num frames 5120
+2024-03-20 17:07:28,317 Average window size: 10  articulated_agent_force.accum: 0.000  articulated_agent_force.instant: 0.000  did_pick_object: 0.016  did_violate_hold_constraint: 0.000  ee_to_object_distance.0: 0.879  ee_to_rest_distance: 0.266  force_terminate: 0.000  num_steps: 3.602  pick_distance_to_goal: 0.751  pick_distance_to_goal_reward: -0.013  pick_reward: -0.039  pick_success: 0.013  reward: -0.073  robot_collisions.obj_scene_colls: 0.000  robot_collisions.robot_obj_colls: 0.000  robot_collisions.robot_scene_colls: 0.001  robot_collisions.total_collisions: 0.001  robot_collisions_terminate: 0.000
+2024-03-20 17:07:28,317 	Perf Stats: trainer.rollout_collect: 16.324 trainer.sample_action: 0.007 trainer.obs_insert: 0.000 trainer.step_env: 0.113 trainer.update_stats: 0.006 trainer.update_agent: 0.252
+2024-03-20 22:47:26,993 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-20 22:47:30,214 agent number of parameters: 9482519
+2024-03-20 23:03:38,732 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-20 23:03:41,942 agent number of parameters: 9482519
