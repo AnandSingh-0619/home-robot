@@ -54,8 +54,7 @@ CLASSES = [
 class YOLOPerception(PerceptionModule):
     def __init__(
         self,
-        yolo_model_id="yolo_world/l",
-        checkpoint_file: str = MOBILE_SAM_CHECKPOINT_PATH,
+        checkpoint_file: Optional[str] = MOBILE_SAM_CHECKPOINT_PATH,
         sem_gpu_id=0,
         verbose: bool = False,
         confidence_threshold: Optional[float] = None,
@@ -69,6 +68,7 @@ class YOLOPerception(PerceptionModule):
             sem_gpu_id: GPU ID to load the model on, -1 for CPU
             verbose: whether to print out debug information
         """
+        yolo_model_id="yolo_world/l",
         self.verbose = verbose
         if checkpoint_file is None:
             checkpoint_file = str(

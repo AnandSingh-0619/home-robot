@@ -11,7 +11,8 @@ from habitat.config.default_structured_configs import register_hydra_plugin
 from config import HabitatConfigPlugin
 
 from habitat_baselines.run import execute_exp
-
+from task.sensors import YOLOSensor, YOLOObjectSegmentationSensor, StartYOLORecepSegmentationSensor, GoalYOLORecepSegmentationSensor, YOLORecepSegmentationSensor
+from utils.YOLO_pred import YOLOPerception as YOLO_pred
 def register_plugins():
     register_hydra_plugin(HabitatConfigPlugin)
 
@@ -95,7 +96,10 @@ def main():
     with read_write(config):
         edit_config(config, args)
 
-    
+    # YOLO_pred(
+    #         sem_gpu_id =0,
+    #         verbose= False
+    #         )
     execute_exp(config, "train")
 
 def edit_config(config, args):

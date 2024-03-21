@@ -15,8 +15,9 @@ from habitat.core.embodied_task import Measure
 from habitat.core.registry import registry
 from habitat.core.simulator import Sensor, SensorTypes
 from habitat.tasks.ovmm.sub_tasks.nav_to_obj_task import OVMMDynNavRLEnv
-from YOLO_pred import YOLOPerception as YOLO_pred 
-
+from utils.YOLO_pred import (
+    YOLOPerception as YOLO_pred, 
+)
 CLASSES = [
     "action_figure", "android_figure", "apple", "backpack", "baseballbat",
     "basket", "basketball", "bath_towel", "battery_charger", "board_game",
@@ -50,7 +51,7 @@ CLASSES = [
 class YOLOSensor(Sensor):
     cls_uuid: str = "yolo_segmentation"
     panoptic_uuid: str = "head_panoptic"
-
+    yolo_perception_instance = None
     def __init__(
         self,
         sim,
@@ -68,8 +69,12 @@ class YOLOSensor(Sensor):
             .resolution
         )
         self.classes =149
-
         super().__init__(config=config)
+        
+        if YOLOSensor.yolo_perception_instance is None:
+            YOLOSensor.yolo_perception_instance = YOLO_pred()
+
+        
 
     def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
         return self.cls_uuid
@@ -92,7 +97,7 @@ class YOLOSensor(Sensor):
     def get_observation(self, observations, *args, episode, task, **kwargs):
 
             
-        segmentation_sensor = YOLO_pred.predict(
+        segmentation_sensor = YOLOSensor.yolo_perception_instance.predict(
             obs=observations,
             depth_threshold=None,
             draw_instance_predictions=False,
@@ -145,7 +150,7 @@ class YOLOObjectSegmentationSensor(Sensor):
 
     def get_observation(self, observations, *args, episode, task, **kwargs):
         
-        category = self._sim.scene_obj_ids[episode.candidate_objects_hard[0].object_category]
+        category = episode.candidate_objects_hard[0].object_category
         classes = CLASSES       
         class_id = classes.index(category)
         yolo_segmentation_sensor = observations["yolo_segmentation"]

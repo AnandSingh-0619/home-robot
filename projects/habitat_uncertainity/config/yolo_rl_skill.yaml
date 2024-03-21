@@ -15,6 +15,7 @@ defaults:
     - end_effector_sensor
     - relative_resting_pos_sensor
     - object_category_sensor
+    - yolo_segmentation_sensor
     - yolo_object_segmentation_sensor
     - object_embedding_sensor
     - start_yolo_recep_segmentation_sensor
@@ -26,7 +27,7 @@ habitat:
     obs_keys:
       - head_depth
       - start_receptacle
-      - yolo_segmentation
+      - yolo_segmentation_sensor
       - yolo_object_segmentation_sensor
       - start_yolo_recep_segmentation_sensor
       - object_embedding
