@@ -7,6 +7,18 @@ defaults:
     - resize_shortest_edge_base
     - center_cropper_base
   - /habitat/simulator/sim_sensors@habitat_baselines.eval.extra_sim_sensors.third_rgb_sensor: third_rgb_sensor
+  - /habitat/task/lab_sensors:
+    - target_start_sensor
+    - joint_sensor
+    - joint_velocity_sensor
+    - is_holding_sensor
+    - end_effector_sensor
+    - relative_resting_pos_sensor
+    - object_category_sensor
+    - yolo_object_segmentation_sensor
+    - object_embedding_sensor
+    - start_yolo_recep_segmentation_sensor
+    - start_receptacle_sensor
   - _self_
 
 habitat:
@@ -14,12 +26,11 @@ habitat:
     obs_keys:
       - head_depth
       - start_receptacle
-      - yolo_object_segmentation
-      - start_yolo_recep_segmentation
+      - yolo_segmentation
+      - yolo_object_segmentation_sensor
+      - start_yolo_recep_segmentation_sensor
       - object_embedding
       - joint
-      - start_recep_segmentation
-      - goal_recep_segmentation
 
 habitat_baselines:
   verbose: False
@@ -66,17 +77,17 @@ habitat_baselines:
             - head_rgb
             - head_depth
             - head_panoptic
-            - object_segmentation
-            - receptacle_segmentation
-            - start_recep_segmentation
-            - goal_recep_segmentation
+            - yolo_object_segmentation_sensor
+            - yolo_recep_segmentation_sensor
+            - start_yolo_recep_segmentation_sensor
+            - goal_yolo_recep_segmentation_sensor
             - ovmm_nav_goal_segmentation
           semantic_keys:
             - head_panoptic
-            - object_segmentation
-            - receptacle_segmentation
-            - start_recep_segmentation
-            - goal_recep_segmentation
+            - yolo_object_segmentation_sensor
+            - yolo_recep_segmentation_sensor
+            - start_yolo_recep_segmentation_sensor
+            - goal_yolo_recep_segmentation_sensor
             - ovmm_nav_goal_segmentation
         center_cropper:
           type: CenterCropper
@@ -87,10 +98,10 @@ habitat_baselines:
             - head_rgb
             - head_depth
             - head_panoptic
-            - object_segmentation
-            - receptacle_segmentation
-            - start_recep_segmentation
-            - goal_recep_segmentation
+            - yolo_object_segmentation
+            - yolo_recep_segmentation
+            - start_yolo_recep_segmentation
+            - goal_yolo_recep_segmentation
             - ovmm_nav_goal_segmentation
 
     ppo:

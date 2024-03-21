@@ -47,7 +47,7 @@ CLASSES = [
 ]
 
 @registry.register_sensor
-class YOLO_Sensor(Sensor):
+class YOLOSensor(Sensor):
     cls_uuid: str = "yolo_segmentation"
     panoptic_uuid: str = "head_panoptic"
 
@@ -59,7 +59,6 @@ class YOLO_Sensor(Sensor):
         **kwargs: Any,
     ):
         self._config = config
-        self._blank_out_prob = self._config.blank_out_prob
         self._sim = sim
         self._object_ids_start = self._sim.habitat_config.object_ids_start
         self._resolution = (
@@ -103,7 +102,7 @@ class YOLO_Sensor(Sensor):
 
 
 @registry.register_sensor
-class YOLO_ObjectSegmentationSensor(Sensor):
+class YOLOObjectSegmentationSensor(Sensor):
     cls_uuid: str = "yolo_object_segmentation"
     panoptic_uuid: str = "head_panoptic"
 
@@ -115,7 +114,6 @@ class YOLO_ObjectSegmentationSensor(Sensor):
         **kwargs: Any,
     ):
         self._config = config
-        self._blank_out_prob = self._config.blank_out_prob
         self._sim = sim
         self._object_ids_start = self._sim.habitat_config.object_ids_start
         self._resolution = (
@@ -157,7 +155,7 @@ class YOLO_ObjectSegmentationSensor(Sensor):
 
 
 @registry.register_sensor
-class YOLO_RecepSegmentationSensor(YOLO_ObjectSegmentationSensor):
+class YOLORecepSegmentationSensor(YOLOObjectSegmentationSensor):
     cls_uuid: str = "yolo_recep_segmentation"
 
     def _get_recep_goals(self, episode):
@@ -176,14 +174,14 @@ class YOLO_RecepSegmentationSensor(YOLO_ObjectSegmentationSensor):
 
 
 @registry.register_sensor
-class StartYOLORecepSegmentationSensor(YOLO_RecepSegmentationSensor):
+class StartYOLORecepSegmentationSensor(YOLORecepSegmentationSensor):
     cls_uuid: str = "start_yolo_recep_segmentation"
 
     def _get_recep_goals(self, episode):
         return episode.candidate_start_receps
 
 @registry.register_sensor
-class GoalYOLORecepSegmentationSensor(YOLO_RecepSegmentationSensor):
+class GoalYOLORecepSegmentationSensor(YOLORecepSegmentationSensor):
     cls_uuid: str = "goal_yolo_recep_segmentation"
 
     def _get_recep_goals(self, episode):
