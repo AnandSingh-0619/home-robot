@@ -42,3 +42,12 @@
 2024-03-20 22:47:30,214 agent number of parameters: 9482519
 2024-03-20 23:03:38,732 Resizing observation of head_depth: from (640, 480) to (160, 120)
 2024-03-20 23:03:41,942 agent number of parameters: 9482519
+2024-03-20 23:32:55,671 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-20 23:32:55,673 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-03-20 23:32:58,707 agent number of parameters: 9484087
+2024-03-20 23:40:01,272 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-20 23:40:01,274 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-03-20 23:40:04,931 agent number of parameters: 9484087
+2024-03-20 23:41:45,611 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-20 23:41:45,613 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-03-20 23:41:48,859 agent number of parameters: 9484087

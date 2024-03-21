@@ -15,7 +15,7 @@ from habitat.core.embodied_task import Measure
 from habitat.core.registry import registry
 from habitat.core.simulator import Sensor, SensorTypes
 from habitat.tasks.ovmm.sub_tasks.nav_to_obj_task import OVMMDynNavRLEnv
-from utils.YOLO_pred import YOLOPerception as YOLO_pred 
+from YOLO_pred import YOLOPerception as YOLO_pred 
 
 CLASSES = [
     "action_figure", "android_figure", "apple", "backpack", "baseballbat",

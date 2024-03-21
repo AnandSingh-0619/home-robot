@@ -25,15 +25,17 @@ def main():
     parser.add_argument(
         "--run-type",
         "-r",
+        default='train',
         choices=["train", "eval"],
-        required=True,
+        required=False,
         help="run type of the experiment (train or eval)",
     )
     parser.add_argument(
         "--exp-config",
         "-e",
+        default='projects/habitat_uncertainity/config/yolo_rl_skill.yaml',
         type=str,
-        required=True,
+        required=False,
         help="path to config yaml containing info about experiment",
     )
     parser.add_argument(
@@ -79,7 +81,7 @@ def main():
     )
     parser.add_argument(
         "opts",
-        default=None,
+        default="habitat_baselines.num_environments=4",
         nargs=argparse.REMAINDER,
         help="Modify config options from command line",
     )
