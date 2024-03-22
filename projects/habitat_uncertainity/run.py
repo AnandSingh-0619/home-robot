@@ -103,7 +103,8 @@ def main():
     execute_exp(config, "train")
 
 def edit_config(config, args):
-
+    config.habitat.task.lab_sensors.pop("object_segmentation_sensor")
+    config.habitat.task.lab_sensors.pop("start_recep_segmentation_sensor")
     # if not hasattr(config.habitat.task.lab_sensors, "yolo_object_segmentation"):
     #     config.habitat.task.lab_sensors.update(
     #         {"yolo_object_segmentation": YOLO_ObjectSegmentationSensorConfig()}

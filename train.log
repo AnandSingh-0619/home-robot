@@ -65,3 +65,75 @@
 2024-03-21 15:59:46,446 agent number of parameters: 9476375
 2024-03-21 16:04:20,837 Resizing observation of head_depth: from (640, 480) to (160, 120)
 2024-03-21 16:04:24,075 agent number of parameters: 9476375
+2024-03-21 18:35:12,361 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 18:35:15,513 agent number of parameters: 9476375
+2024-03-21 18:50:24,013 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 18:50:27,250 agent number of parameters: 9476375
+2024-03-21 18:52:50,827 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 18:52:53,842 agent number of parameters: 9476375
+2024-03-21 19:34:24,977 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 19:34:24,978 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 19:34:28,179 agent number of parameters: 9481079
+2024-03-21 19:37:31,296 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 19:37:31,298 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 19:37:34,380 agent number of parameters: 9481079
+2024-03-21 19:41:54,562 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 19:41:54,563 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 19:41:58,043 agent number of parameters: 9481079
+2024-03-21 19:45:52,439 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 19:45:52,441 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 19:45:55,499 agent number of parameters: 9481079
+2024-03-21 19:53:53,902 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 19:53:53,903 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 19:53:57,763 agent number of parameters: 9481079
+2024-03-21 20:16:18,162 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 20:16:18,164 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 20:16:21,210 agent number of parameters: 9481079
+2024-03-21 20:18:47,968 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 20:18:47,970 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 20:18:51,004 agent number of parameters: 9481079
+2024-03-21 20:58:54,381 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 20:58:54,383 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 20:58:57,672 agent number of parameters: 9481079
+2024-03-21 22:10:45,189 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 22:10:45,190 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 22:10:48,190 agent number of parameters: 9481079
+2024-03-21 22:15:20,077 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 22:15:20,078 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 22:15:23,450 agent number of parameters: 9481079
+2024-03-21 22:18:10,295 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 22:18:10,297 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 22:18:13,405 agent number of parameters: 9481079
+2024-03-21 22:22:38,288 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 22:22:38,290 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 22:22:41,269 agent number of parameters: 9481079
+2024-03-21 22:25:53,505 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 22:25:53,507 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 22:25:56,498 agent number of parameters: 9481079
+2024-03-21 22:29:42,667 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 22:29:42,668 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 22:29:45,733 agent number of parameters: 9481079
+2024-03-21 22:37:19,851 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 22:37:19,852 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 22:37:19,853 Resizing observation of start_yolo_recep_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:37:19,854 Resizing observation of yolo_object_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:37:19,854 Resizing observation of yolo_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:37:22,871 agent number of parameters: 9485783
+2024-03-21 22:41:10,268 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 22:41:10,270 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 22:41:10,271 Resizing observation of start_yolo_recep_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:41:10,271 Resizing observation of yolo_object_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:41:10,272 Resizing observation of yolo_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:41:13,377 agent number of parameters: 9485783
+2024-03-21 22:48:46,951 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 22:48:46,953 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 22:48:46,954 Resizing observation of start_yolo_recep_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:48:46,954 Resizing observation of yolo_object_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:48:46,955 Resizing observation of yolo_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:48:49,933 agent number of parameters: 9485783
+2024-03-21 22:52:23,556 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-21 22:52:23,558 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-03-21 22:52:23,559 Resizing observation of start_yolo_recep_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:52:23,559 Resizing observation of yolo_object_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:52:23,560 Resizing observation of yolo_segmentation_sensor: from (640, 480) to (160, 120)
+2024-03-21 22:52:26,621 agent number of parameters: 9485783

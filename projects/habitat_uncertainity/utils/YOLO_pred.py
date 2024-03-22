@@ -68,7 +68,7 @@ class YOLOPerception(PerceptionModule):
             sem_gpu_id: GPU ID to load the model on, -1 for CPU
             verbose: whether to print out debug information
         """
-        yolo_model_id="yolo_world/l",
+        yolo_model_id="yolo_world/s",
         self.verbose = verbose
         if checkpoint_file is None:
             checkpoint_file = str(
@@ -81,7 +81,9 @@ class YOLOPerception(PerceptionModule):
             )
 
         self.cpu_device = torch.device("cpu")
-        self.model = YOLOWorld(yolo_model_id)
+        self.model = YOLOWorld(model_id="yolo_world/l")
+        vocab = CLASSES
+        self.model.set_classes(vocab)
          #check format of vocabulary
         self.confidence_threshold = confidence_threshold
         self.sam_model = SAM(checkpoint_file)
@@ -105,22 +107,18 @@ class YOLOPerception(PerceptionModule):
             obs.task_observations["semantic_frame"]: segmentation visualization
              image of shape (H, W, 3)
         """
-        vocab = CLASSES
-        self.model.set_classes(vocab)
+
         nms_threshold=0.8
         if draw_instance_predictions:
             raise NotImplementedError
-        # Predict classes and hyper-param for GroundingDINO
-        height, width, _ = obs.rgb.shape
 
         # convert to uint8 instead of silently failing by returning no instances
-        image = obs.rgb
+        image = obs["head_rgb"]
         if not image.dtype == np.uint8:
             if image.max() <= 1.0:
                 image = image * 255.0
             image = image.astype(np.uint8)
 
-        depth = obs.depth
         height, width, _ = image.shape
 
         results = self.model.infer(image, self.confidence_threshold)
@@ -143,18 +141,17 @@ class YOLOPerception(PerceptionModule):
         # convert detections to masks
         detections.mask = self.segment(image=image, xyxy=detections.xyxy)
 
-        if depth_threshold is not None and obs.depth is not None:
-            detections.mask = np.array(
-                [
-                    self.filter_depth(mask, obs.depth, depth_threshold)
-                    for mask in detections.mask
-                ]
-            )
+        # if depth_threshold is not None and obs["head_depth"] is not None:
+        #     detections.mask = np.array(
+        #         [
+        #             self.filter_depth(mask, obs["head_depth"], depth_threshold)
+        #             for mask in detections.mask
+        #         ]
+        #     )
 
         semantic_map, instance_map = self.overlay_masks(
             detections.mask, detections.class_id, (height, width)
         )
-        masks_tensor = self.create_masks_tensor(semantic_map, len(vocab))
 
         # obs.semantic = semantic_map.astype(int)
         # obs.instance = instance_map.astype(int)
@@ -164,7 +161,7 @@ class YOLOPerception(PerceptionModule):
         # obs.task_observations["instance_classes"] = detections.class_id
         # obs.task_observations["instance_scores"] = detections.confidence
         # obs.task_observations["semantic_frame"] = None
-        return masks_tensor
+        return semantic_map
     
 
     # Prompting SAM with detected boxes
@@ -201,18 +198,13 @@ class YOLOPerception(PerceptionModule):
         for mask_idx, class_idx in enumerate(class_idcs):
             if mask_idx < len(masks):
                 mask = masks[mask_idx]
-                semantic_mask[mask.astype(bool)] = class_idx + 1
+                semantic_mask[mask.astype(bool)] = class_idx 
                 instance_mask[mask.astype(bool)] = mask_idx
             else:
                 break
 
         return semantic_mask, instance_mask
     
-    def create_masks_tensor(self, semantic_map: np.ndarray, num_classes: int) -> np.ndarray:
-        masks_tensor = np.zeros((num_classes,) + semantic_map.shape, dtype=np.uint8)
-        for class_idx in range(1, num_classes + 1):
-            masks_tensor[class_idx - 1] = (semantic_map == class_idx).astype(np.uint8)
-        return masks_tensor
 
     def filter_depth(
         mask: np.ndarray, depth: np.ndarray, depth_threshold: Optional[float] = None
