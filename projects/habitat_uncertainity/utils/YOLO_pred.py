@@ -13,7 +13,7 @@ import torch
 import torchvision
 from pathlib import Path
 from typing import List, Optional, Tuple
-
+from ultralytics import YOLO
 from home_robot.core.abstract_perception import PerceptionModule
 from home_robot.core.interfaces import Observations
 
@@ -57,7 +57,7 @@ class YOLOPerception(PerceptionModule):
         checkpoint_file: Optional[str] = MOBILE_SAM_CHECKPOINT_PATH,
         sem_gpu_id=0,
         verbose: bool = False,
-        confidence_threshold: Optional[float] = None,
+        confidence_threshold: Optional[float] = 0.5,
         
     ):
         """Loads a YOLO model for object detection and instance segmentation
@@ -80,10 +80,12 @@ class YOLOPerception(PerceptionModule):
                 f"Loading YOLO model from {yolo_model_id} and MobileSAM with checkpoint={checkpoint_file}"   
             )
 
-        self.cpu_device = torch.device("cpu")
-        self.model = YOLOWorld(model_id="yolo_world/l")
+        self.model = YOLO('yolov8s-world.pt')
         vocab = CLASSES
         self.model.set_classes(vocab)
+        self.model.save("custom_yolov8s.pt")
+        self.model = YOLO('custom_yolov8s.pt')
+
          #check format of vocabulary
         self.confidence_threshold = confidence_threshold
         self.sam_model = SAM(checkpoint_file)
@@ -111,47 +113,54 @@ class YOLOPerception(PerceptionModule):
         nms_threshold=0.8
         if draw_instance_predictions:
             raise NotImplementedError
-
+        
         # convert to uint8 instead of silently failing by returning no instances
-        image = obs["head_rgb"]
+        images = obs["head_rgb"] #get images list from obeservation
         if not image.dtype == np.uint8:
             if image.max() <= 1.0:
                 image = image * 255.0
             image = image.astype(np.uint8)
 
         height, width, _ = image.shape
+        results = self.model(images,  conf = self.confidence_threshold)
 
         results = self.model.infer(image, self.confidence_threshold)
-        detections = sv.Detections.from_inference(results).with_nms(threshold=0.1)
+        semantic_masks=[]
 
-        nms_idx = (
-            torchvision.ops.nms(
-                torch.from_numpy(detections.xyxy),
-                torch.from_numpy(detections.confidence),
-                nms_threshold,
+        for result, img in zip(results, images):
+            masks = []
+            for box in result.boxes.xyxy:
+                sam_output = self.sam_model.predict(source=img, bboxes=box)
+                mask_object = sam_output[0].masks
+                mask_tensor = mask_object.data.cpu()
+                mask = mask_tensor.numpy().squeeze(axis=0)
+                masks.append(mask)
+                print(mask.shape)
+
+            result_masks = np.array(masks)
+            classs_id = result.boxes.cls.cpu().numpy()
+            detection_xyxy = result.boxes.xyxy.cpu().numpy()
+            confidence = result.boxes.conf.cpu().numpy()
+            nms_idx = (
+                torchvision.ops.nms(
+                    torch.from_numpy(detection_xyxy),
+                    torch.from_numpy(confidence),
+                    nms_threshold,
+                )
+                .numpy()
+                .tolist()
             )
-            .numpy()
-            .tolist()
-        )
+            classs_id = classs_id[nms_idx]
+            detection_xyxy = detection_xyxy[nms_idx]
+            confidence = confidence[nms_idx]
 
-        detections.xyxy = detections.xyxy[nms_idx]
-        detections.confidence = detections.confidence[nms_idx]
-        detections.class_id = detections.class_id[nms_idx]
+            height, width, _ = img.shape
+            semantic_mask, instance_mask = self.overlay_masks(
+                result_masks, classs_id, (height, width)
+            )
+            semantic_masks.append(semantic_mask)
+        semantic_masks = np.array(semantic_masks)
 
-        # convert detections to masks
-        detections.mask = self.segment(image=image, xyxy=detections.xyxy)
-
-        # if depth_threshold is not None and obs["head_depth"] is not None:
-        #     detections.mask = np.array(
-        #         [
-        #             self.filter_depth(mask, obs["head_depth"], depth_threshold)
-        #             for mask in detections.mask
-        #         ]
-        #     )
-
-        semantic_map, instance_map = self.overlay_masks(
-            detections.mask, detections.class_id, (height, width)
-        )
 
         # obs.semantic = semantic_map.astype(int)
         # obs.instance = instance_map.astype(int)
@@ -161,30 +170,30 @@ class YOLOPerception(PerceptionModule):
         # obs.task_observations["instance_classes"] = detections.class_id
         # obs.task_observations["instance_scores"] = detections.confidence
         # obs.task_observations["semantic_frame"] = None
-        return semantic_map
+        return semantic_masks
     
 
     # Prompting SAM with detected boxes
-    def segment(self, image: np.ndarray, xyxy: np.ndarray) -> np.ndarray:
-        """
-        Get masks for all detected bounding boxes using SAM
-        Arguments:
-            image: image of shape (H, W, 3)
-            xyxy: bounding boxes of shape (N, 4) in (x1, y1, x2, y2) format
-        Returns:
-            masks: masks of shape (N, H, W)
-        """
-        result_masks = []
-        for box in xyxy:
-            sam_output= self.sam_model.predict(source=image,
-                bboxes=box)
-            mask_object = sam_output[0].masks
-            mask_tensor = mask_object.data.cpu()
-            masks = mask_tensor.numpy()
-            masks = masks.squeeze(axis=0)
-            result_masks.append(masks)
+    # def segment(self, image: np.ndarray, xyxy: np.ndarray) -> np.ndarray:
+    #     """
+    #     Get masks for all detected bounding boxes using SAM
+    #     Arguments:
+    #         image: image of shape (H, W, 3)
+    #         xyxy: bounding boxes of shape (N, 4) in (x1, y1, x2, y2) format
+    #     Returns:
+    #         masks: masks of shape (N, H, W)
+    #     """
+    #     result_masks = []
+    #     for box in xyxy:
+    #         sam_output= self.sam_model.predict(source=image,
+    #             bboxes=box)
+    #         mask_object = sam_output[0].masks
+    #         mask_tensor = mask_object.data.cpu()
+    #         masks = mask_tensor.numpy()
+    #         masks = masks.squeeze(axis=0)
+    #         result_masks.append(masks)
 
-        return np.array(result_masks)
+    #     return np.array(result_masks)
     
     def overlay_masks(self,
         masks: np.ndarray, class_idcs: np.ndarray, shape: Tuple[int, int]
@@ -206,29 +215,29 @@ class YOLOPerception(PerceptionModule):
         return semantic_mask, instance_mask
     
 
-    def filter_depth(
-        mask: np.ndarray, depth: np.ndarray, depth_threshold: Optional[float] = None
-    ) -> np.ndarray:
-        """Filter object mask by depth.
+    # def filter_depth(
+    #     mask: np.ndarray, depth: np.ndarray, depth_threshold: Optional[float] = None
+    # ) -> np.ndarray:
+    #     """Filter object mask by depth.
 
-        Arguments:
-            mask: binary object mask of shape (height, width)
-            depth: depth map of shape (height, width)
-            depth_threshold: restrict mask to (depth median - threshold, depth median + threshold)
-        """
-        md = np.median(depth[mask == 1])  # median depth
-        if md == 0:
-            # Remove mask if more than half of points has invalid depth
-            filter_mask = np.ones_like(mask, dtype=bool)
-        elif depth_threshold is not None:
-            # Restrict objects to depth_threshold
-            filter_mask = (depth >= md + depth_threshold) | (depth <= md - depth_threshold)
-        else:
-            filter_mask = np.zeros_like(mask, dtype=bool)
-        mask_out = mask.copy()
-        mask_out[filter_mask] = 0.0
+    #     Arguments:
+    #         mask: binary object mask of shape (height, width)
+    #         depth: depth map of shape (height, width)
+    #         depth_threshold: restrict mask to (depth median - threshold, depth median + threshold)
+    #     """
+    #     md = np.median(depth[mask == 1])  # median depth
+    #     if md == 0:
+    #         # Remove mask if more than half of points has invalid depth
+    #         filter_mask = np.ones_like(mask, dtype=bool)
+    #     elif depth_threshold is not None:
+    #         # Restrict objects to depth_threshold
+    #         filter_mask = (depth >= md + depth_threshold) | (depth <= md - depth_threshold)
+    #     else:
+    #         filter_mask = np.zeros_like(mask, dtype=bool)
+    #     mask_out = mask.copy()
+    #     mask_out[filter_mask] = 0.0
 
-        return mask_out
+    #     return mask_out
 
 
 

@@ -1,0 +1,32 @@
+pybullet build time: Nov 28 2023 23:52:03
+pybullet build time: Nov 28 2023 23:52:03
+pybullet build time: Nov 28 2023 23:52:03
+SupervisionWarnings: BoxAnnotator is deprecated: `BoxAnnotator` is deprecated and will be removed in `supervision-0.22.0`. Use `BoundingBoxAnnotator` and `LabelAnnotator` instead
+SupervisionWarnings: BoxAnnotator is deprecated: `BoxAnnotator` is deprecated and will be removed in `supervision-0.22.0`. Use `BoundingBoxAnnotator` and `LabelAnnotator` instead
+SupervisionWarnings: BoxAnnotator is deprecated: `BoxAnnotator` is deprecated and will be removed in `supervision-0.22.0`. Use `BoundingBoxAnnotator` and `LabelAnnotator` instead
+2024-03-22 15:18:19,774 Initialized DD-PPO with 3 workers
+2024-03-22 15:18:19,776 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:19,776 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:19,778 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,464 Using the debug Vector environment interface. Expect slower performance.
+2024-03-22 15:18:20,464 Using the debug Vector environment interface. Expect slower performance.
+2024-03-22 15:18:20,464 Using the debug Vector environment interface. Expect slower performance.
+2024-03-22 15:18:20,465 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,465 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,465 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,465 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,466 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,466 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,466 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,466 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,466 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,467 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,467 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:20,467 Initializing dataset OVMMDataset-v0
+2024-03-22 15:18:36,796 initializing sim OVMMSim-v0
+2024-03-22 15:18:37,082 initializing sim OVMMSim-v0
+2024-03-22 15:18:38,907 initializing sim OVMMSim-v0
+2024-03-22 15:18:39,532 initializing sim OVMMSim-v0
+srun: Job step aborted: Waiting up to 302 seconds for job step to finish.
+slurmstepd: error: *** JOB 838841 ON clank CANCELLED AT 2024-03-22T15:19:03 ***
+slurmstepd: error: *** STEP 838841.0 ON clank CANCELLED AT 2024-03-22T15:19:03 ***

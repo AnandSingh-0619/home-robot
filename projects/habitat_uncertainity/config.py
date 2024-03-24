@@ -34,6 +34,18 @@ class StartYOLORecepSegmentationSensorConfig(YOLOObjectSegmentationSensorConfig)
 @dataclass
 class GoalYOLORecepSegmentationSensorConfig(YOLOObjectSegmentationSensorConfig):
     type: str = "GoalYOLORecepSegmentationSensor"
+
+@dataclass
+class YOLOObjectSensorConfig(LabSensorConfig):
+    type: str = "YOLOObjectSensor"
+
+@dataclass
+class YOLOStartReceptacleSensorConfig(YOLOObjectSensorConfig):
+    type: str = "YOLOStartReceptacleSensor"
+
+@dataclass
+class YOLOGoalReceptacleSensorConfig(YOLOObjectSensorConfig):
+    type: str = "YOLOGoalReceptacleSensor"
  # -----------------------------------------------------------------------------
 # Register configs in the Hydra ConfigStore
 # -----------------------------------------------------------------------------
@@ -64,6 +76,26 @@ cs.store(
     node=GoalYOLORecepSegmentationSensorConfig,
 )
 
+cs.store(
+    package="habitat.task.lab_sensors.yolo_object_sensor",
+    group="habitat/task/lab_sensors",
+    name="yolo_object_sensor",
+    node=YOLOObjectSensorConfig,
+)
+
+cs.store(
+    package="habitat.task.lab_sensors.yolo_start_receptacle_sensor",
+    group="habitat/task/lab_sensors",
+    name="yolo_start_receptacle_sensor",
+    node=YOLOStartReceptacleSensorConfig,
+)
+
+cs.store(
+    package="habitat.task.lab_sensors.yolo_goal_receptacle_sensor",
+    group="habitat/task/lab_sensors",
+    name="yolo_goal_receptacle_sensor",
+    node=YOLOGoalReceptacleSensorConfig,
+)
 class HabitatConfigPlugin(SearchPathPlugin):
     def manipulate_search_path(self, search_path: ConfigSearchPath) -> None:
         search_path.append(

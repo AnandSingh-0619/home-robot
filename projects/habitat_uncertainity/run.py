@@ -8,11 +8,11 @@ import torch
 from habitat import get_config
 from habitat.config import read_write
 from habitat.config.default_structured_configs import register_hydra_plugin
-from config import HabitatConfigPlugin
+from habitat_uncertainity.config import HabitatConfigPlugin
 
 from habitat_baselines.run import execute_exp
-from task.sensors import YOLOSensor, YOLOObjectSegmentationSensor, StartYOLORecepSegmentationSensor, GoalYOLORecepSegmentationSensor, YOLORecepSegmentationSensor
-from utils.YOLO_pred import YOLOPerception as YOLO_pred
+from habitat_uncertainity.task.sensors import YOLOSensor, YOLOObjectSegmentationSensor, StartYOLORecepSegmentationSensor, GoalYOLORecepSegmentationSensor, YOLORecepSegmentationSensor
+from habitat_uncertainity.utils.YOLO_pred import YOLOPerception as YOLO_pred
 def register_plugins():
     register_hydra_plugin(HabitatConfigPlugin)
 

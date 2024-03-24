@@ -137,3 +137,11 @@
 2024-03-21 22:52:23,559 Resizing observation of yolo_object_segmentation_sensor: from (640, 480) to (160, 120)
 2024-03-21 22:52:23,560 Resizing observation of yolo_segmentation_sensor: from (640, 480) to (160, 120)
 2024-03-21 22:52:26,621 agent number of parameters: 9485783
+2024-03-23 15:23:05,460 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-23 15:23:05,463 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-03-23 15:23:05,463 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-03-23 15:23:08,799 agent number of parameters: 9485655
+2024-03-24 02:03:47,137 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-03-24 02:03:47,139 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-03-24 02:03:47,140 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-03-24 02:03:52,849 agent number of parameters: 9485655

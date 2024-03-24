@@ -1,0 +1,38 @@
+pybullet build time: Nov 28 2023 23:52:03
+pybullet build time: Nov 28 2023 23:52:03
+pybullet build time: Nov 28 2023 23:52:03
+SupervisionWarnings: BoxAnnotator is deprecated: `BoxAnnotator` is deprecated and will be removed in `supervision-0.22.0`. Use `BoundingBoxAnnotator` and `LabelAnnotator` instead
+SupervisionWarnings: BoxAnnotator is deprecated: `BoxAnnotator` is deprecated and will be removed in `supervision-0.22.0`. Use `BoundingBoxAnnotator` and `LabelAnnotator` instead
+SupervisionWarnings: BoxAnnotator is deprecated: `BoxAnnotator` is deprecated and will be removed in `supervision-0.22.0`. Use `BoundingBoxAnnotator` and `LabelAnnotator` instead
+Traceback (most recent call last):
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 188, in _run_module_as_main
+    mod_name, mod_spec, code = _get_module_details(mod_name, _Error)
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 111, in _get_module_details
+    __import__(pkg_name)
+  File "/srv/kira-lab/share4/asingh3064/home-robot/projects/habitat_uncertainity/__init__.py", line 3, in <module>
+    from habitat_uncertainity.task import sensors
+  File "/srv/kira-lab/share4/asingh3064/home-robot/projects/habitat_uncertainity/task/sensors.py", line 18, in <module>
+    from utils.YOLO_pred import (
+ModuleNotFoundError: No module named 'utils'
+Traceback (most recent call last):
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 188, in _run_module_as_main
+    mod_name, mod_spec, code = _get_module_details(mod_name, _Error)
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 111, in _get_module_details
+    __import__(pkg_name)
+  File "/srv/kira-lab/share4/asingh3064/home-robot/projects/habitat_uncertainity/__init__.py", line 3, in <module>
+    from habitat_uncertainity.task import sensors
+  File "/srv/kira-lab/share4/asingh3064/home-robot/projects/habitat_uncertainity/task/sensors.py", line 18, in <module>
+    from utils.YOLO_pred import (
+ModuleNotFoundError: No module named 'utils'
+Traceback (most recent call last):
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 188, in _run_module_as_main
+    mod_name, mod_spec, code = _get_module_details(mod_name, _Error)
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 111, in _get_module_details
+    __import__(pkg_name)
+  File "/srv/kira-lab/share4/asingh3064/home-robot/projects/habitat_uncertainity/__init__.py", line 3, in <module>
+    from habitat_uncertainity.task import sensors
+  File "/srv/kira-lab/share4/asingh3064/home-robot/projects/habitat_uncertainity/task/sensors.py", line 18, in <module>
+    from utils.YOLO_pred import (
+ModuleNotFoundError: No module named 'utils'
+srun: error: clank: tasks 0-2: Exited with exit code 1
+srun: Terminating StepId=838839.0

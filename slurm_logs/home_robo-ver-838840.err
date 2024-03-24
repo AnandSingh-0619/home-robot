@@ -1,0 +1,32 @@
+pybullet build time: Nov 28 2023 23:52:03
+pybullet build time: Nov 28 2023 23:52:03
+pybullet build time: Nov 28 2023 23:52:03
+SupervisionWarnings: BoxAnnotator is deprecated: `BoxAnnotator` is deprecated and will be removed in `supervision-0.22.0`. Use `BoundingBoxAnnotator` and `LabelAnnotator` instead
+SupervisionWarnings: BoxAnnotator is deprecated: `BoxAnnotator` is deprecated and will be removed in `supervision-0.22.0`. Use `BoundingBoxAnnotator` and `LabelAnnotator` instead
+SupervisionWarnings: BoxAnnotator is deprecated: `BoxAnnotator` is deprecated and will be removed in `supervision-0.22.0`. Use `BoundingBoxAnnotator` and `LabelAnnotator` instead
+Traceback (most recent call last):
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/srv/kira-lab/share4/asingh3064/home-robot/projects/habitat_uncertainity/run.py", line 11, in <module>
+    from config import HabitatConfigPlugin
+ImportError: cannot import name 'HabitatConfigPlugin' from 'config' (unknown location)
+Traceback (most recent call last):
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/srv/kira-lab/share4/asingh3064/home-robot/projects/habitat_uncertainity/run.py", line 11, in <module>
+    from config import HabitatConfigPlugin
+ImportError: cannot import name 'HabitatConfigPlugin' from 'config' (unknown location)
+Traceback (most recent call last):
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/srv/kira-lab/share4/asingh3064/home-robot/projects/habitat_uncertainity/run.py", line 11, in <module>
+    from config import HabitatConfigPlugin
+ImportError: cannot import name 'HabitatConfigPlugin' from 'config' (unknown location)
+srun: error: clank: tasks 0-2: Exited with exit code 1
+srun: Terminating StepId=838840.0

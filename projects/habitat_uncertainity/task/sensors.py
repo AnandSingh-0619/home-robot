@@ -15,9 +15,10 @@ from habitat.core.embodied_task import Measure
 from habitat.core.registry import registry
 from habitat.core.simulator import Sensor, SensorTypes
 from habitat.tasks.ovmm.sub_tasks.nav_to_obj_task import OVMMDynNavRLEnv
-from utils.YOLO_pred import (
+from habitat_uncertainity.utils.YOLO_pred import (
     YOLOPerception as YOLO_pred, 
 )
+from habitat.datasets.ovmm.ovmm_dataset import OVMMDatasetV0, OVMMEpisode
 
 CLASSES = [
     "action_figure", "android_figure", "apple", "backpack", "baseballbat",
@@ -191,7 +192,97 @@ class GoalYOLORecepSegmentationSensor(YOLORecepSegmentationSensor):
 
     def _get_recep_goals(self, episode):
         return episode.candidate_goal_receps
+
+@registry.register_sensor
+class YOLOObjectSensor(Sensor):
+    cls_uuid: str = "yolo_object_sensor"
+
+    def __init__(
+        self,
+        sim,
+        config,
+        dataset: "OVMMDatasetV0",
+        category_attribute="object_category",
+        name_to_id_mapping="obj_category_to_obj_category_id",
+        *args: Any,
+        **kwargs: Any,
+    ):
+        self._sim = sim
+        self._dataset = dataset
+        self._category_attribute = category_attribute
+        self._name_to_id_mapping = name_to_id_mapping
+
+        super().__init__(config=config)
+
+    def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
+        return self.cls_uuid
+
+    def _get_sensor_type(self, *args: Any, **kwargs: Any):
+        return SensorTypes.SEMANTIC
+
+    def _get_observation_space(self, *args: Any, **kwargs: Any):
+        sensor_shape = (1,)
+        max_value = max(
+            getattr(self._dataset, self._name_to_id_mapping).values()
+        )
+
+        return spaces.Box(
+            low=0, high=max_value, shape=sensor_shape, dtype=np.int64
+        )
+
+    def get_observation(
+        self,
+        observations,
+        *args: Any,
+        episode: OVMMEpisode,
+        **kwargs: Any,
+    ) -> Optional[np.ndarray]:
+        category_name = getattr(episode, self._category_attribute)
+        classes = CLASSES       
+        class_id = classes.index(category_name)
+
+        return np.array(class_id, dtype=np.int64,)
     
+
+@registry.register_sensor
+class YOLOStartReceptacleSensor(YOLOObjectSensor):
+    cls_uuid: str = "yolo_start_receptacle_sensor"
+
+    def __init__(
+        self,
+        sim,
+        config,
+        dataset: "OVMMDatasetV0",
+        *args: Any,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            sim=sim,
+            config=config,
+            dataset=dataset,
+            category_attribute="start_recep_category",
+            name_to_id_mapping="recep_category_to_recep_category_id",
+        )
+@registry.register_sensor
+class YOLOGoalReceptacleSensor(YOLOObjectSensor):
+    cls_uuid: str = "yolo_goal_receptacle_sensor"
+
+    def __init__(
+        self,
+        sim,
+        config,
+        dataset: "OVMMDatasetV0",
+        *args: Any,
+        **kwargs: Any,
+    ):
+        super().__init__(
+            sim=sim,
+            config=config,
+            dataset=dataset,
+            category_attribute="goal_recep_category",
+            name_to_id_mapping="recep_category_to_recep_category_id",
+        )
+
 
 # @registry.register_sensor
 # class OVMMNavGoalYOLOSegmentationSensor(Sensor):

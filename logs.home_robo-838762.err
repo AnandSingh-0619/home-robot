@@ -1,0 +1,5 @@
+/var/lib/slurm-llnl/slurmd/job838762/slurm_script: line 18: cd: too many arguments
+/var/lib/slurm-llnl/slurmd/job838762/slurm_script: line 20: --exp-config=projects/habitat_uncertainity/config/yolo_rl_skill.yaml: No such file or directory
+/var/lib/slurm-llnl/slurmd/job838762/slurm_script: line 21: --run-type=train: command not found
+/var/lib/slurm-llnl/slurmd/job838762/slurm_script: line 22: habitat_baselines.num_environments=4: command not found
+/var/lib/slurm-llnl/slurmd/job838762/slurm_script: line 23: habitat_baselines.checkpoint_folder=data/new_checkpoints/ovmm/gaze: No such file or directory
