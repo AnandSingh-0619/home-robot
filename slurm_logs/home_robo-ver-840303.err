@@ -1,0 +1,5 @@
+/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/bin/python: Error while finding module specification for 'habitat_uncertainity.run' (ModuleNotFoundError: No module named 'habitat_uncertainity')
+/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/bin/python: Error while finding module specification for 'habitat_uncertainity.run' (ModuleNotFoundError: No module named 'habitat_uncertainity')
+/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/bin/python: Error while finding module specification for 'habitat_uncertainity.run' (ModuleNotFoundError: No module named 'habitat_uncertainity')
+srun: error: starrysky: tasks 0-2: Exited with exit code 1
+srun: Terminating StepId=840303.0

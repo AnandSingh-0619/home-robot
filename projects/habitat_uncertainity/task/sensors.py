@@ -49,149 +49,149 @@ CLASSES = [
     "washer_dryer"
 ]
 
-@registry.register_sensor
-class YOLOSensor(Sensor):
-    cls_uuid: str = "yolo_segmentation_sensor"
-    panoptic_uuid: str = "head_panoptic"
-    yolo_perception_instance = None
-    def __init__(
-        self,
-        sim,
-        config,
-        *args: Any,
-        **kwargs: Any,
-    ):
-        self._config = config
-        self._sim = sim
-        self._object_ids_start = self._sim.habitat_config.object_ids_start
-        self._resolution = (
-            sim.agents[0]
-            ._sensors[self.panoptic_uuid]
-            .specification()
-            .resolution
-        )
-        self.classes =149
-        super().__init__(config=config)
-        self.segmentation = YOLO_pred()
-        # if YOLOSensor.yolo_perception_instance is None:
-        #     YOLOSensor.yolo_perception_instance = YOLO_pred()
+# @registry.register_sensor
+# class YOLOSensor(Sensor):
+#     cls_uuid: str = "yolo_segmentation_sensor"
+#     panoptic_uuid: str = "head_panoptic"
+#     yolo_perception_instance = None
+#     def __init__(
+#         self,
+#         sim,
+#         config,
+#         *args: Any,
+#         **kwargs: Any,
+#     ):
+#         self._config = config
+#         self._sim = sim
+#         self._object_ids_start = self._sim.habitat_config.object_ids_start
+#         self._resolution = (
+#             sim.agents[0]
+#             ._sensors[self.panoptic_uuid]
+#             .specification()
+#             .resolution
+#         )
+#         self.classes =149
+#         super().__init__(config=config)
+#         self.segmentation = YOLO_pred()
+#         # if YOLOSensor.yolo_perception_instance is None:
+#         #     YOLOSensor.yolo_perception_instance = YOLO_pred()
         
 
-    def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
-        return self.cls_uuid
+#     def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
+#         return self.cls_uuid
 
-    def _get_sensor_type(self, *args: Any, **kwargs: Any):
-        return SensorTypes.TENSOR
+#     def _get_sensor_type(self, *args: Any, **kwargs: Any):
+#         return SensorTypes.TENSOR
 
-    def _get_observation_space(self, *args, **kwargs):
-        return spaces.Box(
-            shape=(
-                self._resolution[0],
-                self._resolution[1],
-                1,
-            ),
-            low=0,
-            high=1,
-            dtype=np.uint8,
-        )
+#     def _get_observation_space(self, *args, **kwargs):
+#         return spaces.Box(
+#             shape=(
+#                 self._resolution[0],
+#                 self._resolution[1],
+#                 1,
+#             ),
+#             low=0,
+#             high=1,
+#             dtype=np.uint8,
+#         )
 
-    def get_observation(self, observations, *args, episode, task, **kwargs):
+#     def get_observation(self, observations, *args, episode, task, **kwargs):
 
             
-        segmentation_sensor = self.segmentation.predict(
-            obs=observations,
-            depth_threshold=None,
-            draw_instance_predictions=False,
-        )
-        observations["head_depth"] = segmentation_sensor
-        return segmentation_sensor
+#         segmentation_sensor = self.segmentation.predict(
+#             obs=observations,
+#             depth_threshold=None,
+#             draw_instance_predictions=False,
+#         )
+#         observations["head_depth"] = segmentation_sensor
+#         return segmentation_sensor
 
 
-@registry.register_sensor
-class YOLOObjectSegmentationSensor(YOLOSensor):
-    cls_uuid: str = "yolo_object_segmentation_sensor"
-    panoptic_uuid: str = "head_panoptic"
+# @registry.register_sensor
+# class YOLOObjectSegmentationSensor(YOLOSensor):
+#     cls_uuid: str = "yolo_object_segmentation_sensor"
+#     panoptic_uuid: str = "head_panoptic"
 
-    def __init__(
-        self,
-        sim,
-        config,
-        *args: Any,
-        **kwargs: Any,
-    ):
-        self._config = config
-        self._sim = sim
-        self._object_ids_start = self._sim.habitat_config.object_ids_start
-        self._resolution = (
-            sim.agents[0]
-            ._sensors[self.panoptic_uuid]
-            .specification()
-            .resolution
-        )
+#     def __init__(
+#         self,
+#         sim,
+#         config,
+#         *args: Any,
+#         **kwargs: Any,
+#     ):
+#         self._config = config
+#         self._sim = sim
+#         self._object_ids_start = self._sim.habitat_config.object_ids_start
+#         self._resolution = (
+#             sim.agents[0]
+#             ._sensors[self.panoptic_uuid]
+#             .specification()
+#             .resolution
+#         )
 
-        super().__init__(sim, config=config)
+#         super().__init__(sim, config=config)
 
-    def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
-        return self.cls_uuid
+#     def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
+#         return self.cls_uuid
 
-    def _get_sensor_type(self, *args: Any, **kwargs: Any):
-        return SensorTypes.TENSOR
+#     def _get_sensor_type(self, *args: Any, **kwargs: Any):
+#         return SensorTypes.TENSOR
 
-    def _get_observation_space(self, *args, **kwargs):
-        return spaces.Box(
-            shape=(
-                self._resolution[0],
-                self._resolution[1],
-                1,
-            ),
-            low=0,
-            high=1,
-            dtype=np.uint8,
-        )
+#     def _get_observation_space(self, *args, **kwargs):
+#         return spaces.Box(
+#             shape=(
+#                 self._resolution[0],
+#                 self._resolution[1],
+#                 1,
+#             ),
+#             low=0,
+#             high=1,
+#             dtype=np.uint8,
+#         )
 
-    def get_observation(self, observations, *args, episode, task, **kwargs):
+#     def get_observation(self, observations, *args, episode, task, **kwargs):
         
-        category = episode.candidate_objects_hard[0].object_category
-        classes = CLASSES       
-        class_id = classes.index(category)
-        yolo_segmentation_sensor = observations["head_depth"] # observations["yolo_segmentation"]
-        filtered_mask = np.where(yolo_segmentation_sensor == class_id, 1, 0)  
+#         category = episode.candidate_objects_hard[0].object_category
+#         classes = CLASSES       
+#         class_id = classes.index(category)
+#         yolo_segmentation_sensor = observations["head_depth"] # observations["yolo_segmentation"]
+#         filtered_mask = np.where(yolo_segmentation_sensor == class_id, 1, 0)  
         
-        return filtered_mask
+#         return filtered_mask
 
 
-@registry.register_sensor
-class YOLORecepSegmentationSensor(YOLOObjectSegmentationSensor):
-    cls_uuid: str = "yolo_recep_segmentation_sensor"
+# @registry.register_sensor
+# class YOLORecepSegmentationSensor(YOLOObjectSegmentationSensor):
+#     cls_uuid: str = "yolo_recep_segmentation_sensor"
 
-    def _get_recep_goals(self, episode):
-        raise NotImplementedError
+#     def _get_recep_goals(self, episode):
+#         raise NotImplementedError
 
-    def get_observation(self, observations, *args, episode, task, **kwargs):
-        recep_goals = self._get_recep_goals(episode)
-        category = recep_goals[0].object_category
-        classes = CLASSES       
-        class_id = classes.index(category)
-        yolo_segmentation_sensor = observations["head_depth"] 
-        filtered_mask = np.where(yolo_segmentation_sensor == class_id, 1, 0)  
+#     def get_observation(self, observations, *args, episode, task, **kwargs):
+#         recep_goals = self._get_recep_goals(episode)
+#         category = recep_goals[0].object_category
+#         classes = CLASSES       
+#         class_id = classes.index(category)
+#         yolo_segmentation_sensor = observations["head_depth"] 
+#         filtered_mask = np.where(yolo_segmentation_sensor == class_id, 1, 0)  
         
-        return filtered_mask
+#         return filtered_mask
 
 
 
-@registry.register_sensor
-class StartYOLORecepSegmentationSensor(YOLORecepSegmentationSensor):
-    cls_uuid: str = "start_yolo_recep_segmentation_sensor"
+# @registry.register_sensor
+# class StartYOLORecepSegmentationSensor(YOLORecepSegmentationSensor):
+#     cls_uuid: str = "start_yolo_recep_segmentation_sensor"
 
-    def _get_recep_goals(self, episode):
-        return episode.candidate_start_receps
+#     def _get_recep_goals(self, episode):
+#         return episode.candidate_start_receps
 
-@registry.register_sensor
-class GoalYOLORecepSegmentationSensor(YOLORecepSegmentationSensor):
-    cls_uuid: str = "goal_yolo_recep_segmentation_sensor"
+# @registry.register_sensor
+# class GoalYOLORecepSegmentationSensor(YOLORecepSegmentationSensor):
+#     cls_uuid: str = "goal_yolo_recep_segmentation_sensor"
 
-    def _get_recep_goals(self, episode):
-        return episode.candidate_goal_receps
+#     def _get_recep_goals(self, episode):
+#         return episode.candidate_goal_receps
 
 @registry.register_sensor
 class YOLOObjectSensor(Sensor):
@@ -241,7 +241,7 @@ class YOLOObjectSensor(Sensor):
         classes = CLASSES       
         class_id = classes.index(category_name)
 
-        return np.array(class_id, dtype=np.int64,)
+        return np.array([class_id], dtype=np.int64,)
     
 
 @registry.register_sensor

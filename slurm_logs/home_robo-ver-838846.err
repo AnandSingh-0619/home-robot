@@ -2875,3 +2875,6 @@ UserWarning: Specified provider 'OpenVINOExecutionProvider' is not in available 
 2024-03-22 15:31:48.599469091 [E:onnxruntime:Default, env.cc:251 ThreadMain] pthread_setaffinity_np failed for thread: 339190, index: 84, mask: {106, }, error code: 22 error msg: Invalid argument. Specify the number of threads explicitly so the affinity is not set.
 2024-03-22 15:31:48.599497871 [E:onnxruntime:Default, env.cc:251 ThreadMain] pthread_setaffinity_np failed for thread: 339177, index: 71, mask: {36, }, error code: 22 error msg: Invalid argument. Specify the number of threads explicitly so the affinity is not set.
 UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+slurmstepd: error: *** STEP 838846.0 ON cheetah CANCELLED AT 2024-03-24T19:23:21 ***
+srun: Job step aborted: Waiting up to 302 seconds for job step to finish.
+slurmstepd: error: *** JOB 838846 ON cheetah CANCELLED AT 2024-03-24T19:28:37 DUE TO PREEMPTION ***

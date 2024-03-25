@@ -16,6 +16,7 @@ from typing import List, Optional, Tuple
 from ultralytics import YOLO
 from home_robot.core.abstract_perception import PerceptionModule
 from home_robot.core.interfaces import Observations
+import torch
 
 
 PARENT_DIR = Path(__file__).resolve().parent
@@ -111,20 +112,22 @@ class YOLOPerception(PerceptionModule):
         """
 
         nms_threshold=0.8
-        if draw_instance_predictions:
-            raise NotImplementedError
+        # if draw_instance_predictions:
+        #     raise NotImplementedError
         
         # convert to uint8 instead of silently failing by returning no instances
-        images = obs["head_rgb"] #get images list from obeservation
-        if not image.dtype == np.uint8:
-            if image.max() <= 1.0:
-                image = image * 255.0
-            image = image.astype(np.uint8)
+        images_tensor = obs["head_rgb"] #get images list from obeservation
 
-        height, width, _ = image.shape
+        images = [images_tensor[i].cpu().numpy() for i in range(images_tensor.size(0))]   
+
+        # if not image.dtype == np.uint8:
+        #     if image.max() <= 1.0:
+        #         image = image * 255.0
+        #     image = image.astype(np.uint8)
+
+        height, width, _ = images[0].shape
         results = self.model(images,  conf = self.confidence_threshold)
 
-        results = self.model.infer(image, self.confidence_threshold)
         semantic_masks=[]
 
         for result, img in zip(results, images):
@@ -201,7 +204,7 @@ class YOLOPerception(PerceptionModule):
         """Overlays the masks of objects
         Masks are overlaid based on the order of class_idcs.
         """
-        semantic_mask = np.zeros(shape)
+        semantic_mask = np.zeros((*shape, 1))
         instance_mask = np.zeros(shape)
 
         for mask_idx, class_idx in enumerate(class_idcs):

@@ -11,8 +11,10 @@ from habitat.config.default_structured_configs import register_hydra_plugin
 from habitat_uncertainity.config import HabitatConfigPlugin
 
 from habitat_baselines.run import execute_exp
-from habitat_uncertainity.task.sensors import YOLOSensor, YOLOObjectSegmentationSensor, StartYOLORecepSegmentationSensor, GoalYOLORecepSegmentationSensor, YOLORecepSegmentationSensor
+from habitat_uncertainity.task.sensors import YOLOObjectSensor, YOLOStartReceptacleSensor, YOLOGoalReceptacleSensor
 from habitat_uncertainity.utils.YOLO_pred import YOLOPerception as YOLO_pred
+from habitat_uncertainity.models.yoloPointNavResNetPolicy import yoloPointNavResNetPolicy, yoloResNetEncoder
+
 def register_plugins():
     register_hydra_plugin(HabitatConfigPlugin)
 
@@ -103,8 +105,8 @@ def main():
     execute_exp(config, "train")
 
 def edit_config(config, args):
-    config.habitat.task.lab_sensors.pop("object_segmentation_sensor")
-    config.habitat.task.lab_sensors.pop("start_recep_segmentation_sensor")
+    # config.habitat.task.lab_sensors.pop("object_segmentation_sensor")
+    # config.habitat.task.lab_sensors.pop("start_recep_segmentation_sensor")
     # if not hasattr(config.habitat.task.lab_sensors, "yolo_object_segmentation"):
     #     config.habitat.task.lab_sensors.update(
     #         {"yolo_object_segmentation": YOLO_ObjectSegmentationSensorConfig()}

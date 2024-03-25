@@ -19,7 +19,7 @@ cd ~/flash/home-robot
 srun python -um habitat_uncertainity.run \
     --exp-config=projects/habitat_uncertainity/config/yolo_rl_skill.yaml \
     --run-type=train \
-    habitat_baselines.num_environments=4 \
+    habitat_baselines.num_environments=20 \
     habitat_baselines.checkpoint_folder=${CHECKPOINT_DIR}
 
 

@@ -44,6 +44,11 @@ from habitat_baselines.rl.models.rnn_state_encoder import (
 from habitat_baselines.rl.ppo import Net, NetPolicy
 from habitat_baselines.utils.common import get_num_actions
 from habitat_uncertainity.utils.YOLO_pred import YOLOPerception as YOLO_pred
+from habitat_uncertainity.task.sensors import (
+    YOLOObjectSensor,
+    YOLOStartReceptacleSensor,
+    YOLOGoalReceptacleSensor,
+)
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
@@ -161,7 +166,7 @@ class yoloPointNavResNetPolicy(NetPolicy):
         )
 
 
-class ResNetEncoder(nn.Module):
+class yoloResNetEncoder(nn.Module):
     def __init__(
         self,
         observation_space: spaces.Dict,
@@ -271,14 +276,23 @@ class ResNetEncoder(nn.Module):
     def forward(self, observations: Dict[str, torch.Tensor]) -> torch.Tensor:  # type: ignore
         if self.is_blind:
             return None
-        segment_masks = self._segmentation.predict(observations["head_rgb"])
+        segment_masks = self._segmentation.predict(observations)
         cnn_input = []
         for k in self.visual_keys:
             obs_k = observations[k]
             if(k == "object_segmentation"):
-                obs_k = np.where(segment_masks == observations["yolo_object_sensor"], 1, 0)  
+                filtered_masks = []
+                class_ids = observations["yolo_object_sensor"].cpu().numpy().flatten()
+                class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
+                filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                obs_k =torch.tensor(filtered_masks, device='cuda:0')
+
             if(k == "start_recep_segmentation"):
-                obs_k = np.where(segment_masks == observations["yolo_receptacle_sensor"], 1, 0)  
+                filtered_masks = []
+                class_ids = observations["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
+                class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
+                filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                obs_k =torch.tensor(filtered_masks, device='cuda:0')
             # permute tensor to dimension [BATCH x CHANNEL x HEIGHT X WIDTH]
             obs_k = obs_k.permute(0, 3, 1, 2)
             if self.key_needs_rescaling[k] is not None:
@@ -601,7 +615,7 @@ class PointNavResNetNet(Net):
                 goal_observation_space = spaces.Dict(
                     {"rgb": observation_space.spaces[uuid]}
                 )
-                goal_visual_encoder = ResNetEncoder(
+                goal_visual_encoder = yoloResNetEncoder(
                     goal_observation_space,
                     baseplanes=resnet_baseplanes,
                     ngroups=resnet_baseplanes // 2,
@@ -653,7 +667,7 @@ class PointNavResNetNet(Net):
                     nn.ReLU(True),
                 )
         else:
-            self.visual_encoder = ResNetEncoder(
+            self.visual_encoder = yoloResNetEncoder(
                 use_obs_space,
                 baseplanes=resnet_baseplanes,
                 ngroups=resnet_baseplanes // 2,
