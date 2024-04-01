@@ -1,5 +1,0 @@
-/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/bin/python: Error while finding module specification for 'projects.habitat_uncertainity.run' (ModuleNotFoundError: No module named 'projects.habitat_uncertainity')
-/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/bin/python: Error while finding module specification for 'projects.habitat_uncertainity.run' (ModuleNotFoundError: No module named 'projects.habitat_uncertainity')
-/srv/kira-lab/share4/asingh3064/miniforge3/envs/home-robot/bin/python: Error while finding module specification for 'projects.habitat_uncertainity.run' (ModuleNotFoundError: No module named 'projects.habitat_uncertainity')
-srun: error: clank: tasks 0-2: Exited with exit code 1
-srun: Terminating StepId=838838.0

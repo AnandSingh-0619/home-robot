@@ -23,6 +23,10 @@ defaults:
   #   - yolo_object_sensor
   #   - yolo_start_receptacle_sensor
   #   - yolo_goal_receptacle_sensor
+  #   - ovmm_nav_goal_segmentation_sensor
+  #   - receptacle_segmentation_sensor
+  #   - robot_start_gps_sensor
+  #   - robot_start_compass_sensor
   - _self_
 
 habitat:
@@ -33,6 +37,8 @@ habitat:
       - start_receptacle
       - object_segmentation
       - start_recep_segmentation
+      # - ovmm_nav_goal_segmentation
+      # - receptacle_segmentation
       - yolo_object_sensor
       - yolo_start_receptacle_sensor
       - yolo_goal_receptacle_sensor

@@ -180,6 +180,10 @@ class yoloResNetEncoder(nn.Module):
     ):
         super().__init__()
         self._segmentation = YOLO_pred()
+        for param in self._segmentation.model.parameters():
+            param.requires_grad = False
+        for param in self._segmentation.sam_model.parameters():
+            param.requires_grad = False
         self.no_downscaling = no_downscaling
         # Determine which visual observations are present
         self.visual_keys = [
@@ -285,14 +289,45 @@ class yoloResNetEncoder(nn.Module):
                 class_ids = observations["yolo_object_sensor"].cpu().numpy().flatten()
                 class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
                 filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
-                obs_k =torch.tensor(filtered_masks, device='cuda:0')
-
+                obs_k = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
             if(k == "start_recep_segmentation"):
                 filtered_masks = []
                 class_ids = observations["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
                 class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
                 filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
-                obs_k =torch.tensor(filtered_masks, device='cuda:0')
+                obs_k = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
+            
+            if(k == "ovmm_nav_goal_segmentation"):
+                
+                if obs_k.shape[3] == 2:
+                    filtered_masks = []
+                    class_ids = observations["yolo_object_sensor"].cpu().numpy().flatten()
+                    class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
+                    filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                    obs_k1 =torch.tensor(filtered_masks, device='cuda:0')
+
+                    filtered_masks = []
+                    class_ids = observations["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
+                    class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
+                    filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                    obs_k2 =torch.tensor(filtered_masks, device='cuda:0')
+                    obs_k = torch.cat((obs_k1, obs_k2), dim=3)
+
+                else:
+                    filtered_masks = []
+                    class_ids = observations["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
+                    class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
+                    filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                    obs_k =torch.tensor(filtered_masks, device='cuda:0')
+               
+            if(k == "goal_recep_segmentation"):
+                filtered_masks = []
+                class_ids = observations["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
+                class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
+                filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                obs_k = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
+            
+            
             # permute tensor to dimension [BATCH x CHANNEL x HEIGHT X WIDTH]
             obs_k = obs_k.permute(0, 3, 1, 2)
             if self.key_needs_rescaling[k] is not None:

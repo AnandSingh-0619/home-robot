@@ -58,7 +58,7 @@ class YOLOPerception(PerceptionModule):
         checkpoint_file: Optional[str] = MOBILE_SAM_CHECKPOINT_PATH,
         sem_gpu_id=0,
         verbose: bool = False,
-        confidence_threshold: Optional[float] = 0.5,
+        confidence_threshold: Optional[float] = 0.7,
         
     ):
         """Loads a YOLO model for object detection and instance segmentation
@@ -81,15 +81,21 @@ class YOLOPerception(PerceptionModule):
                 f"Loading YOLO model from {yolo_model_id} and MobileSAM with checkpoint={checkpoint_file}"   
             )
 
-        self.model = YOLO('yolov8s-world.pt')
+        self.model = YOLO(model='yolov8s-world.pt')
         vocab = CLASSES
         self.model.set_classes(vocab)
-        self.model.save("custom_yolov8s.pt")
-        self.model = YOLO('custom_yolov8s.pt')
+        # Freeze the YOLO model's parameters
+        for param in self.model.parameters():
+            param.requires_grad = False
+        # self.model.save("custom_yolov8s.pt")
+        # self.model = YOLO(model='custom_yolov8s.pt')
 
          #check format of vocabulary
         self.confidence_threshold = confidence_threshold
         self.sam_model = SAM(checkpoint_file)
+        # Freeze the SAM model's parameters
+        for param in self.sam_model.parameters():
+            param.requires_grad = False
         
 
     def predict(
@@ -126,44 +132,29 @@ class YOLOPerception(PerceptionModule):
         #     image = image.astype(np.uint8)
 
         height, width, _ = images[0].shape
-        results = self.model(images,  conf = self.confidence_threshold)
+        results = self.model(images,  conf = self.confidence_threshold, stream = True)
 
         semantic_masks=[]
 
         for result, img in zip(results, images):
-            masks = []
-            for box in result.boxes.xyxy:
-                sam_output = self.sam_model.predict(source=img, bboxes=box)
-                mask_object = sam_output[0].masks
-                mask_tensor = mask_object.data.cpu()
-                mask = mask_tensor.numpy().squeeze(axis=0)
-                masks.append(mask)
-                print(mask.shape)
 
-            result_masks = np.array(masks)
-            classs_id = result.boxes.cls.cpu().numpy()
-            detection_xyxy = result.boxes.xyxy.cpu().numpy()
-            confidence = result.boxes.conf.cpu().numpy()
-            nms_idx = (
-                torchvision.ops.nms(
-                    torch.from_numpy(detection_xyxy),
-                    torch.from_numpy(confidence),
-                    nms_threshold,
+            boxes = [iresult.boxes.xyxy.tolist() for iresult in result]  # List of bounding boxes for each image
+            batch_boxes = [box for boxes_list in boxes for box in boxes_list]  # Flatten the list of boxes
+
+            input_boxes = np.array(batch_boxes)
+            if len(input_boxes) == 0:
+                height, width, _ = img.shape
+                semantic_mask = np.zeros((height, width, 1))
+            else:
+                class_id=result.boxes.cls.cpu().numpy()
+                sam_outputs = self.sam_model.predict(stream=True, source=img, bboxes=input_boxes, points=None, labels=None)
+                sam_output=next(sam_outputs)
+                result_masks=sam_output.masks
+                height, width, _ = img.shape
+                semantic_mask, instance_mask = self.overlay_masks(
+                    result_masks.data, class_id, (height, width)
                 )
-                .numpy()
-                .tolist()
-            )
-            classs_id = classs_id[nms_idx]
-            detection_xyxy = detection_xyxy[nms_idx]
-            confidence = confidence[nms_idx]
-
-            height, width, _ = img.shape
-            semantic_mask, instance_mask = self.overlay_masks(
-                result_masks, classs_id, (height, width)
-            )
-            semantic_masks.append(semantic_mask)
-        semantic_masks = np.array(semantic_masks)
-
+        semantic_masks.append(semantic_mask)
 
         # obs.semantic = semantic_map.astype(int)
         # obs.instance = instance_map.astype(int)
@@ -209,7 +200,7 @@ class YOLOPerception(PerceptionModule):
 
         for mask_idx, class_idx in enumerate(class_idcs):
             if mask_idx < len(masks):
-                mask = masks[mask_idx]
+                mask = masks[mask_idx].cpu().numpy()
                 semantic_mask[mask.astype(bool)] = class_idx 
                 instance_mask[mask.astype(bool)] = mask_idx
             else:

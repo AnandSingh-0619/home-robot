@@ -1,0 +1,276 @@
+[33mcommit 3722729a3680db2d2c43911c7103967dbe3c5816[m[33m ([m[1;36mHEAD -> [m[1;32manand_dev[m[33m)[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Mon Apr 1 14:24:33 2024 -0400
+
+    Remove large files
+
+[33mcommit 5df366e670b5cbe40c486aae354dc554714060aa[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Mon Apr 1 14:11:33 2024 -0400
+
+    SAM updated
+
+[33mcommit 78e91ec39037d8d360caead32c7a9bfcb8617bee[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Mon Apr 1 14:08:46 2024 -0400
+
+    SAM updated
+
+[33mcommit f4f115dde56213d48a2d1bcc8d0b6385b82f374c[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Mon Apr 1 13:42:32 2024 -0400
+
+    SAM updated
+
+[33mcommit 0c247c1be2b43542053ba2f39453517983de45e3[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Mon Apr 1 13:41:05 2024 -0400
+
+    SAM updated
+
+[33mcommit b6bbde4c6d24be7e7ce656847ad3ad91e02218a3[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Mon Apr 1 13:38:08 2024 -0400
+
+    SAM updated
+
+[33mcommit 7622d710132d8005eb169eeda81ed61f7587a362[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Mon Apr 1 13:34:42 2024 -0400
+
+    SAM updated
+
+[33mcommit 3bdb719200134894aa2b0c1bb652c128f105d125[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Fri Mar 29 03:23:16 2024 -0400
+
+    SAM model inference
+
+[33mcommit c09bbc46d5bb373c3ea8ede0c2cc22b1609db91e[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Fri Mar 29 03:09:40 2024 -0400
+
+    SAM model inference
+
+[33mcommit 41f11456da0788e3526f18f3339e07bf524deecb[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Fri Mar 29 03:06:36 2024 -0400
+
+    SAM model inference new
+
+[33mcommit a282f9d1b9c578a4cf2eda4dfc2cd108a1b27e7d[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Fri Mar 29 03:04:20 2024 -0400
+
+    SAM model inference new
+
+[33mcommit b10eef5f7acef2bb0f8fc64b571341ad09c11706[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Fri Mar 29 03:02:44 2024 -0400
+
+    SAM model inference changes
+
+[33mcommit 6d02c1d7cd66a4e9f56e9be2f697123f3b06f082[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Fri Mar 29 02:59:36 2024 -0400
+
+    SAM model inference changes
+
+[33mcommit e7a52933b095487066e24b2be554fab8e0b0f07f[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Fri Mar 29 02:56:59 2024 -0400
+
+    SAM model inference changes
+
+[33mcommit 6816b9011ef64a8555107ff42e5a13f35c500e23[m[33m ([m[1;31morigin/anand_dev[m[33m)[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Sun Mar 24 23:49:29 2024 -0400
+
+    policy working code
+
+[33mcommit c63c801df82cdeb368504885522593545e0b320f[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Sun Mar 24 02:46:54 2024 -0400
+
+    Policy changes
+
+[33mcommit 79a7742ed4855482bf5cdd6a06429b3d5bea973a[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Thu Mar 21 22:53:20 2024 -0400
+
+    Running code with correct sensors
+
+[33mcommit 22326cb780ca8c71d9885093ff2d5626ab09e36b[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Thu Mar 21 16:18:35 2024 -0400
+
+    trainer
+
+[33mcommit 5d7b0799f10d9206066702302477f0108f5684dd[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Thu Mar 21 10:15:05 2024 -0400
+
+    sensor changes
+
+[33mcommit ddea582082e33587e9bcf902281dcaa1d0d4a938[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Wed Mar 20 23:42:21 2024 -0400
+
+    run file changes
+
+[33mcommit a46ae268bbc6e131d4f1d224844e465bbbb676f3[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Wed Mar 20 23:22:46 2024 -0400
+
+    Yolo sensor arch
+
+[33mcommit 5227e5f825bfb76664f40514b6c191e602702aa0[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Mon Mar 18 01:39:58 2024 -0400
+
+    Sensors added
+
+[33mcommit ecb9a50f3993979116d9c8fc0323900255ecd557[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Sat Mar 16 00:52:34 2024 -0400
+
+    YOLO files added as suggested in issue 1
+
+[33mcommit f3f8207f8a0689f4bdad21c6715f9bed1400eab3[m
+Author: AnandSingh-0619 <anandsingh16898@gmail.com>
+Date:   Fri Mar 15 21:08:42 2024 -0400
+
+    YOLO changes
+
+[33mcommit 6e258cd4a062875c6e939248f1332361be007762[m[33m ([m[1;31morigin/xiaohan/svm_vlm_sim[m[33m)[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Wed Feb 21 12:01:37 2024 -0500
+
+    update some parameters
+
+[33mcommit 26e75169b0d7f43bcf1a26363798bf12ede3f429[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Thu Feb 15 17:06:11 2024 -0500
+
+    basic simplification in and supported
+
+[33mcommit c600eceedbcc15fc018f74d58610e9247a58835b[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Thu Feb 15 16:56:27 2024 -0500
+
+    update
+
+[33mcommit 6bd8cc389f26a8e26a453593c577fcbdcb01f25e[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Thu Feb 15 16:54:03 2024 -0500
+
+    simplify basic version works - no verification
+
+[33mcommit 77ab3824f98d20d7c06f0f05f1a38d19c1981370[m[33m ([m[1;31morigin/minor_bug_fixes[m[33m)[m
+Author: Jay Vakil <61257499+Jdvakil@users.noreply.github.com>
+Date:   Wed Feb 14 23:40:51 2024 -0800
+
+    typo
+
+[33mcommit 11486ce2b765d07076f266b0e53eaff18bd8ddc8[m
+Author: Jay Vakil <61257499+Jdvakil@users.noreply.github.com>
+Date:   Wed Feb 14 23:39:45 2024 -0800
+
+    Update troubleshooting.md
+
+[33mcommit 38f9b7a689393c9f5bb7bbb886e257e30790c25a[m
+Author: Jay Vakil <61257499+Jdvakil@users.noreply.github.com>
+Date:   Wed Feb 14 23:33:16 2024 -0800
+
+    Update troubleshooting.md
+
+[33mcommit 20e05146dd48a0a2a82c46ca41f93097f875afb1[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Fri Feb 9 16:46:08 2024 -0500
+
+    add retry on failure
+
+[33mcommit db2b4d657e584e4bdd183ef5627ff6bfbb628dd1[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Fri Feb 9 16:43:03 2024 -0500
+
+    safety threshold fixed and fix other things
+
+[33mcommit d117946278f322c4c2918338ef4b92d98588b5d0[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Fri Feb 9 16:37:59 2024 -0500
+
+    changing params
+
+[33mcommit e8b46cae71788b1387d8cb11a556fbe47a6d1289[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Fri Feb 9 16:37:07 2024 -0500
+
+    make sure frontier is a bit back from actual edges of frontier regions
+
+[33mcommit 1e7aebbe40886cdb3baaeacd36b5ea16c2aee9fa[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Fri Feb 9 16:32:46 2024 -0500
+
+    code cleanup and modify margins around the edge
+
+[33mcommit 5d00ca844f3ba872c00170f0a371a04e2d3786d0[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Wed Feb 7 14:53:50 2024 -0500
+
+    add motion planning debug code
+
+[33mcommit a2efcf6d0db03e0518d6b406646a5537d7484d9b[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Wed Feb 7 12:31:51 2024 -0500
+
+    update things to print out more svms
+
+[33mcommit 022d3cf45b14e0a6a808816b66377ae39b9987bc[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Wed Feb 7 12:12:42 2024 -0500
+
+    visualize positions
+
+[33mcommit 85eb77980c5b29af5d61dc880a3b1ac857303d5d[m
+Author: keke-220 <xzhan244@binghamton.edu>
+Date:   Tue Feb 6 19:07:34 2024 -0500
+
+    cleanup
+
+[33mcommit 9adc742ad31189f00039adb785f6117424829ffe[m
+Author: keke-220 <xzhan244@binghamton.edu>
+Date:   Tue Feb 6 19:03:35 2024 -0500
+
+    debug motion by adding constraints
+
+[33mcommit 1e04109219995652b69216c5dc6a846a153fee61[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Tue Feb 6 17:39:02 2024 -0500
+
+    saving information for placing stuff
+
+[33mcommit d5888d7fbc70ca13d1d23c2a82dc50219b802a24[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Tue Feb 6 16:59:32 2024 -0500
+
+    update gpt stuff
+
+[33mcommit 9601fef064356be5108dcf89aaeb611909ab13d7[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Tue Feb 6 16:57:51 2024 -0500
+
+    padding must be an int; footprint should match actual hardware
+
+[33mcommit d4c291a3644ae9c31f9257ed29104a493ea2f17f[m
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Mon Feb 5 18:07:31 2024 -0500
+
+    update
+
+[33mcommit 3d34a50e03c721ac571c8b8501ec7e34066d7075[m
+Merge: 8c390d90 b539c08c
+Author: Chris Paxton <cpaxton@fb.com>
+Date:   Mon Feb 5 18:04:18 2024 -0500
+
+    Merge branch 'xiaohan/svm_vlm_sim' of github.com:facebookresearch/home-robot into xiaoh

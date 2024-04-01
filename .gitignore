@@ -28,12 +28,16 @@ datadump/
 !/src/home_robot/home_robot/datasets
 data/
 /models/
-
+/slurm_logs/
+slurm_logs/
+slurm_logs/*err
+slurm_logs/*out
 # Archive files
 *.pkl
 *.pcd
 *.zip
-
+*.err
+*.out
 # Visualizations
 *.ogv
 *.pcd
