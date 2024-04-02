@@ -9009,3 +9009,174 @@ from (640, 480) to (160, 120)
 2024-04-01 14:23:37,400 Num updates: 9480	Num frames 18656916
 2024-04-01 14:23:37,400 Average window size: 50  articulated_agent_force.accum: 0.000  articulated_agent_force.instant: 0.000  did_pick_object: 0.756  did_violate_hold_constraint: 0.000  ee_to_object_distance.0: 0.340  ee_to_rest_distance: 0.266  force_terminate: 0.000  num_steps: 17.178  pick_distance_to_goal: 0.617  pick_distance_to_goal_reward: 0.015  pick_reward: 1.511  pick_success: 0.752  reward: 8.758  robot_collisions.obj_scene_colls: 0.000  robot_collisions.robot_obj_colls: 0.000  robot_collisions.robot_scene_colls: 0.006  robot_collisions.total_collisions: 0.006  robot_collisions_terminate: 0.000
 2024-04-01 14:23:37,400 	Perf Stats: trainer.rollout_collect: 3.652 trainer.sample_action: 0.005 trainer.obs_insert: 0.000 trainer.step_env: 0.022 trainer.update_stats: 0.003 trainer.update_agent: 0.395
+2024-04-01 15:11:48,049 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-01 15:11:48,050 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-01 15:11:48,050 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:11:48,050 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:11:49,254 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-01 15:11:49,255 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-01 15:11:49,255 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:11:49,255 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:11:51,816 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-01 15:11:51,817 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-01 15:11:51,817 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:11:51,818 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:11:53,459 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-01 15:11:53,460 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-01 15:11:53,461 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:11:53,461 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:11:55,127 Number of params to train: 9490359
+2024-04-01 15:11:55,128 agent number of parameters: 9490359
+2024-04-01 15:11:55,199 Number of params to train: 9490359
+2024-04-01 15:11:55,200 agent number of parameters: 9490359
+2024-04-01 15:11:57,239 Number of params to train: 9490359
+2024-04-01 15:11:57,240 agent number of parameters: 9490359
+2024-04-01 15:11:57,726 Number of params to train: 9490359
+2024-04-01 15:11:57,727 agent number of parameters: 9490359
+2024-04-01 15:14:58,156 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-01 15:14:58,157 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:14:58,158 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:15:01,513 Number of params to train: 9485655
+2024-04-01 15:15:01,514 agent number of parameters: 9485655
+2024-04-01 15:15:50,753 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-01 15:15:50,753 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-01 15:15:50,754 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:15:50,755 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:15:55,038 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-01 15:15:55,039 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-01 15:15:55,039 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:15:55,039 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:15:56,344 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-01 15:15:56,345 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-01 15:15:56,345 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:15:56,345 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:15:58,003 Number of params to train: 9496503
+2024-04-01 15:15:58,004 agent number of parameters: 9496503
+2024-04-01 15:15:59,469 Number of params to train: 9496503
+2024-04-01 15:15:59,471 agent number of parameters: 9496503
+2024-04-01 15:16:00,667 Number of params to train: 9496503
+2024-04-01 15:16:00,682 agent number of parameters: 9496503
+2024-04-01 15:16:00,685 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-01 15:16:00,686 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-01 15:16:00,687 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:16:00,687 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-01 15:16:04,991 Number of params to train: 9496503
+2024-04-01 15:16:04,993 agent number of parameters: 9496503
+2024-04-02 13:21:07,868 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:21:07,869 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:21:07,870 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:21:07,870 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:21:13,937 Number of params to train: 9496503
+2024-04-02 13:21:13,939 agent number of parameters: 9496503
+2024-04-02 13:21:58,637 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:21:58,638 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:21:58,657 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:21:58,658 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:21:59,825 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:21:59,826 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:21:59,826 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:21:59,827 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:22:00,238 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:22:00,239 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:22:00,240 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:22:00,240 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:22:00,306 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:22:00,307 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:22:00,307 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:22:00,308 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:22:11,431 Number of params to train: 9496503
+2024-04-02 13:22:11,431 Number of params to train: 9496503
+2024-04-02 13:22:11,431 Number of params to train: 9496503
+2024-04-02 13:22:11,432 agent number of parameters: 9496503
+2024-04-02 13:22:11,432 agent number of parameters: 9496503
+2024-04-02 13:22:11,433 agent number of parameters: 9496503
+2024-04-02 13:22:11,466 Number of params to train: 9496503
+2024-04-02 13:22:11,468 agent number of parameters: 9496503
+2024-04-02 13:35:21,262 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:35:21,263 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:35:21,264 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:21,265 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:22,792 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:35:22,792 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:35:22,793 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:22,793 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:23,097 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:35:23,097 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:35:23,098 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:23,098 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:23,791 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:35:23,792 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:35:23,792 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:23,792 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:27,419 Number of params to train: 9496503
+2024-04-02 13:35:27,420 agent number of parameters: 9496503
+2024-04-02 13:35:27,544 Number of params to train: 9496503
+2024-04-02 13:35:27,546 agent number of parameters: 9496503
+2024-04-02 13:35:28,167 Number of params to train: 9496503
+2024-04-02 13:35:28,168 agent number of parameters: 9496503
+2024-04-02 13:35:28,237 2024-04-02 13:35:25,357 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:35:25,357 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:35:25,358 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:25,358 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:27,841 Number of params to train: 9496503
+2024-04-02 13:35:27,843 agent number of parameters: 9496503
+2024-04-02 13:35:28,860 Number of params to train: 9496503
+2024-04-02 13:35:28,862 agent number of parameters: 9496503
+2024-04-02 13:35:29,566 Number of params to train: 9496503
+2024-04-02 13:35:29,567 agent number of parameters: 9496503
+2024-04-02 13:35:30,101 Number of params to train: 9496503
+2024-04-02 13:35:30,102 agent number of parameters: 9496503
+2024-04-02 13:35:56,819 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:35:56,820 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:35:56,821 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:35:56,821 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:36:02,307 Number of params to train: 9496503
+2024-04-02 13:36:02,309 agent number of parameters: 9496503
+2024-04-02 13:45:52,532 update: 10	fps: 33.149	
+2024-04-02 13:45:52,532 Num updates: 10	Num frames 20156
+2024-04-02 13:45:52,533 Average window size: 10  articulated_agent_force.accum: 0.000  articulated_agent_force.instant: 0.000  did_pick_object: 0.028  did_violate_hold_constraint: 0.000  ee_to_object_distance.0: 0.779  ee_to_rest_distance: 0.266  force_terminate: 0.000  num_steps: 3.251  pick_distance_to_goal: 0.705  pick_distance_to_goal_reward: -0.006  pick_reward: -0.026  pick_success: 0.018  reward: 0.013  robot_collisions.obj_scene_colls: 0.000  robot_collisions.robot_obj_colls: 0.000  robot_collisions.robot_scene_colls: 0.000  robot_collisions.total_collisions: 0.000  robot_collisions_terminate: 0.000
+2024-04-02 13:45:52,533 	Perf Stats: trainer.rollout_collect: 33.258 trainer.sample_action: 0.097 trainer.obs_insert: 0.017 trainer.step_env: 0.113 trainer.update_stats: 0.011 trainer.update_agent: 27.081
+2024-04-02 13:54:27,102 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:54:27,103 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:54:27,104 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:54:27,104 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:54:28,127 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:54:28,128 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:54:28,129 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:54:28,129 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:54:28,569 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:54:28,570 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:54:28,571 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:54:28,571 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:54:32,820 Number of params to train: 9496503
+2024-04-02 13:54:32,821 agent number of parameters: 9496503
+2024-04-02 13:54:33,238 Number of params to train: 9496503
+2024-04-02 13:54:33,239 agent number of parameters: 9496503
+2024-04-02 13:54:33,271 Number of params to train: 9496503
+2024-04-02 13:54:33,272 agent number of parameters: 9496503
+2024-04-02 13:54:45,238 Resizing observation of head_depth: from (640, 480) to (160, 120)
+2024-04-02 13:54:45,239 Resizing observation of head_rgb: from (640, 480) to (160, 120)
+2024-04-02 13:54:45,239 Resizing observation of object_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:54:45,239 Resizing observation of start_recep_segmentation: from (640, 480) to (160, 120)
+2024-04-02 13:54:49,730 Number of params to train: 9496503
+2024-04-02 13:54:49,732 agent number of parameters: 9496503
+2024-04-02 13:55:27,812 update: 20	fps: 34.016	
+2024-04-02 13:55:27,813 Num updates: 20	Num frames 40320
+2024-04-02 13:55:27,813 Average window size: 20  articulated_agent_force.accum: 0.000  articulated_agent_force.instant: 0.000  did_pick_object: 0.030  did_violate_hold_constraint: 0.000  ee_to_object_distance.0: 0.764  ee_to_rest_distance: 0.266  force_terminate: 0.000  num_steps: 2.348  pick_distance_to_goal: 0.676  pick_distance_to_goal_reward: 0.005  pick_reward: 0.015  pick_success: 0.021  reward: 0.171  robot_collisions.obj_scene_colls: 0.000  robot_collisions.robot_obj_colls: 0.000  robot_collisions.robot_scene_colls: 0.000  robot_collisions.total_collisions: 0.000  robot_collisions_terminate: 0.000
+2024-04-02 13:55:27,813 	Perf Stats: trainer.rollout_collect: 33.013 trainer.sample_action: 0.092 trainer.obs_insert: 0.014 trainer.step_env: 0.126 trainer.update_stats: 0.011 trainer.update_agent: 25.813
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             2024-04-02 14:05:15,010 update: 30	fps: 34.249	
+2024-04-02 14:05:15,011 Num updates: 30	Num frames 60708
+2024-04-02 14:05:15,011 Average window size: 30  articulated_agent_force.accum: 0.000  articulated_agent_force.instant: 0.000  did_pick_object: 0.028  did_violate_hold_constraint: 0.000  ee_to_object_distance.0: 0.777  ee_to_rest_distance: 0.266  force_terminate: 0.000  num_steps: 2.090  pick_distance_to_goal: 0.670  pick_distance_to_goal_reward: 0.011  pick_reward: 0.029  pick_success: 0.021  reward: 0.204  robot_collisions.obj_scene_colls: 0.000  robot_collisions.robot_obj_colls: 0.000  robot_collisions.robot_scene_colls: 0.000  robot_collisions.total_collisions: 0.000  robot_collisions_terminate: 0.000
+2024-04-02 14:05:15,011 	Perf Stats: trainer.rollout_collect: 33.150 trainer.sample_action: 0.091 trainer.obs_insert: 0.014 trainer.step_env: 0.127 trainer.update_stats: 0.011 trainer.update_agent: 25.498
+2024-04-02 14:15:33,668 update: 40	fps: 33.879	
+2024-04-02 14:15:33,669 Num updates: 40	Num frames 81008
+2024-04-02 14:15:33,669 Average window size: 40  articulated_agent_force.accum: 0.000  articulated_agent_force.instant: 0.000  did_pick_object: 0.028  did_violate_hold_constraint: 0.000  ee_to_object_distance.0: 0.781  ee_to_rest_distance: 0.266  force_terminate: 0.000  num_steps: 1.986  pick_distance_to_goal: 0.668  pick_distance_to_goal_reward: 0.013  pick_reward: 0.035  pick_success: 0.020  reward: 0.217  robot_collisions.obj_scene_colls: 0.000  robot_collisions.robot_obj_colls: 0.000  robot_collisions.robot_scene_colls: 0.000  robot_collisions.total_collisions: 0.000  robot_collisions_terminate: 0.000
+2024-04-02 14:15:33,669 	Perf Stats: trainer.rollout_collect: 34.002 trainer.sample_action: 0.094 trainer.obs_insert: 0.014 trainer.step_env: 0.130 trainer.update_stats: 0.011 trainer.update_agent: 25.338
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             2024-04-02 14:25:49,346 update: 50	fps: 33.631	
+2024-04-02 14:25:49,346 Num updates: 50	Num frames 101124
+2024-04-02 14:25:49,346 Average window size: 50  articulated_agent_force.accum: 0.000  articulated_agent_force.instant: 0.000  did_pick_object: 0.028  did_violate_hold_constraint: 0.000  ee_to_object_distance.0: 0.777  ee_to_rest_distance: 0.266  force_terminate: 0.000  num_steps: 1.928  pick_distance_to_goal: 0.666  pick_distance_to_goal_reward: 0.015  pick_reward: 0.038  pick_success: 0.020  reward: 0.224  robot_collisions.obj_scene_colls: 0.000  robot_collisions.robot_obj_colls: 0.000  robot_collisions.robot_scene_colls: 0.000  robot_collisions.total_collisions: 0.000  robot_collisions_terminate: 0.000
+2024-04-02 14:25:49,346 	Perf Stats: trainer.rollout_collect: 34.321 trainer.sample_action: 0.096 trainer.obs_insert: 0.014 trainer.step_env: 0.132 trainer.update_stats: 0.011 trainer.update_agent: 25.348
+2024-04-02 14:35:43,307 update: 60	fps: 33.710	
+2024-04-02 14:35:43,308 Num updates: 60	Num frames 121376
+2024-04-02 14:35:43,308 Average window size: 50  articulated_agent_force.accum: 0.000  articulated_agent_force.instant: 0.000  did_pick_object: 0.028  did_violate_hold_constraint: 0.000  ee_to_object_distance.0: 0.762  ee_to_rest_distance: 0.266  force_terminate: 0.000  num_steps: 1.753  pick_distance_to_goal: 0.661  pick_distance_to_goal_reward: 0.019  pick_reward: 0.048  pick_success: 0.020  reward: 0.254  robot_collisions.obj_scene_colls: 0.000  robot_collisions.robot_obj_colls: 0.000  robot_collisions.robot_scene_colls: 0.000  robot_collisions.total_collisions: 0.000  robot_collisions_terminate: 0.000
+2024-04-02 14:35:43,308 	Perf Stats: trainer.rollout_collect: 34.100 trainer.sample_action: 0.096 trainer.obs_insert: 0.014 trainer.step_env: 0.132 trainer.update_stats: 0.011 trainer.update_agent: 25.460

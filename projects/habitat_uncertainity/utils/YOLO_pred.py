@@ -96,6 +96,8 @@ class YOLOPerception(PerceptionModule):
         # Freeze the SAM model's parameters
         for param in self.sam_model.parameters():
             param.requires_grad = False
+        self.model.cuda()
+        self.sam_model.cuda()
         
 
     def predict(
