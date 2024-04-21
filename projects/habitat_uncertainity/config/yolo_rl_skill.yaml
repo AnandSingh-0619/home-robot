@@ -44,6 +44,8 @@ habitat:
       - yolo_goal_receptacle_sensor
       - object_embedding
       - joint
+      # - robot_start_gps
+      # - robot_start_compass
   simulator:
     agents:
       main_agent:
@@ -56,7 +58,7 @@ habitat:
 
 habitat_baselines:
   verbose: False
-  trainer_name: "ddppo"
+  trainer_name: "ddppo_yolo"
   torch_gpu_id: 0
   tensorboard_dir: "tb"
   video_dir: "video_dir"
@@ -81,7 +83,7 @@ habitat_baselines:
 
   rl:
     policy:
-      name: "yoloPointNavResNetPolicy"
+      name: "PointNavResNetPolicy"
       action_distribution_type: "gaussian"
       no_downscaling: True
       action_dist:
@@ -96,7 +98,7 @@ habitat_baselines:
           size: 120
           channels_last: True
           trans_keys:
-            - head_rgb
+            # - head_rgb
             - head_depth
             - head_panoptic
             - object_segmentation
@@ -104,7 +106,6 @@ habitat_baselines:
             - start_recep_segmentation
             - goal_recep_segmentation
             - ovmm_nav_goal_segmentation
-
           semantic_keys:
             - head_panoptic
             - object_segmentation
@@ -118,7 +119,7 @@ habitat_baselines:
           width: 120
           channels_last: True
           trans_keys:
-            - head_rgb
+            # - head_rgb
             - head_depth
             - head_panoptic
             - object_segmentation
