@@ -97,12 +97,12 @@ class YOLOPerception(PerceptionModule):
 
          #check format of vocabulary
         self.confidence_threshold = confidence_threshold
-        self.sam_model = SAM(checkpoint_file)
+        # self.sam_model = SAM(checkpoint_file)
         # Freeze the SAM model's parameters
-        for param in self.sam_model.parameters():
-            param.requires_grad = False
+        # for param in self.sam_model.parameters():
+        #     param.requires_grad = False
         self.model.cuda()
-        self.sam_model.cuda()
+        # self.sam_model.cuda()
         torch.cuda.empty_cache()
 
         
@@ -121,9 +121,9 @@ class YOLOPerception(PerceptionModule):
 
         Returns:
             obs.semantic: segmentation predictions of shape (H, W) with
-             indices in [0, num_sem_categories - 1]
+            indices in [0, num_sem_categories - 1]
             obs.task_observations["semantic_frame"]: segmentation visualization
-             image of shape (H, W, 3)
+            image of shape (H, W, 3)
         """
         torch.cuda.empty_cache()
         devices = Device.all() 
@@ -132,97 +132,40 @@ class YOLOPerception(PerceptionModule):
         logger.info(f"Memory used {devices[0].memory_used_human()} Memory free {devices[0].memory_free_human()}")
 
         nms_threshold=0.8
-        # if draw_instance_predictions:
-        #     raise NotImplementedError
-        
-        # convert to uint8 instead of silently failing by returning no instances
-        images_tensor = obs["head_rgb"] #get images list from obeservation
-
+            
+        images_tensor = obs["head_rgb"] 
         images = [images_tensor[i].cpu().numpy() for i in range(images_tensor.size(0))]   
 
-        # if not image.dtype == np.uint8:
-        #     if image.max() <= 1.0:
-        #         image = image * 255.0
-        #     image = image.astype(np.uint8)
-        # nenv = 32
-        # if(len(images)>nenv):
-        #     logger.info(f"Batch size greater than number of environments. Batch size: {len(images)}  Number of env: {nenv}")
-        #     # images = images[:nenv]
         height, width, _ = images[0].shape
-        results = self.model(images,  conf = self.confidence_threshold, stream = True)
-        # logger.info(f"YOLO pred memory usage {sys.getsizeof(results)} Image number {len(images)}")
-        output_directory = str(PARENT_DIR / "sample_outputs")
-        semantic_masks=[]
+        results = self.model(images, conf=self.confidence_threshold, stream=True)
+
+        semantic_masks = []
 
         for idx, result in enumerate(results):
             img = images[idx] 
-            boxes = [iresult.boxes.xyxy.tolist() for iresult in result]  # List of bounding boxes for each image
-            batch_boxes = [box for boxes_list in boxes for box in boxes_list]  # Flatten the list of boxes
+            boxes = [iresult.boxes.xyxy.tolist() for iresult in result]
+            batch_boxes = [box for boxes_list in boxes for box in boxes_list]
 
             input_boxes = np.array(batch_boxes)
             if len(input_boxes) == 0:
                 height, width, _ = img.shape
                 semantic_mask = np.zeros((160, 120, 1))
             else:
-                class_id=result.boxes.cls.cpu().numpy()
-                sam_outputs = self.sam_model.predict(stream=True, source=img, bboxes=input_boxes, points=None, labels=None)
-                sam_output=next(sam_outputs)
-                result_masks=sam_output.masks
-                height, width, _ = img.shape
-                semantic_mask, instance_mask = self.overlay_masks(
-                    result_masks.data, class_id, (height, width)
-                )
-            # Remove the extra dimension from the semantic mask
-            # semantic_maski = np.squeeze(semantic_mask, axis=2)
+                class_ids = result.boxes.cls.cpu().numpy()
+                semantic_mask, _ = self.overlay_masks(class_ids, input_boxes, (height, width))
 
-            # # Convert semantic mask to uint8
-            # semantic_mask_uint8 = (semantic_maski * 255).astype(np.uint8)
-
-            # # Create PIL Image from semantic mask
-            # semantic_mask_image = Image.fromarray(semantic_mask_uint8)
-
-            # # Resize semantic mask to match original image dimensions
-            # semantic_mask_image_resized = semantic_mask_image.resize((width, height), Image.NEAREST)
-
-            # # Save the semantic mask along with the original image
-            # save_path = os.path.join(output_directory, f"image_{idx}_semantic_mask.png")
-            # semantic_mask_image_resized.save(save_path)
-            # # Load the original image
-            # original_image = Image.fromarray(np.array(img).astype(np.uint8))
-
-            # # Create a new image with twice the width to accommodate both images side by side
-            # combined_image = Image.new('RGB', (width * 2, height))
-
-            # # Paste the original image on the left side
-            # combined_image.paste(original_image, (0, 0))
-
-            # # Paste the semantic mask image on the right side
-            # combined_image.paste(semantic_mask_image_resized, (width, 0))
-
-            # # Save the combined image
-            # save_path_combined = os.path.join(output_directory, f"image_{idx}_combined.png")
-            # combined_image.save(save_path_combined)
             torch.cuda.empty_cache()
             semantic_mask_resized = cv2.resize(semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
 
             semantic_masks.append(semantic_mask_resized[:, :, np.newaxis])
-        # semantic_masks = np.stack([mask[:, :, np.newaxis] for mask in semantic_masks], axis=0)
 
         semantic_masks = np.array(semantic_masks)
-        # del results, boxes, batch_boxes, input_boxes, sam_outputs, result_masks
         torch.cuda.empty_cache()
-        # obs.semantic = semantic_map.astype(int)
-        # obs.instance = instance_map.astype(int)
-        # if obs.task_observations is None:
-        #     obs.task_observations = dict()
-        # obs.task_observations["instance_map"] = instance_map
-        # obs.task_observations["instance_classes"] = detections.class_id
-        # obs.task_observations["instance_scores"] = detections.confidence
-        # obs.task_observations["semantic_frame"] = None
-        end_time = time.time()  # Record the time when the code is about to exit the function
-        duration = end_time - start_time  # Calculate the duration
+        end_time = time.time()
+        duration = end_time - start_time
         logger.info(f"Dtetection + Segmentation execution time: {duration} seconds")
         return semantic_masks
+
     
 
     # Prompting SAM with detected boxes
@@ -247,25 +190,25 @@ class YOLOPerception(PerceptionModule):
 
     #     return np.array(result_masks)
     
-    def overlay_masks(self,
-        masks: np.ndarray, class_idcs: np.ndarray, shape: Tuple[int, int]
+    def overlay_masks(
+        self,
+        class_idcs: np.ndarray,
+        boxes: np.ndarray,
+        shape: Tuple[int, int]
     ) -> np.ndarray:
-        """Overlays the masks of objects
-        Masks are overlaid based on the order of class_idcs.
-        """
+        """Overlays the masks of objects based on bounding boxes."""
         semantic_mask = np.zeros((*shape, 1))
         instance_mask = np.zeros(shape)
 
-        for mask_idx, class_idx in enumerate(class_idcs):
-            if mask_idx < len(masks):
-                mask = masks[mask_idx].cpu().numpy()
-                semantic_mask[mask.astype(bool)] = class_idx 
-                instance_mask[mask.astype(bool)] = mask_idx
-            else:
-                break
-        del masks, class_idcs, shape
+        for class_idx, box in zip(class_idcs, boxes):
+            x1, y1, x2, y2 = box
+            center_x = int((x1 + x2) / 2)
+            center_y = int((y1 + y2) / 2)
+            semantic_mask[center_y, center_x] = class_idx
+            instance_mask[center_y, center_x] = 1  # You can set any value here for instance id
 
         return semantic_mask, instance_mask
+
     
 
     # def filter_depth(

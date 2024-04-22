@@ -13,8 +13,8 @@
 #SBATCH --signal=USR1@100
 
 export PYTHONPATH=~/flash/home-robot/projects/:$PYTHONPATH
-CHECKPOINT_DIR="data/new_checkpoints/ovmm/gaze_res2"
-TENSORBOARD_DIR="tb/yolo_gaze/nGPU4_nENV32_res2"
+CHECKPOINT_DIR="data/new_checkpoints/ovmm/gaze_yolo_heatmap"
+TENSORBOARD_DIR="tb/yolo_gaze/nGPU4_nENV32_yolo_heatmap"
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
 
