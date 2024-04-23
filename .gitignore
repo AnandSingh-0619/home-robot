@@ -89,3 +89,6 @@ projects/habitat_ovmm/configs/agent/generated/*
 train.log
 *.log
 tb/
+*.err
+*.out
+*.0

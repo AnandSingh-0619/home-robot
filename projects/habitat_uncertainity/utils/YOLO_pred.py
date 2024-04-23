@@ -163,7 +163,7 @@ class YOLOPerception(PerceptionModule):
         torch.cuda.empty_cache()
         end_time = time.time()
         duration = end_time - start_time
-        logger.info(f"Dtetection + Segmentation execution time: {duration} seconds")
+        logger.info(f"Dtetection execution time: {duration} seconds")
         return semantic_masks
 
     
