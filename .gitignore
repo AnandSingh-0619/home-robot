@@ -28,7 +28,12 @@ datadump/
 !/src/home_robot/home_robot/datasets
 data/
 /models/
-
+Logs/
+Logs/*
+Logs/slurmLogs/*.err
+Logs/slurmLogs/*.out
+Logs/tensorLogs/*
+Logs/checkpoints/
 # Archive files
 *.pkl
 *.pcd

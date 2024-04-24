@@ -13,8 +13,14 @@
 #SBATCH --signal=USR1@100
 
 export PYTHONPATH=~/flash/home-robot/projects/:$PYTHONPATH
+<<<<<<< Updated upstream
 CHECKPOINT_DIR="data/new_checkpoints/ovmm/gaze_og_heatmap4"
 TENSORBOARD_DIR="tb/yolo_gaze/nGPU4_nENV32_og_heatmap4"
+=======
+export CUDA_LAUNCH_BLOCKING=1
+CHECKPOINT_DIR="data/new_checkpoints/ddppo/ovmm/gaze_yolo_heatmap1"
+TENSORBOARD_DIR="tb/yolo_gaze/nGPU4_nENV32_yolo_heatmap1"
+>>>>>>> Stashed changes
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
 
