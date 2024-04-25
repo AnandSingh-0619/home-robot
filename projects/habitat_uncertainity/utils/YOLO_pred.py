@@ -7,11 +7,8 @@ import cv2
 import time
 import supervision as sv
 import numpy as np
-from tqdm import tqdm
-from inference.models import YOLOWorld
-from ultralytics import SAM
+
 import torch
-import torchvision
 from pathlib import Path
 from typing import List, Optional, Tuple
 from ultralytics import YOLO
@@ -20,9 +17,7 @@ from home_robot.core.interfaces import Observations
 import torch
 from habitat.core.logging import logger
 from nvitop import Device
-import sys
-import os
-from PIL import Image
+import gc
 PARENT_DIR = Path(__file__).resolve().parent
 MOBILE_SAM_CHECKPOINT_PATH = str(PARENT_DIR / "pretrained_wt" / "mobile_sam.pt")
 CLASSES = [
@@ -61,7 +56,7 @@ class YOLOPerception(PerceptionModule):
         self,
         checkpoint_file: Optional[str] = MOBILE_SAM_CHECKPOINT_PATH,
         sem_gpu_id=0,
-        verbose: bool = True,
+        verbose: bool = False,
         confidence_threshold: Optional[float] = 0.35,
         
     ):
@@ -84,25 +79,16 @@ class YOLOPerception(PerceptionModule):
             print(
                 f"Loading YOLO model from {yolo_model_id} and MobileSAM with checkpoint={checkpoint_file}"   
             )
-        logger.info(f"Loading YOLO model from {yolo_model_id} and MobileSAM with checkpoint={checkpoint_file}" 
-                    )
         self.model = YOLO(model='yolov8s-world.pt')
         vocab = CLASSES
         self.model.set_classes(vocab)
         # Freeze the YOLO model's parameters
         for param in self.model.parameters():
             param.requires_grad = False
-        # self.model.save("custom_yolov8s.pt")
-        # self.model = YOLO(model='custom_yolov8s.pt')
 
-         #check format of vocabulary
         self.confidence_threshold = confidence_threshold
-        # self.sam_model = SAM(checkpoint_file)
-        # Freeze the SAM model's parameters
-        # for param in self.sam_model.parameters():
-        #     param.requires_grad = False
+
         self.model.cuda()
-        # self.sam_model.cuda()
         torch.cuda.empty_cache()
 
         
@@ -126,18 +112,14 @@ class YOLOPerception(PerceptionModule):
             image of shape (H, W, 3)
         """
         torch.cuda.empty_cache()
-        devices = Device.all() 
         start_time = time.time()  
-        logger.info(f"Predicting batch data with YOLO" )
-        logger.info(f"Memory used {devices[0].memory_used_human()} Memory free {devices[0].memory_free_human()}")
-
         nms_threshold=0.8
             
         images_tensor = obs["head_rgb"] 
         images = [images_tensor[i].cpu().numpy() for i in range(images_tensor.size(0))]   
 
         height, width, _ = images[0].shape
-        results = self.model(images, conf=self.confidence_threshold, stream=True)
+        results = self.model(images, conf=self.confidence_threshold, stream=True, verbose=False)
 
         semantic_masks = []
 
@@ -160,35 +142,13 @@ class YOLOPerception(PerceptionModule):
             semantic_masks.append(semantic_mask_resized[:, :, np.newaxis])
 
         semantic_masks = np.array(semantic_masks)
+        gc.collect()
         torch.cuda.empty_cache()
         end_time = time.time()
         duration = end_time - start_time
-        logger.info(f"Dtetection execution time: {duration} seconds")
+        devices = Device.all() 
+        logger.info(f"Memory used {devices[0].memory_used_human()} GB. Dtetection execution time: {duration} seconds")
         return semantic_masks
-
-    
-
-    # Prompting SAM with detected boxes
-    # def segment(self, image: np.ndarray, xyxy: np.ndarray) -> np.ndarray:
-    #     """
-    #     Get masks for all detected bounding boxes using SAM
-    #     Arguments:
-    #         image: image of shape (H, W, 3)
-    #         xyxy: bounding boxes of shape (N, 4) in (x1, y1, x2, y2) format
-    #     Returns:
-    #         masks: masks of shape (N, H, W)
-    #     """
-    #     result_masks = []
-    #     for box in xyxy:
-    #         sam_output= self.sam_model.predict(source=image,
-    #             bboxes=box)
-    #         mask_object = sam_output[0].masks
-    #         mask_tensor = mask_object.data.cpu()
-    #         masks = mask_tensor.numpy()
-    #         masks = masks.squeeze(axis=0)
-    #         result_masks.append(masks)
-
-    #     return np.array(result_masks)
     
     def overlay_masks(
         self,
@@ -208,32 +168,6 @@ class YOLOPerception(PerceptionModule):
             instance_mask[center_y, center_x] = 1  # You can set any value here for instance id
 
         return semantic_mask, instance_mask
-
-    
-
-    # def filter_depth(
-    #     mask: np.ndarray, depth: np.ndarray, depth_threshold: Optional[float] = None
-    # ) -> np.ndarray:
-    #     """Filter object mask by depth.
-
-    #     Arguments:
-    #         mask: binary object mask of shape (height, width)
-    #         depth: depth map of shape (height, width)
-    #         depth_threshold: restrict mask to (depth median - threshold, depth median + threshold)
-    #     """
-    #     md = np.median(depth[mask == 1])  # median depth
-    #     if md == 0:
-    #         # Remove mask if more than half of points has invalid depth
-    #         filter_mask = np.ones_like(mask, dtype=bool)
-    #     elif depth_threshold is not None:
-    #         # Restrict objects to depth_threshold
-    #         filter_mask = (depth >= md + depth_threshold) | (depth <= md - depth_threshold)
-    #     else:
-    #         filter_mask = np.zeros_like(mask, dtype=bool)
-    #     mask_out = mask.copy()
-    #     mask_out[filter_mask] = 0.0
-
-    #     return mask_out
 
 
 

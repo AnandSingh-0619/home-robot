@@ -32,6 +32,12 @@ data/
 slurm_logs/
 slurm_logs/*err
 slurm_logs/*out
+Logs/
+Logs/*
+Logs/slurmLogs/*.err
+Logs/slurmLogs/*.out
+Logs/tensorLogs/*
+Logs/checkpoints/
 # Archive files
 *.pkl
 *.pcd
