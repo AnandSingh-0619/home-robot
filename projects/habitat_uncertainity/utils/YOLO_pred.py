@@ -137,9 +137,9 @@ class YOLOPerception(PerceptionModule):
                 semantic_mask, _ = self.overlay_masks(class_ids, input_boxes, (height, width))
 
             torch.cuda.empty_cache()
-            semantic_mask_resized = cv2.resize(semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+            # semantic_mask_resized = cv2.resize(semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
 
-            semantic_masks.append(semantic_mask_resized[:, :, np.newaxis])
+            # semantic_masks.append(semantic_mask_resized[:, :, np.newaxis])
 
         semantic_masks = np.array(semantic_masks)
         gc.collect()

@@ -5,7 +5,7 @@
 #SBATCH --nodes 1
 #SBATCH --cpus-per-task 10
 #SBATCH --ntasks-per-node 4
-#SBATCH --partition=overcap,kira-lab
+#SBATCH --partition=overcap
 #SBATCH --gpus a40:4
 #SBATCH --qos="long"
 #SBATCH --exclude=spd-13
@@ -21,9 +21,9 @@ ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 export CUDA_LAUNCH_BLOCKING=1
 
-CHECKPOINT_DIR="Logs/checkpoints/gaze/yolo_heatmap"
-TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/yolo_heatmap"
-LOG_DIR="Logs/logs/gaze/yolo_heatmap.log"
+CHECKPOINT_DIR="Logs/checkpoints/gaze/yolo_heatmap2"
+TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/yolo_heatmap2"
+LOG_DIR="Logs/logs/gaze/yolo_heatmap2.log"
 
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
