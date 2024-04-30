@@ -22,7 +22,7 @@ export MAIN_ADDR
 
 CHECKPOINT_DIR="Logs/checkpoints/gaze/gaze_heatmap"
 TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/gaze_heatmap"
-LOG_DIR="Logs/logs/gaze/gaze_heatmap.log"
+LOG_DIR="Logs/logs/gaze/gaze_heatmap1.log"
 
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
