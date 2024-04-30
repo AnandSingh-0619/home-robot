@@ -38,7 +38,7 @@ Logs/checkpoints/
 *.pkl
 *.pcd
 *.zip
-
+*.0
 # Visualizations
 *.ogv
 *.pcd
