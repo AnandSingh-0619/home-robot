@@ -317,8 +317,10 @@ class PPOyoloTrainer(PPOTrainer):
                 done_masks, 0.0
             )
             #YOLO Detection with Mobile SAM segmentations
-            segment_masks = self._segmentation.predict(batch)
-            
+            # profiling_wrapper.range_push("yolo_detector_step")
+            with g_timer.avg_time("trainer.yolo_detector_step"):
+                segment_masks = self._segmentation.predict(batch)
+            # profiling_wrapper.range_pop() 
             if("object_segmentation" in batch):
                 filtered_masks = []
                 class_ids = batch["yolo_object_sensor"].cpu().numpy().flatten()
