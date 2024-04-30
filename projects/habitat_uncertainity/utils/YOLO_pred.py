@@ -16,8 +16,8 @@ from home_robot.core.abstract_perception import PerceptionModule
 from home_robot.core.interfaces import Observations
 import torch
 from habitat.core.logging import logger
-from nvitop import Device
-import gc
+# from nvitop import Device
+# import gc
 PARENT_DIR = Path(__file__).resolve().parent
 MOBILE_SAM_CHECKPOINT_PATH = str(PARENT_DIR / "pretrained_wt" / "mobile_sam.pt")
 CLASSES = [
@@ -112,7 +112,7 @@ class YOLOPerception(PerceptionModule):
             image of shape (H, W, 3)
         """
         torch.cuda.empty_cache()
-        start_time = time.time()  
+        # start_time = time.time()  
         nms_threshold=0.8
             
         images_tensor = obs["head_rgb"] 
@@ -144,12 +144,12 @@ class YOLOPerception(PerceptionModule):
 
 
         semantic_masks = np.array(semantic_masks)
-        gc.collect()
+        # gc.collect()
         torch.cuda.empty_cache()
-        end_time = time.time()
-        duration = end_time - start_time
-        devices = Device.all() 
-        logger.info(f"Memory used {devices[0].memory_used_human()} GB. Dtetection execution time: {duration} seconds")
+        # end_time = time.time()
+        # duration = end_time - start_time
+        # devices = Device.all() 
+        # logger.info(f"Memory used {devices[0].memory_used_human()} GB. Dtetection execution time: {duration} seconds")
         return semantic_masks
     
     def overlay_masks(
