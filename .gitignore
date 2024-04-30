@@ -87,3 +87,6 @@ projects/habitat_ovmm/configs/agent/generated/*
 
 # Emacs
 *~
+tb/events.out.tfevents.1713992796.ephemeral-3.155324.0
+tb/events.out.tfevents.1713996290.ephemeral-3.161455.0
+tb/events.out.tfevents.1713996557.ephemeral-3.163562.0
