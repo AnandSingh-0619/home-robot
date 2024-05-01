@@ -12,8 +12,8 @@
 #SBATCH --requeue
 #SBATCH --signal=USR1@100
 
-export HABITAT_SIM_LOG=quiet
-export MAGNUM_LOG=quiet
+# export HABITAT_SIM_LOG=quiet
+# export MAGNUM_LOG=quiet
 export PYTHONPATH=~/flash/home-robot/projects/:$PYTHONPATH
 
 MAIN_ADDR=$(scontrol show hostnames "
