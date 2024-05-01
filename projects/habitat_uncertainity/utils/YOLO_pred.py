@@ -16,8 +16,6 @@ from home_robot.core.abstract_perception import PerceptionModule
 from home_robot.core.interfaces import Observations
 import torch
 from habitat.core.logging import logger
-# from nvitop import Device
-# import gc
 PARENT_DIR = Path(__file__).resolve().parent
 MOBILE_SAM_CHECKPOINT_PATH = str(PARENT_DIR / "pretrained_wt" / "mobile_sam.pt")
 CLASSES = [
@@ -60,15 +58,14 @@ class YOLOPerception(PerceptionModule):
         confidence_threshold: Optional[float] = 0.35,
         
     ):
-        """Loads a YOLO model for object detection and instance segmentation
+        """Loads YOLO-open world model for object detection and mobileSAM for segmentation
 
         Arguments:
-            yolo_model_id: one of "yolo_world/l" or "yolo_world/s" for large or small
             checkpoint_file: path to model checkpoint
             sem_gpu_id: GPU ID to load the model on, -1 for CPU
             verbose: whether to print out debug information
         """
-        yolo_model_id="yolo_world/s",
+
         self.verbose = verbose
         if checkpoint_file is None:
             checkpoint_file = str(
@@ -77,7 +74,7 @@ class YOLOPerception(PerceptionModule):
             )
         if self.verbose:
             print(
-                f"Loading YOLO model from {yolo_model_id} and MobileSAM with checkpoint={checkpoint_file}"   
+                f"Loading YOLO model {yolov8s-world} and MobileSAM with checkpoint={checkpoint_file}"   
             )
         self.model = YOLO(model='yolov8s-world.pt')
         vocab = CLASSES
@@ -87,8 +84,12 @@ class YOLOPerception(PerceptionModule):
             param.requires_grad = False
 
         self.confidence_threshold = confidence_threshold
-
+        self.sam_model = SAM(checkpoint_file)
+        # Freeze the SAM model's parameters
+        for param in self.sam_model.parameters():
+            param.requires_grad = False
         self.model.cuda()
+        self.sam_model.cuda()
         torch.cuda.empty_cache()
 
         
@@ -101,24 +102,20 @@ class YOLOPerception(PerceptionModule):
     ) -> Observations:
         """
         Arguments:
-            obs.rgb: image of shape (H, W, 3) (in RGB order - Detic expects BGR)
-            obs.depth: depth frame of shape (H, W), used for depth filtering
+            obs.rgb: image of shape (B, H, W, 3) (in RGB order)
             depth_threshold: if specified, the depth threshold per instance
 
         Returns:
-            obs.semantic: segmentation predictions of shape (H, W) with
-            indices in [0, num_sem_categories - 1]
-            obs.task_observations["semantic_frame"]: segmentation visualization
-            image of shape (H, W, 3)
+            semantic_masks: segmentation predictions of shape (B, H, W, 1) with each pixel representing class names
+
         """
         torch.cuda.empty_cache()
-        # start_time = time.time()  
-        nms_threshold=0.8
-            
+                
         images_tensor = obs["head_rgb"] 
         images = [images_tensor[i].cpu().numpy() for i in range(images_tensor.size(0))]   
 
         height, width, _ = images[0].shape
+        #Inference from Yolo-open world model 
         results = self.model(images, conf=self.confidence_threshold, stream=True, verbose=False)
 
         semantic_masks = []
@@ -134,43 +131,42 @@ class YOLOPerception(PerceptionModule):
                 semantic_mask = np.zeros((160, 120, 1))
             else:
                 class_ids = result.boxes.cls.cpu().numpy()
-                semantic_mask, _ = self.overlay_masks(class_ids, input_boxes, (height, width))
+                #Inference from mobileSAM model
+                sam_outputs = self.sam_model.predict(stream=True, source=img, bboxes=input_boxes, points=None, labels=None)
+                sam_output=next(sam_outputs)
+                result_masks=sam_output.masks
+                height, width, _ = img.shape
+                semantic_mask, instance_mask = self.overlay_masks(
+                    result_masks.data, class_id, (height, width)
+                )
 
             torch.cuda.empty_cache()
-            # semantic_mask_resized = cv2.resize(semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
-
-            # semantic_masks.append(semantic_mask_resized[:, :, np.newaxis])
             semantic_masks.append(semantic_mask)
 
 
         semantic_masks = np.array(semantic_masks)
-        # gc.collect()
         torch.cuda.empty_cache()
-        # end_time = time.time()
-        # duration = end_time - start_time
-        # devices = Device.all() 
-        # logger.info(f"Memory used {devices[0].memory_used_human()} GB. Dtetection execution time: {duration} seconds")
         return semantic_masks
     
-    def overlay_masks(
-        self,
-        class_idcs: np.ndarray,
-        boxes: np.ndarray,
-        shape: Tuple[int, int]
+    def overlay_masks(self,
+        masks: np.ndarray, class_idcs: np.ndarray, shape: Tuple[int, int]
     ) -> np.ndarray:
-        """Overlays the masks of objects based on bounding boxes."""
+        """Overlays the masks of objects
+        Masks are overlaid based on the order of class_idcs.
+        """
         semantic_mask = np.zeros((*shape, 1))
         instance_mask = np.zeros(shape)
 
-        for class_idx, box in zip(class_idcs, boxes):
-            x1, y1, x2, y2 = box
-            center_x = int((x1 + x2) / 2)
-            center_y = int((y1 + y2) / 2)
-            semantic_mask[center_y, center_x] = class_idx
-            instance_mask[center_y, center_x] = 1  # You can set any value here for instance id
+        for mask_idx, class_idx in enumerate(class_idcs):
+            if mask_idx < len(masks):
+                mask = masks[mask_idx].cpu().numpy()
+                semantic_mask[mask.astype(bool)] = class_idx 
+                instance_mask[mask.astype(bool)] = mask_idx
+            else:
+                break
+        del masks, class_idcs, shape
 
         return semantic_mask, instance_mask
-
 
 
 

@@ -14,7 +14,6 @@ from habitat_uncertainity.config import HabitatConfigPlugin
 from habitat_baselines.run import execute_exp
 from habitat_uncertainity.task.sensors import YOLOObjectSensor, YOLOStartReceptacleSensor, YOLOGoalReceptacleSensor
 from habitat_uncertainity.utils.YOLO_pred import YOLOPerception as YOLO_pred
-from habitat_uncertainity.models.yoloPointNavResNetPolicy import yoloPointNavResNetPolicy, yoloResNetEncoder
 from habitat_uncertainity.trainers.ppo_trainer_yolo import PPOyoloTrainer
 
 def register_plugins():
