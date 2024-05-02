@@ -37,7 +37,6 @@ To train on a single machine use the following script:
 export MAGNUM_LOG=quiet
 export HABITAT_SIM_LOG=quiet
 export PYTHONPATH=~/flash/home-robot/projects/:$PYTHONPATH
-set -x
 conda deactivate
 conda activate home-robot
 cd ~/flash/home-robot 
@@ -70,7 +69,6 @@ To run on a cluster with SLURM using distributed training run the following scri
 export MAGNUM_LOG=quiet
 export HABITAT_SIM_LOG=quiet
 export PYTHONPATH=~/flash/home-robot/projects/:$PYTHONPATH
-set -x
 conda deactivate
 conda activate home-robot
 cd ~/flash/home-robot 
