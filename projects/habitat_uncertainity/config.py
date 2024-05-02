@@ -19,22 +19,6 @@ cs = ConfigStore.instance()
 ##########################################################################
 # Sensors
 ##########################################################################
-# @dataclass
-# class YOLOSensorConfig(LabSensorConfig):
-#     type: str = "YOLOSensor"
-
-# @dataclass
-# class YOLOObjectSegmentationSensorConfig(LabSensorConfig):
-#     type: str = "YOLOObjectSegmentationSensor"
-
-# @dataclass
-# class StartYOLORecepSegmentationSensorConfig(YOLOObjectSegmentationSensorConfig):
-#     type: str = "StartYOLORecepSegmentationSensor"
-
-# @dataclass
-# class GoalYOLORecepSegmentationSensorConfig(YOLOObjectSegmentationSensorConfig):
-#     type: str = "GoalYOLORecepSegmentationSensor"
-
 @dataclass
 class YOLOObjectSensorConfig(LabSensorConfig):
     type: str = "YOLOObjectSensor"
@@ -49,32 +33,7 @@ class YOLOGoalReceptacleSensorConfig(YOLOObjectSensorConfig):
  # -----------------------------------------------------------------------------
 # Register configs in the Hydra ConfigStore
 # -----------------------------------------------------------------------------
-# cs.store(
-#     package="habitat.task.lab_sensors.yolo_segmentation_sensor",
-#     group="habitat/task/lab_sensors",
-#     name="yolo_segmentation_sensor",
-#     node=YOLOSensorConfig,
-# )
 
-# cs.store(
-#     package="habitat.task.lab_sensors.yolo_object_segmentation_sensor",
-#     group="habitat/task/lab_sensors",
-#     name="yolo_object_segmentation_sensor",
-#     node=YOLOObjectSegmentationSensorConfig,
-# )
-
-# cs.store(
-#     package="habitat.task.lab_sensors.start_yolo_recep_segmentation_sensor",
-#     group="habitat/task/lab_sensors",
-#     name="start_yolo_recep_segmentation_sensor",
-#     node=StartYOLORecepSegmentationSensorConfig,
-# )
-# cs.store(
-#     package="habitat.task.lab_sensors.goal_yolo_recep_segmentation_sensor",
-#     group="habitat/task/lab_sensors",
-#     name="goal_yolo_recep_segmentation_sensor",
-#     node=GoalYOLORecepSegmentationSensorConfig,
-# )
 
 cs.store(
     package="habitat.task.lab_sensors.yolo_object_sensor",
