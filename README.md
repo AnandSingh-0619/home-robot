@@ -159,13 +159,6 @@ python projects/real_world_ovmm/tests/test_heuristic_policies.py
 
 See our [troubleshooting doc](docs/troubleshooting.md) for some common errors.
 
-## Change Log for Yolo-open world
-head panoptic sensor: gives pixel-wise semantic segmentation of the agent's observation
-Replaced this with a Detector (YOLO-Open World) and Segmentation model (MobileSAM)
-
-New Trainer:
-In DDPPO algorithm, the agents collects observation in the rollout stage and store the obs, rewards, and while updating the policy, uses these rollout storage to calculate losses.
-Created a new trainer ppo_trainer_yolo that takes these input obs from various sensor, calculates the semantic mask and stores them in required output as object segmentation sensor or receptacle segmentation sensor.
 
 ## Code Contribution
 
