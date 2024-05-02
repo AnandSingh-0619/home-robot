@@ -93,6 +93,9 @@ srun python -um habitat_uncertainity.run \
 
 Refer to the provided  [job.sh](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/job.sh) for detailed cluster job submission instructions.
 
+## Tensorboard Log
+Sample performance comparison showing FPS improvement
+![fps_comparison](fps_comparison.png)
 
 ## Disclaimer
 This project is currently under development, and the code is primarily tested with the gaze skill.
