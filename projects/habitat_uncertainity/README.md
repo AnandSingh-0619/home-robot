@@ -23,7 +23,7 @@ The setup involves setting up the Home-Robot framework up to step 2 from the Hab
 
 These sensors play a crucial role in improving segmentation in the environment by returning the target object/receptacle class ID for filtering masks, a functionality not provided by existing sensors. They allow the agent to focus on specific objects or receptacles relevant to the task by filtering the masks obtained from the YOLO perception system.  
 
-### New Trainer: [ppo_trainer_yolo](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/trainers/ppo_trainer_yolo.py)
+### New Trainer: ([ppo_trainer_yolo](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/trainers/ppo_trainer_yolo.py))
 The _collect_environment_result method in the trainer gathers observations, rewards, and other data from the environment. It utilizes information from the new YOLOObjectSensor, YOLOStartReceptacleSensor, and YOLOGoalReceptacleSensor sensors to filter masks for various segmentation tasks, including object segmentation, start receptacle segmentation, goal receptacle segmentation, and navigation goal segmentation. Additionally, it caches predictions from the frozen YOLO model in the rollout storage to reduce compute costs during new policy action evaluation.
 
 ## Training DD-PPO skills
