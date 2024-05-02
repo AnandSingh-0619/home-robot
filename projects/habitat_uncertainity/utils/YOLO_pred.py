@@ -154,6 +154,15 @@ class YOLOPerception(PerceptionModule):
     ) -> np.ndarray:
         """Overlays the masks of objects
         Masks are overlaid based on the order of class_idcs.
+
+        Arguments:
+            masks: The masks to overlay
+            class_idcs: The class indices corresponding to the masks
+            shape: The shape of the output masks
+
+        Returns:
+            semantic_mask: The overlayed semantic mask
+            instance_mask: The overlayed instance mask
         """
         semantic_mask = np.zeros((*shape, 1))
         instance_mask = np.zeros(shape)

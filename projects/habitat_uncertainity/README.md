@@ -9,7 +9,7 @@ Setup from [README](https://github.com/facebookresearch/home-robot/tree/main/pro
 
 ### Updated Head Panoptic Sensor
 
-1. Replaced with a Detector (YOLO-Open World) and Segmentation model (MobileSAM) for improved performance and functionality.
+1. Replaced Ground Truth segmentation with a combination of Detector (YOLO-Open World) and Segmentation model (MobileSAM) for improved performance and functionality.
 [YOLO_pred](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/utils/YOLO_pred.py)
 2. The new setup provides pixel-wise semantic segmentation of the agent's observation.
 
@@ -36,7 +36,7 @@ To train on a single machine use the following script:
 
 export MAGNUM_LOG=quiet
 export HABITAT_SIM_LOG=quiet
-
+export PYTHONPATH=~/flash/home-robot/projects/:$PYTHONPATH
 set -x
 conda deactivate
 conda activate home-robot
