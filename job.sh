@@ -32,8 +32,8 @@ conda deactivate
 conda activate home-robot
 cd ~/flash/home-robot 
 
-srun python -um habitat_uncertainity.run \
-    --exp-config=projects/habitat_uncertainity/config/yolo_rl_skill.yaml \
+srun python -um habitat_uncertainty.run \
+    --exp-config=projects/habitat_uncertainty/config/yolo_rl_skill.yaml \
     --run-type=train \
     benchmark/ovmm=gaze \
     habitat_baselines.num_environments=32 \

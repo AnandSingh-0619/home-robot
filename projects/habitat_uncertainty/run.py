@@ -9,12 +9,12 @@ import torch
 from habitat import get_config
 from habitat.config import read_write
 from habitat.config.default_structured_configs import register_hydra_plugin
-from habitat_uncertainity.config import HabitatConfigPlugin
+from habitat_uncertainty.config import HabitatConfigPlugin
 
 from habitat_baselines.run import execute_exp
-from habitat_uncertainity.task.sensors import YOLOObjectSensor, YOLOStartReceptacleSensor, YOLOGoalReceptacleSensor
-from habitat_uncertainity.utils.YOLO_pred import YOLOPerception as YOLO_pred
-from habitat_uncertainity.trainers.ppo_trainer_yolo import PPOyoloTrainer
+from habitat_uncertainty.task.sensors import YOLOObjectSensor, YOLOStartReceptacleSensor, YOLOGoalReceptacleSensor
+from habitat_uncertainty.utils.YOLO_pred import YOLOPerception as YOLO_pred
+from habitat_uncertainty.trainers.ppo_trainer_yolo import PPOyoloTrainer
 
 def register_plugins():
     register_hydra_plugin(HabitatConfigPlugin)
@@ -37,7 +37,7 @@ def main():
     parser.add_argument(
         "--exp-config",
         "-e",
-        default='projects/habitat_uncertainity/config/yolo_rl_skill.yaml',
+        default='projects/habitat_uncertainty/config/yolo_rl_skill.yaml',
         type=str,
         required=False,
         help="path to config yaml containing info about experiment",
