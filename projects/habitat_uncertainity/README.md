@@ -10,13 +10,13 @@ The setup involves setting up the Home-Robot framework up to step 2 from the Hab
 
 ## Change Log 
 
-### Updated Head Panoptic Sensor with YOLO [YOLO_pred](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/utils/YOLO_pred.py)
+### Updated Head Panoptic Sensor with YOLO ([YOLO_pred](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/utils/YOLO_pred.py))
 
 1. Replaced Ground Truth segmentation with a combination of Detector (YOLO-Open World) and Segmentation model (MobileSAM) for improved performance and functionality in real world.
 
 2. The new setup provides pixel-wise semantic segmentation of the agent's observation.
 
-### New Sensors [sensors](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/task/sensors.py)
+### New Sensors ([sensors](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/task/sensors.py))
 1. YOLOObjectSensor: This sensor detects objects in the environment using YOLO detection and provides the object category as an observation.
 2. YOLOStartReceptacleSensor & YOLOGoalReceptacleSensor: Specifically detect start and goal receptacles using YOLO, aiding in task-oriented perception.
 
@@ -38,7 +38,7 @@ cd /path/to/home-robot/src/third_party/habitat-lab/
 # create soft link to data/ directory
 ln -s /path/to/home-robot/data data
 ```
-
+Base config file used for trainig is [`yolo_rl_skill`](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/config/yolo_rl_skill.yaml) 
 To train on a single machine use the following script:
 ```
 #/bin/bash
