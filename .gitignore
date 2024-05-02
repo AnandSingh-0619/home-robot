@@ -100,3 +100,4 @@ tb/
 *.0
 
 !tb/ovmm_yolo_4GPUs_32ENV/events.out.tfevents.1712895070.cheetah.2972776.0
+!tb/ovmm_og_4GPUs_32ENV/events.out.tfevents.1712633263.tachikoma.1936826.0
