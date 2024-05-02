@@ -9,15 +9,15 @@ Setup from [README](https://github.com/facebookresearch/home-robot/tree/main/pro
 
 ### Updated Head Panoptic Sensor
 
-    Replaced with a Detector (YOLO-Open World) and Segmentation model (MobileSAM) for improved performance and functionality.
-    [YOLO_pred](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/utils/YOLO_pred.py)
-    The new setup provides pixel-wise semantic segmentation of the agent's observation.
+1. Replaced with a Detector (YOLO-Open World) and Segmentation model (MobileSAM) for improved performance and functionality.
+[YOLO_pred](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/utils/YOLO_pred.py)
+2. The new setup provides pixel-wise semantic segmentation of the agent's observation.
 
 ### New Trainer: ppo_trainer_yolo
 
-    In the DDPPO algorithm, the agent collects observations in the rollout stage and stores the observations, rewards, and other relevant data.
-    The [ppo_trainer_yolo](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/trainers/ppo_trainer_yolo.py) has been created to handle these input observations from various sensors.
-    This trainer calculates the semantic mask and stores them in the required output as object segmentation sensor or receptacle segmentation sensor.
+1. In the DDPPO algorithm, the agent collects observations in the rollout stage and stores the observations, rewards, and other relevant data.
+2. The [ppo_trainer_yolo](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/trainers/ppo_trainer_yolo.py) has been created to handle these input observations from various sensors.
+3. This trainer calculates the semantic mask and stores them in the required output as object segmentation sensor or receptacle segmentation sensor.
 
 
 ## Training DD-PPO skills
