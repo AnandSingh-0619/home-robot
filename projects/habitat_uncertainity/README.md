@@ -94,7 +94,7 @@ srun python -um habitat_uncertainity.run \
 Refer to the provided  [job.sh](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/job.sh) for detailed cluster job submission instructions.
 
 ## Tensorboard Log
-Sample performance comparison showing FPS improvement.
+Sample performance comparison showing FPS.
 
 ![fps_comparison](https://drive.google.com/uc?export=view&id=1WayMUi1FTZWsDtTC5WXsGv3EtbDt6iUA)
 
