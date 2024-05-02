@@ -91,8 +91,7 @@ srun python -um habitat_uncertainity.run \
 Refer to the provided  [job.sh](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/job.sh) for detailed cluster job submission instructions.
 
 ## Tensorboard Log
-Sample performance comparison showing FPS.
-
+This TensorBoard log demonstrates the performance comparison in terms of Frames Per Second (FPS) achieved during training  for the `gaze` task with [config](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/config/yolo_rl_skill.yaml) using 4 A40 GPUs with 32 environments on each. 
 ![fps_comparison](https://drive.google.com/uc?export=view&id=1WayMUi1FTZWsDtTC5WXsGv3EtbDt6iUA)
 
 ## Disclaimer
