@@ -17,17 +17,14 @@ The setup involves setting up the Home-Robot framework up to step 2 from the Hab
 2. The new setup provides pixel-wise semantic segmentation of the agent's observation.
 
 ### New Sensors ([sensors](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/task/sensors.py))
-1. YOLOObjectSensor: This sensor detects objects in the environment using YOLO detection and provides the object category as an observation.
-2. YOLOStartReceptacleSensor & YOLOGoalReceptacleSensor: Specifically detect start and goal receptacles using YOLO, aiding in task-oriented perception.
+1. YOLOObjectSensor: This sensor returns the target object class id in the current episode of training environment as an observation. It enables the agent to focus on detecting and interacting with specific objects relevant to the task.
 
-These sensors were added to improve segmentation in the environment. They help filter the masks obtained from the YOLO perception system, allowing the agent to focus on specific objects or receptacles relevant to the task. The filtered masks are then used for segmentation, focusing the agent's attention on relevant objects and receptacles for the task. 
+2. YOLOStartReceptacleSensor & YOLOGoalReceptacleSensor: These sensors specifically return the start and goal receptacle class ids, aiding in task-oriented perception. They help the agent identify and navigate to receptacles essential for task completion.
 
-### New Trainer: ppo_trainer_yolo
+These sensors play a crucial role in improving segmentation in the environment by returning the target object/receptacle class ID for filtering masks, a functionality not provided by existing sensors. They allow the agent to focus on specific objects or receptacles relevant to the task by filtering the masks obtained from the YOLO perception system.  
 
-1. In the DDPPO algorithm, the agent collects observations in the rollout stage and stores the observations, rewards, and other relevant data. The ppo_trainer_yolo trainer leverages visual information provided by the YOLOObjectSensor, YOLOStartReceptacleSensor, and YOLOGoalReceptacleSensor sensors, enhancing the agent's ability to learn tasks requiring understanding and interacting with objects and receptacles in the environment.
-
-2. The [ppo_trainer_yolo](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/trainers/ppo_trainer_yolo.py) has been created to handle these input observations from various sensors.The trainer efficiently calculates semantic masks from input observations, storing them in the required output format for object segmentation sensor or receptacle segmentation sensor. 
-
+### New Trainer: [ppo_trainer_yolo](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainity/trainers/ppo_trainer_yolo.py)
+The _collect_environment_result method in the trainer gathers observations, rewards, and other data from the environment. It utilizes information from the new YOLOObjectSensor, YOLOStartReceptacleSensor, and YOLOGoalReceptacleSensor sensors to filter masks for various segmentation tasks, including object segmentation, start receptacle segmentation, goal receptacle segmentation, and navigation goal segmentation. Additionally, it caches predictions from the frozen YOLO model in the rollout storage to reduce compute costs during new policy action evaluation.
 
 ## Training DD-PPO skills
 
