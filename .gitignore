@@ -98,3 +98,5 @@ tb/
 *.err
 *.out
 *.0
+
+!tb/ovmm_yolo_4GPUs_32ENV/events.out.tfevents.1712895070.cheetah.2972776.0
