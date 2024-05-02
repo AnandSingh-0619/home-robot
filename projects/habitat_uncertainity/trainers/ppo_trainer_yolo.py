@@ -4,42 +4,24 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-import contextlib
 import os
 import random
 import time
 from collections import defaultdict, deque
 from typing import Any, Dict, List, Optional, Set
 
-import hydra
 import numpy as np
 import torch
-import tqdm
 from omegaconf import OmegaConf
 
 from habitat import VectorEnv, logger
 from habitat.config import read_write
-from habitat.config.default import get_agent_config
-from habitat.gym.gym_definitions import make_gym_from_config
-from habitat.tasks.rearrange.rearrange_sensors import GfxReplayMeasure
-from habitat.tasks.rearrange.utils import write_gfx_replay
+
 from habitat.utils import profiling_wrapper
-from habitat.utils.visualizations.utils import (
-    observations_to_image,
-    overlay_frame,
-)
-from habitat_baselines.common import VectorEnvFactory
-from habitat_baselines.common.base_trainer import BaseRLTrainer
 from habitat_baselines.common.baseline_registry import baseline_registry
 from habitat_baselines.common.env_spec import EnvironmentSpec
 from habitat_baselines.common.obs_transformers import (
     apply_obs_transforms_batch,
-    apply_obs_transforms_obs_space,
-    get_active_obs_transforms,
-)
-from habitat_baselines.common.tensorboard_utils import (
-    TensorboardWriter,
-    get_writer,
 )
 from habitat_baselines.rl.ddppo.algo import DDPPO  # noqa: F401.
 from habitat_baselines.rl.ddppo.ddp_utils import (
@@ -53,10 +35,6 @@ from habitat_baselines.rl.ddppo.ddp_utils import (
     save_resume_state,
 )
 from habitat_baselines.rl.ddppo.policy import PointNavResNetNet
-from habitat_baselines.rl.ppo.agent_access_mgr import AgentAccessMgr
-from habitat_baselines.rl.ppo.single_agent_access_mgr import (  # noqa: F401.
-    SingleAgentAccessMgr,
-)
 from habitat_baselines.utils.common import (
     batch_obs,
     generate_video,
@@ -73,9 +51,8 @@ from habitat_baselines.utils.timing import g_timer
 from habitat_uncertainity.utils.YOLO_pred import YOLOPerception as YOLO_pred
 from habitat_baselines import PPOTrainer
 from habitat.core.logging import logger
-import scipy.ndimage as ndi
-import matplotlib.pyplot as plt
 
+# List of classes for object detection and segmentation
 CLASSES = [
     "action_figure", "android_figure", "apple", "backpack", "baseballbat",
     "basket", "basketball", "bath_towel", "battery_charger", "board_game",
@@ -105,6 +82,7 @@ CLASSES = [
     "washer_dryer"
 ]
 
+# Register PPOyoloTrainer as a trainer for the specified tasks
 @baseline_registry.register_trainer(name="ddppo_yolo")
 @baseline_registry.register_trainer(name="ppo_yolo")
 class PPOyoloTrainer(PPOTrainer):
@@ -320,8 +298,9 @@ class PPOyoloTrainer(PPOTrainer):
 
             with g_timer.avg_time("trainer.yolo_detector_step"):
                 segment_masks = self._segmentation.predict(batch)
-
+            # Process and filter segment masks for different segmentation types
             if("object_segmentation" in batch):
+                # Filter masks for object segmentation
                 filtered_masks = []
                 class_ids = batch["yolo_object_sensor"].cpu().numpy().flatten()
                 class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
@@ -330,6 +309,7 @@ class PPOyoloTrainer(PPOTrainer):
                 batch["object_segmentation"] = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
 
             if("start_recep_segmentation" in batch):
+                # Filter masks for start receptacle segmentation
                 filtered_masks = []
                 class_ids = batch["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
                 class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
@@ -338,6 +318,7 @@ class PPOyoloTrainer(PPOTrainer):
                 batch["start_recep_segmentation"] = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
             
             if("goal_recep_segmentation" in batch):
+                # Filter masks for goal receptacle segmentation
                 filtered_masks = []
                 class_ids = batch["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
                 class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
@@ -348,6 +329,7 @@ class PPOyoloTrainer(PPOTrainer):
             if("ovmm_nav_goal_segmentation" in batch):
                     
                 if batch["ovmm_nav_goal_segmentation"].shape[3] == 2:
+                    # If there are two segments, filter masks for each
                     filtered_masks = []
                     class_ids = batch["yolo_object_sensor"].cpu().numpy().flatten()
                     class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
@@ -369,6 +351,7 @@ class PPOyoloTrainer(PPOTrainer):
                     batch["ovmm_nav_goal_segmentation"] =torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
             
             if("receptacle_segmentation_sensor" in batch):
+                # Filter masks for receptacle segmentation
                 filtered_masks = []
                 filtered_masks = np.where(segment_masks > 127, 1, 0)
                 batch["receptacle_segmentation_sensor"] = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))

@@ -35,7 +35,7 @@ cd ~/flash/home-robot
 srun python -um habitat_uncertainity.run \
     --exp-config=projects/habitat_uncertainity/config/yolo_rl_skill.yaml \
     --run-type=train \
-    benchmark.ovmm=gaze \
+    benchmark/ovmm=gaze \
     habitat_baselines.num_environments=32 \
     habitat_baselines.tensorboard_dir=${TENSORBOARD_DIR} \
     habitat_baselines.checkpoint_folder=${CHECKPOINT_DIR} \
