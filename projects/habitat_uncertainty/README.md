@@ -1,4 +1,4 @@
-# Habitat Uncertainity
+# Habitat Uncertainty
 This project extends the Home-Robot (Habitat-OVMM) framework by integrating the YOLO object detection system. This integration aims to improve the robot's ability to perform manipulation tasks in real environments.
 
 [README](https://github.com/facebookresearch/home-robot/tree/main/projects/habitat_ovmm) 
@@ -17,7 +17,7 @@ The setup involves setting up the Home-Robot framework up to step 2 from the Hab
 2. The new setup provides pixel-wise semantic segmentation of the agent's observation.
 
 ### New Sensors ([sensors](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainty/task/sensors.py))
-1. YOLOObjectSensor: This sensor returns the target object [class id](https://github.com/AnandSingh-0619/home-robot/blob/3c10988a465a89837838e42bbae53ae4a6df79f0/projects/habitat_uncertainity/utils/YOLO_pred.py#L22C1-L49C2) in the current episode of training environment as an observation. It enables the agent to focus on detecting and interacting with specific objects relevant to the task.
+1. YOLOObjectSensor: This sensor returns the target object [class id](https://github.com/AnandSingh-0619/home-robot/blob/3c10988a465a89837838e42bbae53ae4a6df79f0/projects/habitat_uncertainty/utils/YOLO_pred.py#L22C1-L49C2) in the current episode of training environment as an observation. It enables the agent to focus on detecting and interacting with specific objects relevant to the task.
 
 2. YOLOStartReceptacleSensor & YOLOGoalReceptacleSensor: These sensors specifically return the start and goal receptacle class ids, aiding in task-oriented perception. They help the agent identify and navigate to receptacles essential for task completion.
 
@@ -91,7 +91,7 @@ srun python -um habitat_uncertainty.run \
 Refer to the provided  [job.sh](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/job.sh) for detailed cluster job submission instructions.
 
 ## Tensorboard Log
-This TensorBoard log demonstrates the performance comparison in terms of Frames Per Second (FPS) achieved during training  for the `gaze` task with [config](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainty/config/yolo_rl_skill.yaml) using 4 A40 GPUs with 32 environments on each. 
+This TensorBoard log demonstrates the performance comparison in terms of Frames Per Second (FPS) achieved during training  for the `gaze` task with [config](https://github.com/AnandSingh-0619/home-robot/blob/yolo-sam/projects/habitat_uncertainty/config/yolo_rl_skill.yaml) using 4 A40 GPUs with 32 environments on each. Here is the [tensorboard log](https://drive.google.com/file/d/1uqn-xrl-ivIK4tuDjqxO13tBhhuo1MNI/view?usp=sharing)
 ![fps_comparison](https://drive.google.com/uc?export=view&id=1WayMUi1FTZWsDtTC5WXsGv3EtbDt6iUA)
 
 ## Disclaimer
