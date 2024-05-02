@@ -12,6 +12,7 @@ import torch
 from pathlib import Path
 from typing import List, Optional, Tuple
 from ultralytics import YOLO
+from ultralytics import SAM
 from home_robot.core.abstract_perception import PerceptionModule
 from home_robot.core.interfaces import Observations
 import torch
@@ -74,7 +75,7 @@ class YOLOPerception(PerceptionModule):
             )
         if self.verbose:
             print(
-                f"Loading YOLO model {yolov8s-world} and MobileSAM with checkpoint={checkpoint_file}"   
+                f"Loading YOLO model yolov8s-world and MobileSAM with checkpoint={checkpoint_file}"   
             )
         self.model = YOLO(model='yolov8s-world.pt')
         vocab = CLASSES
@@ -132,12 +133,12 @@ class YOLOPerception(PerceptionModule):
             else:
                 class_ids = result.boxes.cls.cpu().numpy()
                 #Inference from mobileSAM model
-                sam_outputs = self.sam_model.predict(stream=True, source=img, bboxes=input_boxes, points=None, labels=None)
+                sam_outputs = self.sam_model.predict(stream=True, source=img, bboxes=input_boxes, points=None, labels=None, verbose=False)
                 sam_output=next(sam_outputs)
                 result_masks=sam_output.masks
                 height, width, _ = img.shape
                 semantic_mask, instance_mask = self.overlay_masks(
-                    result_masks.data, class_id, (height, width)
+                    result_masks.data, class_ids, (height, width)
                 )
 
             torch.cuda.empty_cache()

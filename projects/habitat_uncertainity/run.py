@@ -96,59 +96,7 @@ def main():
 
     config = get_config(args.exp_config, args.opts)
 
-    with read_write(config):
-        edit_config(config, args)
-
-    # YOLO_pred(
-    #         sem_gpu_id =0,
-    #         verbose= False
-    #         )
     execute_exp(config, "train")
-
-def edit_config(config, args):
-    # config.habitat.task.lab_sensors.pop("object_segmentation_sensor")
-    # config.habitat.task.lab_sensors.pop("start_recep_segmentation_sensor")
-    # if not hasattr(config.habitat.task.lab_sensors, "yolo_object_segmentation"):
-    #     config.habitat.task.lab_sensors.update(
-    #         {"yolo_object_segmentation": YOLO_ObjectSegmentationSensorConfig()}
-    #     )
-    if args.debug:
-        assert osp.isdir(os.environ["JUNK"]), (
-            "Environment variable directory $JUNK does not exist "
-            f"(Current value: {os.environ['JUNK']})"
-        )
-
-        # Remove resume state in junk if training, so we don't resume from it
-        resume_state_path = osp.join(os.environ["JUNK"], ".habitat-resume-state.pth")
-        if args.run_type == "train" and osp.isfile(resume_state_path):
-            print(
-                "Removing junk resume state file:",
-                osp.abspath(resume_state_path),
-            )
-            os.remove(resume_state_path)
-
-        config.habitat_baselines.tensorboard_dir = os.environ["JUNK"]
-        config.habitat_baselines.video_dir = os.environ["JUNK"]
-        config.habitat_baselines.checkpoint_folder = os.environ["JUNK"]
-        config.habitat_baselines.log_file = osp.join(os.environ["JUNK"], "junk.log")
-        config.habitat_baselines.load_resume_state_config = False
-
-    if args.debug_datapath:
-        # Only load one scene for faster debugging
-        scenes = "1UnKg1rAb8A" if args.run_type == "train" else "4ok3usBNeis"
-        config.habitat.dataset.content_scenes = [scenes]
-
-    if args.single_env:
-        config.habitat_baselines.num_environments = 1
-
-    if args.eval_analysis:
-        from habitat.config.default_structured_configs import (
-            HabitatSimSemanticSensorConfig,
-        )
-
-        config.habitat.simulator.agents.main_agent.sim_sensors.update(
-            {"semantic_sensor": HabitatSimSemanticSensorConfig(height=640, width=360)}
-        )
 
 
 if __name__ == "__main__":
