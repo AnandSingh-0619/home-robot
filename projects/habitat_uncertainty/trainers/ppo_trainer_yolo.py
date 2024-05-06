@@ -48,7 +48,7 @@ from habitat_baselines.utils.info_dict import (
     extract_scalars_from_infos,
 )
 from habitat_baselines.utils.timing import g_timer
-from habitat_uncertainity.utils.YOLO_pred import YOLOPerception as YOLO_pred
+from habitat_uncertainty.utils.YOLO_pred import YOLOPerception as YOLO_pred
 from habitat_baselines import PPOTrainer
 from habitat.core.logging import logger
 
