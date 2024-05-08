@@ -1,6 +1,21 @@
 # @package _global_
 
 defaults:
+  - /habitat/task/lab_sensors:
+    - target_start_sensor
+    - joint_sensor
+    - joint_velocity_sensor
+    - is_holding_sensor
+    - end_effector_sensor
+    - relative_resting_pos_sensor
+    - object_category_sensor
+    - object_segmentation_sensor
+    - object_embedding_sensor
+    - start_recep_segmentation_sensor
+    - start_receptacle_sensor
+    - yolo_object_sensor
+    - yolo_start_receptacle_sensor
+    - yolo_goal_receptacle_sensor
   - /benchmark/ovmm: gaze
   - /habitat_baselines: habitat_baselines_rl_config_base
   - /habitat/simulator/sim_sensors@habitat.simulator.agents.main_agent.sim_sensors.head_rgb_sensor: head_rgb_sensor
@@ -8,25 +23,7 @@ defaults:
     - resize_shortest_edge_base
     - center_cropper_base
   # - /habitat/simulator/sim_sensors@habitat_baselines.eval.extra_sim_sensors.third_rgb_sensor: third_rgb_sensor
-  # - /habitat/task/lab_sensors:
-  #   - target_start_sensor
-  #   - joint_sensor
-  #   - joint_velocity_sensor
-  #   - is_holding_sensor
-  #   - end_effector_sensor
-  #   - relative_resting_pos_sensor
-  #   - object_category_sensor
-  #   - object_segmentation_sensor
-  #   - object_embedding_sensor
-  #   - start_recep_segmentation_sensor
-  #   - start_receptacle_sensor
-  #   - yolo_object_sensor
-  #   - yolo_start_receptacle_sensor
-  #   - yolo_goal_receptacle_sensor
-  #   - ovmm_nav_goal_segmentation_sensor
-  #   - receptacle_segmentation_sensor
-  #   - robot_start_gps_sensor
-  #   - robot_start_compass_sensor
+
   - _self_
 
 habitat:

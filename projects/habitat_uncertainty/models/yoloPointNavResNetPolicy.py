@@ -43,8 +43,8 @@ from habitat_baselines.rl.models.rnn_state_encoder import (
 )
 from habitat_baselines.rl.ppo import Net, NetPolicy
 from habitat_baselines.utils.common import get_num_actions
-from habitat_uncertainity.utils.YOLO_pred import YOLOPerception as YOLO_pred
-from habitat_uncertainity.task.sensors import (
+from habitat_uncertainty.utils.YOLO_pred import YOLOPerception as YOLO_pred
+from habitat_uncertainty.task.sensors import (
     YOLOObjectSensor,
     YOLOStartReceptacleSensor,
     YOLOGoalReceptacleSensor,

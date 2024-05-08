@@ -70,7 +70,7 @@ from habitat_baselines.utils.info_dict import (
     extract_scalars_from_infos,
 )
 from habitat_baselines.utils.timing import g_timer
-from habitat_uncertainity.utils.YOLO_pred import YOLOPerception as YOLO_pred
+from habitat_uncertainty.utils.YOLO_pred import YOLOPerception as YOLO_pred
 from habitat_baselines import PPOTrainer
 from habitat.core.logging import logger
 import scipy.ndimage as ndi
@@ -248,6 +248,7 @@ class PPOyoloTrainer(PPOTrainer):
             lambda: deque(maxlen=self._ppo_cfg.reward_window_size)
         )
         self._segmentation = YOLO_pred()
+        self.segment_masks = np.zeros((32, 160, 120, 1))
         self.t_start = time.time()
 
     
@@ -316,16 +317,17 @@ class PPOyoloTrainer(PPOTrainer):
             self.current_episode_reward[env_slice].masked_fill_(
                 done_masks, 0.0
             )
+
+            if buffer_index ==0:
             #YOLO Detection with Mobile SAM segmentations
-            # profiling_wrapper.range_push("yolo_detector_step")
-            with g_timer.avg_time("trainer.yolo_detector_step"):
-                segment_masks = self._segmentation.predict(batch)
-            # profiling_wrapper.range_pop() 
+                with g_timer.avg_time("trainer.yolo_detector_step"):
+                    self.segment_masks = self._segmentation.predict(batch)
+
             if("object_segmentation" in batch):
                 filtered_masks = []
                 class_ids = batch["yolo_object_sensor"].cpu().numpy().flatten()
                 class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
                 sigma = 8.0  # Sigma value for the Gaussian filter
                 masks = []
                 for mask in filtered_masks:
@@ -354,7 +356,7 @@ class PPOyoloTrainer(PPOTrainer):
                 filtered_masks = []
                 class_ids = batch["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
                 class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
                 sigma = 8.0  # Sigma value for the Gaussian filter
                 masks = []
                 for mask in filtered_masks:
@@ -383,7 +385,7 @@ class PPOyoloTrainer(PPOTrainer):
                 filtered_masks = []
                 class_ids = batch["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
                 class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
                 # for class_id in class_ids:
                 #     if (segment_masks == class_id).any():
                 #         logger.info(f"Receptacle Detected: {CLASSES[class_id]}")
@@ -397,13 +399,13 @@ class PPOyoloTrainer(PPOTrainer):
                     filtered_masks = []
                     class_ids = batch["yolo_object_sensor"].cpu().numpy().flatten()
                     class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                    filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                    filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
                     obs_k1 =torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
 
                     filtered_masks = []
                     class_ids = batch["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
                     class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                    filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                    filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
                     obs_k2 =torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
                     batch["ovmm_nav_goal_segmentation"] = torch.cat((obs_k1, obs_k2), dim=3)
 
@@ -411,12 +413,12 @@ class PPOyoloTrainer(PPOTrainer):
                     filtered_masks = []
                     class_ids = observations["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
                     class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                    filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
+                    filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
                     batch["ovmm_nav_goal_segmentation"] =torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
             
             if("receptacle_segmentation_sensor" in batch):
                 filtered_masks = []
-                filtered_masks = np.where(segment_masks > 127, 1, 0)
+                filtered_masks = np.where(self.segment_masks > 127, 1, 0)
                 batch["receptacle_segmentation_sensor"] = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
             
         if self._is_static_encoder:
