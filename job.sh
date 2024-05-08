@@ -20,9 +20,9 @@ MAIN_ADDR=$(scontrol show hostnames "
 ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 
-CHECKPOINT_DIR="Logs/checkpoints/gaze/gaze_og"
-TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/gaze_og"
-LOG_DIR="Logs/logs/gaze/gaze_og.log"
+CHECKPOINT_DIR="Logs/checkpoints/gaze/gaze_hmap_new"
+TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/gaze_hmap_new"
+LOG_DIR="Logs/logs/gaze/gaze_hmap_new.log"
 
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
