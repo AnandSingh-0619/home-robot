@@ -9,20 +9,20 @@
 #SBATCH --gpus a40:4
 #SBATCH --qos="long"
 #SBATCH --exclude=spd-13
-#SBATCH --requeue
+
 #SBATCH --signal=USR1@100
 
-# export HABITAT_SIM_LOG=quiet
-# export MAGNUM_LOG=quiet
+export HABITAT_SIM_LOG=quiet
+export MAGNUM_LOG=quiet
 export PYTHONPATH=~/flash/home-robot/projects/:$PYTHONPATH
 
 MAIN_ADDR=$(scontrol show hostnames "
 ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 
-CHECKPOINT_DIR="Logs/checkpoints/gaze/gaze_hmap_new"
-TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/gaze_hmap_new"
-LOG_DIR="Logs/logs/gaze/gaze_hmap_new.log"
+CHECKPOINT_DIR="Logs/checkpoints/gaze/gaze_hmap2"
+TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/gaze_hmap2"
+LOG_DIR="Logs/logs/gaze/gaze_hmap2.log"
 
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
