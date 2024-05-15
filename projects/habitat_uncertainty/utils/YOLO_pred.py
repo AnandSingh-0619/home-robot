@@ -57,7 +57,7 @@ class YOLOPerception(PerceptionModule):
         checkpoint_file: Optional[str] = MOBILE_SAM_CHECKPOINT_PATH,
         sem_gpu_id=0,
         verbose: bool = False,
-        confidence_threshold: Optional[float] = 0.35,
+        confidence_threshold: Optional[float] = 0.02,
         
     ):
         """Loads a YOLO model for object detection and instance segmentation
@@ -91,7 +91,24 @@ class YOLOPerception(PerceptionModule):
         self.model.cuda()
         torch.cuda.empty_cache()
 
-        
+    def create_gaussian_mask(self, height, width, boxes, max_sigma=25):
+        if len(boxes) > 0:
+            # print("Detected")
+            boxes=boxes[0]
+            x_min, y_min, x_max, y_max = boxes
+            center = ((boxes[0] + boxes[2]) // 2, (boxes[1] + boxes[3]) // 2)    
+
+            size = (x_max - x_min, y_max - y_min)
+            sigma_x = min(size[0] / 8, max_sigma)
+            sigma_y = min(size[1] / 8, max_sigma)
+
+            y, x = np.ogrid[0:height, 0:width]
+            distance = np.sqrt((x - center[0])**2 / (2 * (sigma_x**2) + 1e-6) + (y - center[1])**2 / (2 * (sigma_y**2) + 1e-6))        
+            gaussian = np.exp(-distance)
+            return np.expand_dims(gaussian / gaussian.max(), axis=2) 
+        else:
+            # print("Nothing Detected")
+            return np.zeros((160, 120, 1))
 
     def predict(
         self,
@@ -116,60 +133,50 @@ class YOLOPerception(PerceptionModule):
         nms_threshold=0.8
             
         images_tensor = obs["head_rgb"] 
+        obj_class_ids = obs["yolo_object_sensor"].cpu().numpy().flatten()
+        rec_class_ids = obs["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
+        batch_size = images_tensor.shape[0]
         images = [images_tensor[i].cpu().numpy() for i in range(images_tensor.size(0))]   
 
         height, width, _ = images[0].shape
-        results = self.model(images, conf=self.confidence_threshold, stream=True, verbose=False)
-
-        semantic_masks = []
+        results = list(self.model(images, conf=self.confidence_threshold, stream=True, verbose=False))
+        obj_semantic_masks = []
+        rec_semantic_masks = []
 
         for idx, result in enumerate(results):
-            img = images[idx] 
-            boxes = [iresult.boxes.xyxy.tolist() for iresult in result]
-            batch_boxes = [box for boxes_list in boxes for box in boxes_list]
+            class_ids = result.boxes.cls.cpu().numpy()
+            input_boxes = result.boxes.xyxy.cpu().numpy()
 
-            input_boxes = np.array(batch_boxes)
-            if len(input_boxes) == 0:
-                height, width, _ = img.shape
-                semantic_mask = np.zeros((160, 120, 1))
-            else:
-                class_ids = result.boxes.cls.cpu().numpy()
-                semantic_mask, _ = self.overlay_masks(class_ids, input_boxes, (height, width))
+            obj_mask_idx = np.isin(class_ids, obj_class_ids[idx])
+            rec_mask_idx = np.isin(class_ids, rec_class_ids[idx])
 
-            torch.cuda.empty_cache()
-            # semantic_mask_resized = cv2.resize(semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+            obj_boxes = input_boxes[obj_mask_idx]
+            rec_boxes = input_boxes[rec_mask_idx]
 
-            # semantic_masks.append(semantic_mask_resized[:, :, np.newaxis])
-            semantic_masks.append(semantic_mask)
+            obj_semantic_mask = self.create_gaussian_mask(height, width, obj_boxes)
+            rec_semantic_mask = self.create_gaussian_mask(height, width, rec_boxes)
+            
+            
+            # combined_image = np.concatenate([obj_semantic_mask * 255, rec_semantic_mask * 255], axis=1)
+            cv2.imwrite('obj_mask{}.png'.format(idx), [obj_semantic_mask * 255])
+            cv2.imwrite('rec_mask{}.png'.format(idx), [rec_semantic_mask * 255])
+            cv2.imwrite('orig_image{}.png'.format(idx), cv2.cvtColor(images[idx], cv2.COLOR_BGR2RGB) )
 
 
-        semantic_masks = np.array(semantic_masks)
-        # gc.collect()
+            # obj_semantic_mask = cv2.resize(obj_semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+            # rec_semantic_mask = cv2.resize(rec_semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+            
+            # obj_semantic_mask = np.expand_dims(obj_semantic_mask, axis=-1)
+            # rec_semantic_mask = np.expand_dims(rec_semantic_mask, axis=-1)
+            obj_semantic_masks.append(obj_semantic_mask)
+            rec_semantic_masks.append(rec_semantic_mask)
+
         torch.cuda.empty_cache()
-        # end_time = time.time()
-        # duration = end_time - start_time
-        # devices = Device.all() 
-        # logger.info(f"Memory used {devices[0].memory_used_human()} GB. Dtetection execution time: {duration} seconds")
-        return semantic_masks
-    
-    def overlay_masks(
-        self,
-        class_idcs: np.ndarray,
-        boxes: np.ndarray,
-        shape: Tuple[int, int]
-    ) -> np.ndarray:
-        """Overlays the masks of objects based on bounding boxes."""
-        semantic_mask = np.zeros((*shape, 1))
-        instance_mask = np.zeros(shape)
+        obj_semantic_masks = np.array(obj_semantic_masks)
+        rec_semantic_masks = np.array(rec_semantic_masks)
 
-        for class_idx, box in zip(class_idcs, boxes):
-            x1, y1, x2, y2 = box
-            center_x = int((x1 + x2) / 2)
-            center_y = int((y1 + y2) / 2)
-            semantic_mask[center_y, center_x] = class_idx
-            instance_mask[center_y, center_x] = 1  # You can set any value here for instance id
+        return obj_semantic_masks, rec_semantic_masks
 
-        return semantic_mask, instance_mask
 
 
 

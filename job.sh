@@ -21,9 +21,9 @@ ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 export CUDA_LAUNCH_BLOCKING=1
 
-CHECKPOINT_DIR="Logs/checkpoints/gaze/yolo_heatmap6"
-TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/yolo_heatmap6"
-LOG_DIR="Logs/logs/gaze/yolo_heatmap6.log"
+CHECKPOINT_DIR="Logs/checkpoints/gaze/yolo_heatmap_new2"
+TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/yolo_heatmap_new2"
+LOG_DIR="Logs/logs/gaze/yolo_heatmap_new2.log"
 
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh

@@ -248,8 +248,19 @@ class PPOyoloTrainer(PPOTrainer):
             lambda: deque(maxlen=self._ppo_cfg.reward_window_size)
         )
         self._segmentation = YOLO_pred()
-        self.segment_masks = np.zeros((32, 160, 120, 1))
+        self.object_masks = torch.zeros((32, 160, 120, 1))
+        self.recep_masks = torch.zeros((32, 160, 120, 1))
         self.t_start = time.time()
+
+    def create_gaussian_heatmap(self, height, width, center, size, max_sigma=14.0):
+        # Calculate the standard deviation (sigma) based on the size of the object
+        sigma_x = min(size[0] / 25, max_sigma)
+        sigma_y = min(size[1] / 25, max_sigma)
+
+        y, x = np.ogrid[0:height, 0:width]
+        distance = np.sqrt((x - center[0])**2 / (2 * (sigma_x**2) + 1e-6) + (y - center[1])**2 / (2 * (sigma_y**2) + 1e-6))        
+        gaussian = np.exp(-distance)
+        return gaussian / gaussian.max()
 
     
     def _collect_environment_result(self, buffer_index: int = 0):
@@ -318,108 +329,59 @@ class PPOyoloTrainer(PPOTrainer):
                 done_masks, 0.0
             )
 
-            if buffer_index ==0:
+            if np.random.random() < 0.4:
             #YOLO Detection with Mobile SAM segmentations
                 with g_timer.avg_time("trainer.yolo_detector_step"):
-                    self.segment_masks = self._segmentation.predict(batch)
+                    self.object_masks, self.recep_masks = self._segmentation.predict(batch)
 
+            
             if("object_segmentation" in batch):
-                filtered_masks = []
-                class_ids = batch["yolo_object_sensor"].cpu().numpy().flatten()
-                class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
-                sigma = 8.0  # Sigma value for the Gaussian filter
-                masks = []
-                for mask in filtered_masks:
-                    mask_binary = mask.astype(bool)
-                    object_pixels = np.where(mask_binary)
-                    if len(object_pixels[0]) == 0:
-                        masks.append(mask)
-                        continue
-                    center_coordinate = (int(np.mean(object_pixels[1])), int(np.mean(object_pixels[0])))
-                    mask = np.zeros_like(mask, dtype=np.float32)
-                    x, y = np.meshgrid(np.arange(mask.shape[1]), np.arange(mask.shape[0]))
-                    distance_matrix = np.sqrt((x - center_coordinate[1])**2 + (y - center_coordinate[0])**2)
-                    heatmap = np.exp(-(distance_matrix**2) / (2 * sigma**2))
-                    heatmap /= np.max(heatmap)
-                    heatmap = np.expand_dims(heatmap, axis=2)
-                    masks.append(heatmap)
-                    mask = np.expand_dims(mask, axis=2)
-                    heatmap = np.expand_dims(heatmap, axis=2)
-                    # plt.imsave('mask3.png', mask, cmap='hot')
-                    # plt.imsave('mask4.png', heatmap, cmap='hot')
-                filtered_masks = np.array(masks)
-                
-                batch["object_segmentation"] = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
+
+                batch["object_segmentation"] = torch.tensor(self.object_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
 
             if("start_recep_segmentation" in batch):
-                filtered_masks = []
-                class_ids = batch["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
-                class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
-                sigma = 8.0  # Sigma value for the Gaussian filter
-                masks = []
-                for mask in filtered_masks:
-                    mask_binary = mask.astype(bool)
-                    object_pixels = np.where(mask_binary)
-                    if len(object_pixels[0]) == 0:
-                        masks.append(mask)
-                        continue
-                    center_coordinate = (int(np.mean(object_pixels[1])), int(np.mean(object_pixels[0])))
-                    mask = np.zeros_like(mask, dtype=np.float32)
-                    x, y = np.meshgrid(np.arange(mask.shape[1]), np.arange(mask.shape[0]))
-                    distance_matrix = np.sqrt((x - center_coordinate[1])**2 + (y - center_coordinate[0])**2)
-                    heatmap = np.exp(-(distance_matrix**2) / (2 * sigma**2))
-                    heatmap /= np.max(heatmap)
-                    heatmap = np.expand_dims(heatmap, axis=2)
-                    masks.append(heatmap)
-                    mask = np.expand_dims(mask, axis=2)
-                    heatmap = np.expand_dims(heatmap, axis=2)
-                    # plt.imsave('mask5.png', mask, cmap='hot')
-                    # plt.imsave('mask6.png', heatmap, cmap='hot')
-                filtered_masks = np.array(masks)
-                
-                batch["start_recep_segmentation"] = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
+                               
+                batch["start_recep_segmentation"] = torch.tensor( self.recep_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
             
-            if("goal_recep_segmentation" in batch):
-                filtered_masks = []
-                class_ids = batch["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
-                class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
-                # for class_id in class_ids:
-                #     if (segment_masks == class_id).any():
-                #         logger.info(f"Receptacle Detected: {CLASSES[class_id]}")
-                #     else:
-                #         logger.info(f"No receptacle Detected")
-                batch["goal_recep_segmentation"] = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
+            # if("goal_recep_segmentation" in batch):
+            #     filtered_masks = []
+            #     class_ids = batch["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
+            #     class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
+            #     filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
+            #     # for class_id in class_ids:
+            #     #     if (segment_masks == class_id).any():
+            #     #         logger.info(f"Receptacle Detected: {CLASSES[class_id]}")
+            #     #     else:
+            #     #         logger.info(f"No receptacle Detected")
+            #     batch["goal_recep_segmentation"] = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
             
-            if("ovmm_nav_goal_segmentation" in batch):
+            # if("ovmm_nav_goal_segmentation" in batch):
                     
-                if batch["ovmm_nav_goal_segmentation"].shape[3] == 2:
-                    filtered_masks = []
-                    class_ids = batch["yolo_object_sensor"].cpu().numpy().flatten()
-                    class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                    filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
-                    obs_k1 =torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
+            #     if batch["ovmm_nav_goal_segmentation"].shape[3] == 2:
+            #         filtered_masks = []
+            #         class_ids = batch["yolo_object_sensor"].cpu().numpy().flatten()
+            #         class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
+            #         filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
+            #         obs_k1 =torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
 
-                    filtered_masks = []
-                    class_ids = batch["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
-                    class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                    filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
-                    obs_k2 =torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
-                    batch["ovmm_nav_goal_segmentation"] = torch.cat((obs_k1, obs_k2), dim=3)
+            #         filtered_masks = []
+            #         class_ids = batch["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
+            #         class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
+            #         filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
+            #         obs_k2 =torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
+            #         batch["ovmm_nav_goal_segmentation"] = torch.cat((obs_k1, obs_k2), dim=3)
 
-                else:
-                    filtered_masks = []
-                    class_ids = observations["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
-                    class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-                    filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
-                    batch["ovmm_nav_goal_segmentation"] =torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
+            #     else:
+            #         filtered_masks = []
+            #         class_ids = observations["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
+            #         class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
+            #         filtered_masks = np.where(self.segment_masks == class_ids_expanded, 1, 0)
+            #         batch["ovmm_nav_goal_segmentation"] =torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
             
-            if("receptacle_segmentation_sensor" in batch):
-                filtered_masks = []
-                filtered_masks = np.where(self.segment_masks > 127, 1, 0)
-                batch["receptacle_segmentation_sensor"] = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
+            # if("receptacle_segmentation_sensor" in batch):
+            #     filtered_masks = []
+            #     filtered_masks = np.where(self.segment_masks > 127, 1, 0)
+            #     batch["receptacle_segmentation_sensor"] = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
             
         if self._is_static_encoder:
             with inference_mode(), g_timer.avg_time("trainer.visual_features"):

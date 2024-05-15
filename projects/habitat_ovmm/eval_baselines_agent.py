@@ -6,6 +6,7 @@
 
 import argparse
 import os
+from habitat_uncertainty.task.sensors import YOLOObjectSensor, YOLOStartReceptacleSensor, YOLOGoalReceptacleSensor
 
 from evaluator import OVMMEvaluator
 from utils.config_utils import (
@@ -61,13 +62,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--start_episode",
         type=int,
-        default=None,
+        default=1,
         help="Start episode of the range to evaluate",
     )
     parser.add_argument(
         "--end_episode",
         type=int,
-        default=None,
+        default=100,
         help="End episode of the range to evaluate",
     )
     parser.add_argument(
