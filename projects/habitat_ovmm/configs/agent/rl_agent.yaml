@@ -43,9 +43,9 @@ SKILLS:
       - start_receptacle
       - start_recep_segmentation
       - joint
-      - yolo_object_sensor
-      - yolo_start_receptacle_sensor
-      - yolo_goal_receptacle_sensor
+      # - yolo_object_sensor
+      # - yolo_start_receptacle_sensor
+      # - yolo_goal_receptacle_sensor
     allowed_actions:
       - arm_action
       - base_velocity

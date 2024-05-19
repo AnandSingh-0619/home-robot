@@ -158,9 +158,9 @@ class YOLOPerception(PerceptionModule):
             
             
             # combined_image = np.concatenate([obj_semantic_mask * 255, rec_semantic_mask * 255], axis=1)
-            cv2.imwrite('obj_mask{}.png'.format(idx), [obj_semantic_mask * 255])
-            cv2.imwrite('rec_mask{}.png'.format(idx), [rec_semantic_mask * 255])
-            cv2.imwrite('orig_image{}.png'.format(idx), cv2.cvtColor(images[idx], cv2.COLOR_BGR2RGB) )
+            # cv2.imwrite('obj_mask{}.png'.format(idx), [obj_semantic_mask * 255])
+            # cv2.imwrite('rec_mask{}.png'.format(idx), [rec_semantic_mask * 255])
+            # cv2.imwrite('orig_image{}.png'.format(idx), cv2.cvtColor(images[idx], cv2.COLOR_BGR2RGB) )
 
 
             # obj_semantic_mask = cv2.resize(obj_semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
