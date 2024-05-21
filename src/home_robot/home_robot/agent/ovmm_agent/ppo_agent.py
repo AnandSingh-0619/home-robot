@@ -321,6 +321,11 @@ class PPOAgent(Agent):
         )
         hab_obs = OrderedDict(
             {
+                "rgb": np.array(obs.rgb),
+                "yolo_object_sensor": np.array(obs.task_observations["start_receptacle"]),
+                "yolo_start_receptacle_sensor": np.array(obs.task_observations["start_receptacle"]),
+                "yolo_goal_receptacle_sensor": np.array(obs.task_observations["goal_receptacle"]),
+
                 "head_depth": np.expand_dims(normalized_depth, -1).astype(np.float32),
                 "object_embedding": obs.task_observations["object_embedding"],
                 "object_segmentation": np.expand_dims(

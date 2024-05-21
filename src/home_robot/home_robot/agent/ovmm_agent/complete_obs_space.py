@@ -99,5 +99,29 @@ def get_complete_obs_space(skill_config, baseline_config):
                 (1,),
                 np.int64,
             ),
+            "rgb": spaces.Box(
+                0.0,
+                255,
+                (skill_config.sensor_height, skill_config.sensor_width, 3),
+                np.float32,
+            ),
+            "yolo_object_sensor": spaces.Box(
+                0,
+                150,
+                (1,),
+                np.int64,
+            ),
+            "yolo_start_receptacle_sensor": spaces.Box(
+                0,
+                150,
+                (1,),
+                np.int64,
+            ),
+            "yolo_goal_receptacle_sensor": spaces.Box(
+                0,
+                150,
+                (1,),
+                np.int64,
+            ),
         }
     )

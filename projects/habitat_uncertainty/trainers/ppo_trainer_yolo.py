@@ -248,8 +248,8 @@ class PPOyoloTrainer(PPOTrainer):
             lambda: deque(maxlen=self._ppo_cfg.reward_window_size)
         )
         self._segmentation = YOLO_pred()
-        self.object_masks = torch.zeros((32, 160, 120, 1))
-        self.recep_masks = torch.zeros((32, 160, 120, 1))
+        self.object_masks = torch.zeros((4, 160, 120, 1))
+        self.recep_masks = torch.zeros((4, 160, 120, 1))
         self.t_start = time.time()
 
     def create_gaussian_heatmap(self, height, width, center, size, max_sigma=14.0):

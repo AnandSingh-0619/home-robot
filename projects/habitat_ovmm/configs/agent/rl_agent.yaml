@@ -37,15 +37,16 @@ SKILLS:
     checkpoint_path: data/checkpoints/ovmm_baseline_home_robot_challenge_2023_v0.2/gaze_at_obj.pth
     rl_config: projects/habitat_ovmm/configs/agent/skills/gaze_rl.yaml # with continuous actions
     gym_obs_keys:
+      - rgb
       - head_depth
       - object_embedding
       - object_segmentation
       - start_receptacle
       - start_recep_segmentation
       - joint
-      # - yolo_object_sensor
-      # - yolo_start_receptacle_sensor
-      # - yolo_goal_receptacle_sensor
+      - yolo_object_sensor
+      - yolo_start_receptacle_sensor
+      - yolo_goal_receptacle_sensor
     allowed_actions:
       - arm_action
       - base_velocity
