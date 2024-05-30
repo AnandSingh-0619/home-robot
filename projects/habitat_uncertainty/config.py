@@ -1,39 +1,62 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Dict
 
-from habitat.config.default_structured_configs import (
-    CollisionsMeasurementConfig,
-    HabitatConfig,
-    LabSensorConfig,
-    MeasurementConfig,
-    SimulatorConfig,
+from habitat.config.default_structured_configs import LabSensorConfig
+from hydra.core.config_store import ConfigStore
+from hydra.plugins.search_path_plugin import SearchPathPlugin
+from habitat_baselines.config.default_structured_configs import (
+    AgentAccessMgrConfig,
+    DDPPOConfig,
+    HabitatBaselinesRLConfig,
+    PolicyConfig,
+    PPOConfig,
+    PreemptionConfig,
+    RLConfig,
+    VERConfig,
+    AuxLossConfig,
 )
-
 from hydra.core.config_search_path import ConfigSearchPath
 from hydra.core.config_store import ConfigStore
 from hydra.plugins.search_path_plugin import SearchPathPlugin
-
 cs = ConfigStore.instance()
 
+@dataclass
+class customDDPPOConfig(DDPPOConfig):
+    """Decentralized distributed proximal policy optimization config"""
 
-##########################################################################
-# Sensors
-##########################################################################
-# @dataclass
-# class YOLOSensorConfig(LabSensorConfig):
-#     type: str = "YOLOSensor"
+    sync_frac: float = 0.6
+    distrib_backend: str = "GLOO"
+    rnn_type: str = "GRU"
+    num_recurrent_layers: int = 1
+    backbone: str = "resnet18"
+    pretrained_weights: str = "data/ddppo-models/gibson-2plus-resnet50.pth"
+    pretrained: bool = False
+    pretrained_encoder: bool = False
+    train_encoder: bool = True
+    reset_critic: bool = True
+    force_distributed: bool = False
+    normalize_visual_inputs: bool = False
+    train_detector: bool = False
 
-# @dataclass
-# class YOLOObjectSegmentationSensorConfig(LabSensorConfig):
-#     type: str = "YOLOObjectSegmentationSensor"
+@dataclass
+class customAgentAccessMgrConfig(AgentAccessMgrConfig):
+    type: str = "SingleAgentAccessManager"
 
-# @dataclass
-# class StartYOLORecepSegmentationSensorConfig(YOLOObjectSegmentationSensorConfig):
-#     type: str = "StartYOLORecepSegmentationSensor"
+@dataclass
+class customRLConfig(RLConfig):
+    """Reinforcement learning config"""
 
-# @dataclass
-# class GoalYOLORecepSegmentationSensorConfig(YOLOObjectSegmentationSensorConfig):
-#     type: str = "GoalYOLORecepSegmentationSensor"
+    agent: customAgentAccessMgrConfig = customAgentAccessMgrConfig()
+    preemption: PreemptionConfig = PreemptionConfig()
+    policy: PolicyConfig = PolicyConfig()
+    ppo: PPOConfig = PPOConfig()
+    ddppo: customDDPPOConfig = customDDPPOConfig()
+    ver: VERConfig = VERConfig()
+    auxiliary_losses: Dict[str, AuxLossConfig] = field(default_factory=dict)
+
+@dataclass
+class customHabitatBaselinesRLConfig(HabitatBaselinesRLConfig):
+    rl: customRLConfig = customRLConfig()
 
 @dataclass
 class YOLOObjectSensorConfig(LabSensorConfig):
@@ -46,35 +69,15 @@ class YOLOStartReceptacleSensorConfig(YOLOObjectSensorConfig):
 @dataclass
 class YOLOGoalReceptacleSensorConfig(YOLOObjectSensorConfig):
     type: str = "YOLOGoalReceptacleSensor"
- # -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # Register configs in the Hydra ConfigStore
 # -----------------------------------------------------------------------------
-# cs.store(
-#     package="habitat.task.lab_sensors.yolo_segmentation_sensor",
-#     group="habitat/task/lab_sensors",
-#     name="yolo_segmentation_sensor",
-#     node=YOLOSensorConfig,
-# )
-
-# cs.store(
-#     package="habitat.task.lab_sensors.yolo_object_segmentation_sensor",
-#     group="habitat/task/lab_sensors",
-#     name="yolo_object_segmentation_sensor",
-#     node=YOLOObjectSegmentationSensorConfig,
-# )
-
-# cs.store(
-#     package="habitat.task.lab_sensors.start_yolo_recep_segmentation_sensor",
-#     group="habitat/task/lab_sensors",
-#     name="start_yolo_recep_segmentation_sensor",
-#     node=StartYOLORecepSegmentationSensorConfig,
-# )
-# cs.store(
-#     package="habitat.task.lab_sensors.goal_yolo_recep_segmentation_sensor",
-#     group="habitat/task/lab_sensors",
-#     name="goal_yolo_recep_segmentation_sensor",
-#     node=GoalYOLORecepSegmentationSensorConfig,
-# )
+cs.store(
+    group="habitat_baselines",
+    name="habitat_baselines_rl_config_base",
+    node=customHabitatBaselinesRLConfig(),
+)
 
 cs.store(
     package="habitat.task.lab_sensors.yolo_object_sensor",
@@ -96,6 +99,7 @@ cs.store(
     name="yolo_goal_receptacle_sensor",
     node=YOLOGoalReceptacleSensorConfig,
 )
+
 class HabitatConfigPlugin(SearchPathPlugin):
     def manipulate_search_path(self, search_path: ConfigSearchPath) -> None:
         search_path.append(
@@ -106,4 +110,3 @@ class HabitatConfigPlugin(SearchPathPlugin):
             provider="habitat_baselines",
             path="pkg://habitat_baselines/config/",
         )
-        

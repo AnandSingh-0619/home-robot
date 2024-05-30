@@ -14,8 +14,10 @@ from habitat_uncertainty.config import HabitatConfigPlugin
 from habitat_baselines.run import execute_exp
 from habitat_uncertainty.task.sensors import YOLOObjectSensor, YOLOStartReceptacleSensor, YOLOGoalReceptacleSensor
 from habitat_uncertainty.utils.YOLO_pred import YOLOPerception as YOLO_pred
-from habitat_uncertainty.trainers.ppo_trainer_yolo import PPOyoloTrainer
-
+from habitat_uncertainty.trainers.gaze_ppo_trainer import GazePPOTrainer
+from habitat_uncertainty.models.GazePointNavResNetPolicy import GazePointNavResNetPolicy
+from habitat_uncertainty import config
+from habitat_uncertainty.models.single_agent_access_manager import SingleAgentAccessManager
 def register_plugins():
     register_hydra_plugin(HabitatConfigPlugin)
 
@@ -37,7 +39,7 @@ def main():
     parser.add_argument(
         "--exp-config",
         "-e",
-        default='projects/habitat_uncertainty/config/yolo_rl_skill.yaml',
+        default='projects/habitat_uncertainty/config/gaze_rl_skill.yaml',
         type=str,
         required=False,
         help="path to config yaml containing info about experiment",
@@ -99,19 +101,11 @@ def main():
     with read_write(config):
         edit_config(config, args)
 
-    # YOLO_pred(
-    #         sem_gpu_id =0,
-    #         verbose= False
-    #         )
+
     execute_exp(config, "train")
 
 def edit_config(config, args):
-    # config.habitat.task.lab_sensors.pop("object_segmentation_sensor")
-    # config.habitat.task.lab_sensors.pop("start_recep_segmentation_sensor")
-    # if not hasattr(config.habitat.task.lab_sensors, "yolo_object_segmentation"):
-    #     config.habitat.task.lab_sensors.update(
-    #         {"yolo_object_segmentation": YOLO_ObjectSegmentationSensorConfig()}
-    #     )
+
     if args.debug:
         assert osp.isdir(os.environ["JUNK"]), (
             "Environment variable directory $JUNK does not exist "

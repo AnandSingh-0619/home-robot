@@ -15,9 +15,6 @@ from habitat.core.embodied_task import Measure
 from habitat.core.registry import registry
 from habitat.core.simulator import Sensor, SensorTypes
 from habitat.tasks.ovmm.sub_tasks.nav_to_obj_task import OVMMDynNavRLEnv
-from habitat_uncertainty.utils.YOLO_pred import (
-    YOLOPerception as YOLO_pred, 
-)
 from habitat.datasets.ovmm.ovmm_dataset import OVMMDatasetV0, OVMMEpisode
 
 CLASSES = [

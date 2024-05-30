@@ -43,12 +43,51 @@ from habitat_baselines.rl.models.rnn_state_encoder import (
 )
 from habitat_baselines.rl.ppo import Net, NetPolicy
 from habitat_baselines.utils.common import get_num_actions
-from habitat_uncertainty.utils.YOLO_pred import YOLOPerception as YOLO_pred
 from habitat_uncertainty.task.sensors import (
     YOLOObjectSensor,
     YOLOStartReceptacleSensor,
     YOLOGoalReceptacleSensor,
 )
+import supervision as sv
+from pathlib import Path
+from typing import List, Optional, Tuple
+from ultralytics import YOLO
+from home_robot.core.abstract_perception import PerceptionModule
+from home_robot.core.interfaces import Observations
+from habitat.core.logging import logger
+from habitat_baselines.utils.timing import g_timer
+import cv2
+PARENT_DIR = Path(__file__).resolve().parent
+MOBILE_SAM_CHECKPOINT_PATH = str(PARENT_DIR / "pretrained_wt" / "mobile_sam.pt")
+CLASSES = [
+    "action_figure", "android_figure", "apple", "backpack", "baseballbat",
+    "basket", "basketball", "bath_towel", "battery_charger", "board_game",
+    "book", "bottle", "bowl", "box", "bread", "bundt_pan", "butter_dish",
+    "c-clamp", "cake_pan", "can", "can_opener", "candle", "candle_holder",
+    "candy_bar", "canister", "carrying_case", "casserole", "cellphone", "clock",
+    "cloth", "credit_card", "cup", "cushion", "dish", "doll", "dumbbell", "egg",
+    "electric_kettle", "electronic_cable", "file_sorter", "folder", "fork",
+    "gaming_console", "glass", "hammer", "hand_towel", "handbag", "hard_drive",
+    "hat", "helmet", "jar", "jug", "kettle", "keychain", "knife", "ladle", "lamp",
+    "laptop", "laptop_cover", "laptop_stand", "lettuce", "lunch_box",
+    "milk_frother_cup", "monitor_stand", "mouse_pad", "multiport_hub",
+    "newspaper", "pan", "pen", "pencil_case", "phone_stand", "picture_frame",
+    "pitcher", "plant_container", "plant_saucer", "plate", "plunger", "pot",
+    "potato", "ramekin", "remote", "salt_and_pepper_shaker", "scissors",
+    "screwdriver", "shoe", "soap", "soap_dish", "soap_dispenser", "spatula",
+    "spectacles", "spicemill", "sponge", "spoon", "spray_bottle", "squeezer",
+    "statue", "stuffed_toy", "sushi_mat", "tape", "teapot", "tennis_racquet",
+    "tissue_box", "toiletry", "tomato", "toy_airplane", "toy_animal", "toy_bee",
+    "toy_cactus", "toy_construction_set", "toy_fire_truck", "toy_food",
+    "toy_fruits", "toy_lamp", "toy_pineapple", "toy_rattle", "toy_refrigerator",
+    "toy_sink", "toy_sofa", "toy_swing", "toy_table", "toy_vehicle", "tray",
+    "utensil_holder_cup", "vase", "video_game_cartridge", "watch", "watering_can",
+    "wine_bottle", "bathtub", "bed", "bench", "cabinet", "chair", "chest_of_drawers",
+    "couch", "counter", "filing_cabinet", "hamper", "serving_cart", "shelves",
+    "shoe_rack", "sink", "stand", "stool", "table", "toilet", "trunk", "wardrobe",
+    "washer_dryer"
+]
+
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
@@ -59,7 +98,7 @@ except ImportError:
 
 
 @baseline_registry.register_policy
-class yoloPointNavResNetPolicy(NetPolicy):
+class GazePointNavResNetPolicy(NetPolicy):
     def __init__(
         self,
         observation_space: spaces.Dict,
@@ -105,7 +144,7 @@ class yoloPointNavResNetPolicy(NetPolicy):
             self.action_distribution_type = "categorical"
 
         super().__init__(
-            PointNavResNetNet(
+            GazePointNavResNetNet(
                 observation_space=observation_space,
                 action_space=action_space,  # for previous action
                 hidden_size=hidden_size,
@@ -165,8 +204,132 @@ class yoloPointNavResNetPolicy(NetPolicy):
             fuse_keys=None,
         )
 
+class YOLOPerception(PerceptionModule):
+    def __init__(
+        self,
+        checkpoint_file: Optional[str] = MOBILE_SAM_CHECKPOINT_PATH,
+        sem_gpu_id=0,
+        verbose: bool = False,
+        confidence_threshold: Optional[float] = 0.02,
+        
+    ):
+        """Loads a YOLO model for object detection and instance segmentation
 
-class yoloResNetEncoder(nn.Module):
+        Arguments:
+            yolo_model_id: one of "yolo_world/l" or "yolo_world/s" for large or small
+            checkpoint_file: path to model checkpoint
+            sem_gpu_id: GPU ID to load the model on, -1 for CPU
+            verbose: whether to print out debug information
+        """
+        yolo_model_id="yolo_world/s",
+        self.verbose = verbose
+        if checkpoint_file is None:
+            checkpoint_file = str(
+                Path(__file__).resolve().parent
+                / "pretrained_wt/mobile_sam.pt"
+            )
+        if self.verbose:
+            print(
+                f"Loading YOLO model from {yolo_model_id} and MobileSAM with checkpoint={checkpoint_file}"   
+            )
+        self.model = YOLO(model='yolov8s-world.pt')
+        vocab = CLASSES
+        self.model.set_classes(vocab)
+        # Freeze the YOLO model's parameters
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        self.confidence_threshold = confidence_threshold
+
+        self.model.cuda()
+        torch.cuda.empty_cache()
+
+    def create_gaussian_mask(self, height, width, boxes, max_sigma=25):
+        if len(boxes) > 0:
+            # print("Detected")
+            boxes=boxes[0]
+            x_min, y_min, x_max, y_max = boxes
+            center = ((boxes[0] + boxes[2]) // 2, (boxes[1] + boxes[3]) // 2)    
+
+            size = (x_max - x_min, y_max - y_min)
+            sigma_x = min(size[0] / 8, max_sigma)
+            sigma_y = min(size[1] / 8, max_sigma)
+
+            y, x = np.ogrid[0:height, 0:width]
+            distance = np.sqrt((x - center[0])**2 / (2 * (sigma_x**2) + 1e-6) + (y - center[1])**2 / (2 * (sigma_y**2) + 1e-6))        
+            gaussian = np.exp(-distance)
+            return np.expand_dims(gaussian / gaussian.max(), axis=2) 
+        else:
+            # print("Nothing Detected")
+            return np.zeros((160, 120, 1))
+
+    def predict(
+        self,
+        obs: Observations,
+        depth_threshold: Optional[float] = None,
+        draw_instance_predictions: bool = True,
+    ) -> Observations:
+        """
+        Arguments:
+            obs.rgb: image of shape (H, W, 3) (in RGB order - Detic expects BGR)
+            obs.depth: depth frame of shape (H, W), used for depth filtering
+            depth_threshold: if specified, the depth threshold per instance
+
+        Returns:
+            obs.semantic: segmentation predictions of shape (H, W) with
+            indices in [0, num_sem_categories - 1]
+            obs.task_observations["semantic_frame"]: segmentation visualization
+            image of shape (H, W, 3)
+        """
+        torch.cuda.empty_cache()
+        # start_time = time.time()  
+        nms_threshold=0.8
+            
+        images_tensor = obs["head_rgb"] 
+        obj_class_ids = obs["yolo_object_sensor"].cpu().numpy().flatten()
+        rec_class_ids = obs["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
+        batch_size = images_tensor.shape[0]
+        images = [images_tensor[i].cpu().numpy() for i in range(images_tensor.size(0))]   
+
+        height, width, _ = images[0].shape
+        results = list(self.model(images, conf=self.confidence_threshold, stream=True, verbose=False))
+        obj_semantic_masks = []
+        rec_semantic_masks = []
+
+        for idx, result in enumerate(results):
+            class_ids = result.boxes.cls.cpu().numpy()
+            input_boxes = result.boxes.xyxy.cpu().numpy()
+
+            obj_mask_idx = np.isin(class_ids, obj_class_ids[idx])
+            rec_mask_idx = np.isin(class_ids, rec_class_ids[idx])
+
+            obj_boxes = input_boxes[obj_mask_idx]
+            rec_boxes = input_boxes[rec_mask_idx]
+
+            obj_semantic_mask = self.create_gaussian_mask(height, width, obj_boxes)
+            rec_semantic_mask = self.create_gaussian_mask(height, width, rec_boxes)
+            
+            # cv2.imwrite('obj_mask{}.png'.format(idx), [obj_semantic_mask * 255])
+            # cv2.imwrite('rec_mask{}.png'.format(idx), [rec_semantic_mask * 255])
+            # cv2.imwrite('orig_image{}.png'.format(idx), cv2.cvtColor(images[idx], cv2.COLOR_BGR2RGB) )
+
+
+            obj_semantic_mask = cv2.resize(obj_semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+            rec_semantic_mask = cv2.resize(rec_semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+            
+            obj_semantic_mask = np.expand_dims(obj_semantic_mask, axis=-1)
+            rec_semantic_mask = np.expand_dims(rec_semantic_mask, axis=-1)
+            obj_semantic_masks.append(obj_semantic_mask)
+            rec_semantic_masks.append(rec_semantic_mask)
+
+        torch.cuda.empty_cache()
+        obj_semantic_masks = np.array(obj_semantic_masks)
+        rec_semantic_masks = np.array(rec_semantic_masks)
+        combined_masks = np.concatenate((obj_semantic_masks, rec_semantic_masks), axis=-1)
+        return combined_masks
+    
+
+class GazeResNetEncoder(nn.Module):
     def __init__(
         self,
         observation_space: spaces.Dict,
@@ -179,17 +342,17 @@ class yoloResNetEncoder(nn.Module):
         normalize_visual_inputs: bool = False,
     ):
         super().__init__()
-        # self._segmentation = YOLO_pred()
-        # for param in self._segmentation.model.parameters():
-        #     param.requires_grad = False
-        # for param in self._segmentation.sam_model.parameters():
-        #     param.requires_grad = False
+        self._segmentation = YOLOPerception()
+        for param in self._segmentation.model.parameters():
+            param.requires_grad = False
+        self.masks = torch.zeros((4, 160, 120, 2))  #to change to the batch size
+
         self.no_downscaling = no_downscaling
         # Determine which visual observations are present
         self.visual_keys = [
             k
             for k, v in observation_space.spaces.items()
-            if len(v.shape) > 1 and k != ImageGoalSensor.cls_uuid
+            if len(v.shape) > 1 and k != ImageGoalSensor.cls_uuid and k!="head_rgb"
         ]
         self.key_needs_rescaling = {k: None for k in self.visual_keys}
         for k, v in observation_space.spaces.items():
@@ -280,55 +443,29 @@ class yoloResNetEncoder(nn.Module):
     def forward(self, observations: Dict[str, torch.Tensor]) -> torch.Tensor:  # type: ignore
         if self.is_blind:
             return None
-        # segment_masks = self._segmentation.predict(observations)
-        # # torch.cuda.empty_cache()
+        
+        if (  # noqa: SIM401
+                GazePointNavResNetNet.SEG_MASKS
+                in observations
+            ):
+                self.masks = observations[GazePointNavResNetNet.SEG_MASKS]
+        else:
+        # if np.random.random() < 0.4:
+        #YOLO Detection with Mobile SAM segmentations
+            with g_timer.avg_time("trainer.yolo_detector_step"):
+                self.masks = self._segmentation.predict(observations)
+        obj_masks = self.masks[..., 0:1]
+        rec_masks = self.masks[..., 1:2]
         cnn_input = []
         for k in self.visual_keys:
             obs_k = observations[k]
-        #     if(k == "object_segmentation"):
-        #         filtered_masks = []
-        #         class_ids = observations["yolo_object_sensor"].cpu().numpy().flatten()
-        #         class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-        #         filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
-        #         obs_k = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
-        #     if(k == "start_recep_segmentation"):
-        #         filtered_masks = []
-        #         class_ids = observations["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
-        #         class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-        #         filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
-        #         obs_k = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
-            
-        #     if(k == "ovmm_nav_goal_segmentation"):
-                
-        #         if obs_k.shape[3] == 2:
-        #             filtered_masks = []
-        #             class_ids = observations["yolo_object_sensor"].cpu().numpy().flatten()
-        #             class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-        #             filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
-        #             obs_k1 =torch.tensor(filtered_masks, device='cuda:0')
+            #Make changes to the sensors as required by the GAZE skill
+            if(k == "object_segmentation"):
+                obs_k = torch.tensor(obj_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
 
-        #             filtered_masks = []
-        #             class_ids = observations["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
-        #             class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-        #             filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
-        #             obs_k2 =torch.tensor(filtered_masks, device='cuda:0')
-        #             obs_k = torch.cat((obs_k1, obs_k2), dim=3)
-
-        #         else:
-        #             filtered_masks = []
-        #             class_ids = observations["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
-        #             class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-        #             filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
-        #             obs_k =torch.tensor(filtered_masks, device='cuda:0')
-               
-        #     if(k == "goal_recep_segmentation"):
-        #         filtered_masks = []
-        #         class_ids = observations["yolo_goal_receptacle_sensor"].cpu().numpy().flatten()
-        #         class_ids_expanded = class_ids[:, np.newaxis, np.newaxis, np.newaxis]
-        #         filtered_masks = np.where(segment_masks == class_ids_expanded, 1, 0)
-        #         obs_k = torch.tensor(filtered_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
-            
-            
+            if(k == "start_recep_segmentation"):
+                obs_k = torch.tensor( rec_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
+      
             # permute tensor to dimension [BATCH x CHANNEL x HEIGHT X WIDTH]
             obs_k = obs_k.permute(0, 3, 1, 2)
             if self.key_needs_rescaling[k] is not None:
@@ -464,12 +601,13 @@ class ResNetCLIPEncoder(nn.Module):
         return x
 
 
-class PointNavResNetNet(Net):
+class GazePointNavResNetNet(Net):
     """Network which passes the input image through CNN and concatenates
     goal vector with CNN's output and passes that through RNN.
     """
 
     PRETRAINED_VISUAL_FEATURES_KEY = "visual_features"
+    SEG_MASKS = "segmentation_masks"
     prev_action_embedding: nn.Module
 
     def __init__(
@@ -524,7 +662,7 @@ class PointNavResNetNet(Net):
                 ImageGoalSensor.cls_uuid,
                 InstanceImageGoalSensor.cls_uuid,
             }
-            fuse_keys = [k for k in fuse_keys if k not in goal_sensor_keys]
+            fuse_keys = [k for k in fuse_keys if k not in goal_sensor_keys and k!="head_rgb" and k!="yolo_object_sensor" and k!="yolo_start_receptacle_sensor"]
 
         self._fuse_keys_1d: List[str] = [
             k
@@ -651,7 +789,7 @@ class PointNavResNetNet(Net):
                 goal_observation_space = spaces.Dict(
                     {"rgb": observation_space.spaces[uuid]}
                 )
-                goal_visual_encoder = yoloResNetEncoder(
+                goal_visual_encoder = GazeResNetEncoder(
                     goal_observation_space,
                     baseplanes=resnet_baseplanes,
                     ngroups=resnet_baseplanes // 2,
@@ -703,7 +841,7 @@ class PointNavResNetNet(Net):
                     nn.ReLU(True),
                 )
         else:
-            self.visual_encoder = yoloResNetEncoder(
+            self.visual_encoder = GazeResNetEncoder(
                 use_obs_space,
                 baseplanes=resnet_baseplanes,
                 ngroups=resnet_baseplanes // 2,
@@ -765,11 +903,11 @@ class PointNavResNetNet(Net):
             # We CANNOT use observations.get() here because self.visual_encoder(observations)
             # is an expensive operation. Therefore, we need `# noqa: SIM401`
             if (  # noqa: SIM401
-                PointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY
+                GazePointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY
                 in observations
             ):
                 visual_feats = observations[
-                    PointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY
+                    GazePointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY
                 ]
             else:
                 visual_feats = self.visual_encoder(observations)
