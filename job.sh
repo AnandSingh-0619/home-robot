@@ -21,7 +21,7 @@ ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 export CUDA_LAUNCH_BLOCKING=1
 
-CHECKPOINT_DIR="data/checkpoints/gaze"
+CHECKPOINT_DIR="Logs/checkpoints/gaze/yolo_heatmap_policy_full_res"
 TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/yolo_heatmap_policy_full_res"
 LOG_DIR="Logs/logs/gaze/yolo_heatmap_policy_full_res.log"
 
@@ -33,7 +33,7 @@ conda activate home-robot
 cd ~/flash/home-robot 
 
 srun python -um habitat_uncertainty.run \
-    --exp-config=projects/habitat_uncertainty/config/yolo_rl_skill.yaml \
+    --exp-config=projects/habitat_uncertainty/config/gaze_rl_skill.yaml \
     --run-type=train \
     habitat_baselines.num_environments=32 \
     habitat_baselines.tensorboard_dir=${TENSORBOARD_DIR} \

@@ -15,9 +15,11 @@ from habitat_baselines.run import execute_exp
 from habitat_uncertainty.task.sensors import YOLOObjectSensor, YOLOStartReceptacleSensor, YOLOGoalReceptacleSensor
 from habitat_uncertainty.utils.YOLO_pred import YOLOPerception as YOLO_pred
 from habitat_uncertainty.trainers.gaze_ppo_trainer import GazePPOTrainer
+from habitat_uncertainty.trainers.YOLOSAM_trainer import YOLOSAMPPOTrainer
 from habitat_uncertainty.models.GazePointNavResNetPolicy import GazePointNavResNetPolicy
 from habitat_uncertainty import config
 from habitat_uncertainty.models.single_agent_access_manager import SingleAgentAccessManager
+from habitat_uncertainty.models.YOLOSAMPointNavResNetPolicy import YOLOSAMPointNavResNetPolicy
 def register_plugins():
     register_hydra_plugin(HabitatConfigPlugin)
 

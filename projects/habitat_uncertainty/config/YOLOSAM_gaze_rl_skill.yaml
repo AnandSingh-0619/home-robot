@@ -52,7 +52,7 @@ habitat:
 
 habitat_baselines:
   verbose: False
-  trainer_name: "gaze_ddppo"
+  trainer_name: "yolosam_ddppo"
   torch_gpu_id: 0
   tensorboard_dir: "tb"
   video_dir: "video_dir"
@@ -77,7 +77,7 @@ habitat_baselines:
 
   rl:
     policy:
-      name: "GazePointNavResNetPolicy"
+      name: "YOLOSAMPointNavResNetPolicy"
       action_distribution_type: "gaussian"
       no_downscaling: True
       action_dist:
