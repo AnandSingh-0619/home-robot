@@ -8,7 +8,7 @@
 #SBATCH --partition=overcap
 #SBATCH --gpus a40:4
 #SBATCH --qos="long"
-#SBATCH --exclude=spd-13
+#SBATCH --exclude=spd-13,xaea-12
 #SBATCH --requeue
 #SBATCH --signal=USR1@100
 
@@ -21,9 +21,9 @@ ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 export CUDA_LAUNCH_BLOCKING=1
 
-CHECKPOINT_DIR="Logs/checkpoints/gaze/yolo_heatmap_policy_full_res"
-TENSORBOARD_DIR="Logs/tensorLogs/nGPU4_nENV32/gaze/yolo_heatmap_policy_full_res"
-LOG_DIR="Logs/logs/gaze/yolo_heatmap_policy_full_res.log"
+CHECKPOINT_DIR="Logs/checkpoints/yolo_og_new3_50_prob"
+TENSORBOARD_DIR="Logs/tensorLogs/gaze/yolo_og_new3_50_prob"
+LOG_DIR="Logs/logs/gaze/yolo_og_new3_50_prob.log"
 
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
@@ -32,9 +32,9 @@ conda deactivate
 conda activate home-robot
 cd ~/flash/home-robot 
 
-srun python -um habitat_uncertainty.run \
-    --exp-config=projects/habitat_uncertainty/config/gaze_rl_skill.yaml \
-    --run-type=train \
+srun python -um habitat_baselines.run \
+    --config-name=ovmm/rl_skill.yaml \
+    habitat_baselines.evaluate=False \
     habitat_baselines.num_environments=32 \
     habitat_baselines.tensorboard_dir=${TENSORBOARD_DIR} \
     habitat_baselines.checkpoint_folder=${CHECKPOINT_DIR} \

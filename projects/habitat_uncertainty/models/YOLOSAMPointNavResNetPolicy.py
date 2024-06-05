@@ -6,6 +6,7 @@
 
 
 from collections import OrderedDict
+from re import search
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -58,6 +59,7 @@ from habitat.core.logging import logger
 from habitat_baselines.utils.timing import g_timer
 import cv2
 from ultralytics import SAM
+from nvitop import Device
 PARENT_DIR = Path(__file__).resolve().parent
 MOBILE_SAM_CHECKPOINT_PATH = str(PARENT_DIR / "pretrained_wt" / "mobile_sam.pt")
 CLASSES = [
@@ -233,7 +235,7 @@ class YOLOPerception(PerceptionModule):
             print(
                 f"Loading YOLO model from {yolo_model_id} and MobileSAM with checkpoint={checkpoint_file}"   
             )
-        self.model = YOLO(model='yolov8s-worldv2.pt')
+        self.model = YOLO(model='yolov8s-world.pt')
         vocab = CLASSES
         self.model.set_classes(vocab)
         # Freeze the YOLO model's parameters
@@ -248,129 +250,85 @@ class YOLOPerception(PerceptionModule):
         self.model.cuda()
         torch.cuda.empty_cache()
 
-    def overlay_masks(self,
-        masks: np.ndarray, class_id: int, shape: Tuple[int, int]
-        ) -> np.ndarray:
-        """Overlays the masks of objects
-        Masks are overlaid based on the order of class_idcs.
-
-        Arguments:
-            masks: The masks to overlay
-            class_idcs: The class indices corresponding to the masks
-            shape: The shape of the output masks
-
-        Returns:
-            semantic_mask: The overlayed semantic mask
-            instance_mask: The overlayed instance mask
-        """
-        semantic_mask = np.zeros((*shape, 1))
-        instance_mask = np.zeros(shape)
-
-        for mask_idx, mask in enumerate(masks):
-                mask = mask.cpu().numpy()
-                mask_bool = mask.astype(bool)
-                semantic_mask[mask_bool] = 1
-                instance_mask[mask_bool] = mask_idx + 1
-
-        return semantic_mask, instance_mask
-
-    def predict(
-        self,
-        obs: Observations,
-        depth_threshold: Optional[float] = None,
-        draw_instance_predictions: bool = True,
-    ) -> Observations:
-        """
-        Arguments:
-            obs.rgb: image of shape (H, W, 3) (in RGB order - Detic expects BGR)
-            obs.depth: depth frame of shape (H, W), used for depth filtering
-            depth_threshold: if specified, the depth threshold per instance
-
-        Returns:
-            obs.semantic: segmentation predictions of shape (H, W) with
-            indices in [0, num_sem_categories - 1]
-            obs.task_observations["semantic_frame"]: segmentation visualization
-            image of shape (H, W, 3)
-        """
+   
+    def predict(self, obs: Observations, depth_threshold: Optional[float] = None, draw_instance_predictions: bool = True) -> Observations:
         torch.cuda.empty_cache()
-        # start_time = time.time()  
-        nms_threshold=0.8
-            
-        images_tensor = obs["head_rgb"] 
+        
+        nms_threshold = 0.8
+        images_tensor = obs["head_rgb"]
         obj_class_ids = obs["yolo_object_sensor"].cpu().numpy().flatten()
         rec_class_ids = obs["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
-        batch_size = images_tensor.shape[0]
-        images = [images_tensor[i].clone().detach().cpu().numpy() for i in range(images_tensor.size(0))]   
-        search = np.concatenate((obj_class_ids, rec_class_ids))
-        search_list = search.tolist()
+        # batch_size = images_tensor.shape[0]
+        # if(batch_size>32):
+        # logger.info(f"Current batch: {batch_size}")
+        # devices = Device.all()
+        # Log the initial memory usage
+        # logger.info(f"GPU Memory - Used: {devices[0].memory_used_human()}, Free: {devices[0].memory_free_human()}")
+        # logger.info(f"YOLO inference")
+        images = [images_tensor[i].clone().detach().cpu().numpy() for i in range(images_tensor.size(0))]
+        search_list = np.concatenate((obj_class_ids, rec_class_ids)).tolist()
         height, width, _ = images[0].shape
-        results = list(self.model(images, conf=self.confidence_threshold, classes = search_list, iou = nms_threshold, stream=True, verbose=False))
+        results = list(self.model(images, classes=search_list, conf=self.confidence_threshold, iou=nms_threshold, stream=True, verbose=False, half =True))
+        
         obj_masks = []
         rec_masks = []
 
         for idx, result in enumerate(results):
-            img = images[idx] 
+            img = images[idx]
             obj_class_id = obj_class_ids[idx]
             rec_class_id = rec_class_ids[idx]
-            boxes = [iresult.boxes.xyxy.tolist() for iresult in result]
-            batch_boxes = [box for boxes_list in boxes for box in boxes_list]
-            class_ids = result.boxes.cls.clone().detach().cpu().numpy()
+            batch_boxes = result.boxes.xyxy.cpu().numpy()
+            class_ids = result.boxes.cls.cpu().numpy()
 
-        #     image= cv2.cvtColor(images[idx], cv2.COLOR_BGR2RGB)
-        #    # Add the text for the target object
-        #     cv2.putText(image, f"Target object: {CLASSES[obj_class_id]}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+            obj_boxes = batch_boxes[class_ids == obj_class_id]
+            rec_boxes = batch_boxes[class_ids == rec_class_id]
+            # image= cv2.cvtColor(images[idx], cv2.COLOR_BGR2RGB)
+            # # Add the text for the target object
+            # cv2.putText(image, f"Target object: {CLASSES[obj_class_id]}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
-        #     # Add the text for the target receptacle
-        #     cv2.putText(image, f"Target Receptacle: {CLASSES[rec_class_id]}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
-        #     cv2.imwrite('orig_image{}.png'.format(idx), image)
+            # # Add the text for the target receptacle
+            # cv2.putText(image, f"Target Receptacle: {CLASSES[rec_class_id]}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+            # cv2.imwrite('orig_image{}.png'.format(idx), image)
 
-            # Find the target boxes and class IDs for the current image
-            obj_boxes = [box for box, class_id in zip(batch_boxes, class_ids) if class_id == obj_class_id]
-            rec_boxes = [box for box, class_id in zip(batch_boxes, class_ids) if class_id == rec_class_id]
+            combined_boxes = np.vstack((obj_boxes, rec_boxes)) if len(obj_boxes) > 0 or len(rec_boxes) > 0 else None
 
-            # For object
-            if len(obj_boxes) == 0:
-                obj_mask = np.zeros((160, 120, 1))
-            else:
-                obj_boxes = np.array(obj_boxes)
-                sam_outputs = self.sam_model.predict(stream=True, source=img, bboxes=obj_boxes, points=None, labels=None, verbose=False)
-                sam_output = next(sam_outputs)
-                result_masks = sam_output.masks
-                obj_mask, _ = self.overlay_masks(result_masks.data, obj_class_id, (height, width))
+            obj_mask = np.zeros((160, 120, 1), dtype=np.float64)
+            rec_mask = np.zeros((160, 120, 1), dtype=np.float64)
+            
+            if combined_boxes is not None:
+                # logger.info(f"mobileSAM inference")
+                sam_outputs = list(self.sam_model.predict(stream=True, source=img, bboxes=combined_boxes, points=None, labels=None, verbose=False))
+                sam_output = sam_outputs[0]
+
+                # sam_output = next(sam_outputs)
+                result_masks = sam_output.masks.cpu().numpy()
+
+                obj_mask = np.zeros((height, width), dtype=np.float64)
+                rec_mask = np.zeros((height, width), dtype=np.float64)
+
+                for mask, class_id in zip(result_masks, class_ids):
+                    if class_id == obj_class_id:
+                        obj_mask += mask.data.squeeze()
+                    elif class_id == rec_class_id:
+                        rec_mask += mask.data.squeeze()
+                
                 obj_mask = cv2.resize(obj_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
                 obj_mask = np.expand_dims(obj_mask, axis=-1)
-                del sam_outputs, sam_output, result_masks
-
-            obj_masks.append(obj_mask)
-
-            # For receptacle
-            if len(rec_boxes) == 0:
-                rec_mask = np.zeros((160, 120, 1))
-            else:
-                rec_boxes = np.array(rec_boxes)
-                sam_outputs = self.sam_model.predict(stream=True, source=img, bboxes=rec_boxes, points=None, labels=None, verbose=False)
-                sam_output = next(sam_outputs)
-                result_masks = sam_output.masks
-                rec_mask, _ = self.overlay_masks(result_masks.data, rec_class_id, (height, width))
                 rec_mask = cv2.resize(rec_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
                 rec_mask = np.expand_dims(rec_mask, axis=-1)
                 del sam_outputs, sam_output, result_masks
-
+            
+            obj_masks.append(obj_mask)
             rec_masks.append(rec_mask)
-
-            torch.cuda.empty_cache()
-                
+            
             # cv2.imwrite('obj_mask{}.png'.format(idx), obj_mask * 255)
             # cv2.imwrite('rec_mask{}.png'.format(idx), rec_mask * 255)
-           
-            # image = img
+            
+            torch.cuda.empty_cache()
 
-
-
+        combined_masks = np.concatenate((np.array(obj_masks), np.array(rec_masks)), axis=-1)
+        del results, obj_masks, rec_masks, search_list
         torch.cuda.empty_cache()
-        obj_semantic_masks = np.array(obj_masks)
-        rec_semantic_masks = np.array(rec_masks)
-        combined_masks = np.concatenate((obj_semantic_masks, rec_semantic_masks), axis=-1)
         return combined_masks
     
 
@@ -497,21 +455,22 @@ class GazeResNetEncoder(nn.Module):
         else:
         # if np.random.random() < 0.4:
         #YOLO Detection with Mobile SAM segmentations
-            with g_timer.avg_time("trainer.yolo_detector_step"):
-                self.masks = self._segmentation.predict(observations)
-        obj_masks = self.masks[..., 0:1]
-        rec_masks = self.masks[..., 1:2]
+            # with g_timer.avg_time("trainer.yolo_detector_step"):
+            self.masks = self._segmentation.predict(observations)
+            logger.info(f"Calling YOLO inference from visual encoder")
+        # if(self.masks.shape[0]>32):
+        
+        # obj_masks = self.masks[..., 0:1]
+        # rec_masks = self.masks[..., 1:2]
         cnn_input = []
         for k in self.visual_keys:
             obs_k = observations[k]
             #Make changes to the sensors as required by the GAZE skill
             if(k == "object_segmentation"):
-                obs_k = torch.tensor(obj_masks.clone().detach(), device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
-                obs_k.requires_grad_(False)
+                obs_k = self.masks[..., 0:1]
 
             if(k == "start_recep_segmentation"):
-                obs_k = torch.tensor( rec_masks.clone().detach(), device=torch.device('cuda:{}'.format(torch.cuda.current_device())))
-                obs_k.requires_grad_(False)
+                obs_k = self.masks[..., 1:2]
       
             # permute tensor to dimension [BATCH x CHANNEL x HEIGHT X WIDTH]
             obs_k = obs_k.permute(0, 3, 1, 2)
@@ -530,6 +489,11 @@ class GazeResNetEncoder(nn.Module):
         x = self.running_mean_and_var(x)
         x = self.backbone(x)
         x = self.compression(x)
+        # if(self.masks.shape[0]>32):
+        # devices = Device.all()
+        # Log the initial memory usage
+        # logger.info(f"GPU Memory - Used: {devices[0].memory_used_human()}, Free: {devices[0].memory_free_human()}") 
+        torch.cuda.empty_cache()
         return x
 
 

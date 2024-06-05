@@ -70,7 +70,6 @@ from habitat_baselines.utils.info_dict import (
     extract_scalars_from_infos,
 )
 from habitat_baselines.utils.timing import g_timer
-from habitat_uncertainty.models.YOLOSAMPointNavResNetPolicy import YOLOPerception, GazePointNavResNetNet
 from habitat_baselines import PPOTrainer
 from habitat.core.logging import logger
 import scipy.ndimage as ndi
@@ -217,7 +216,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
             self._agent.updater.init_distributed(find_unused_params=False)  # type: ignore
         self._agent.post_init()
         self._is_static_detector = not self.config.habitat_baselines.rl.ddppo.train_detector
-        self._yolo_detector =YOLOPerception()
+        self._yolo_detector =self._agent.actor_critic.visual_encoder._segmentation
 
         self._is_static_encoder = (
             not self.config.habitat_baselines.rl.ddppo.train_encoder
@@ -229,7 +228,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
         batch = batch_obs(observations, device=self.device)
         batch = apply_obs_transforms_batch(batch, self.obs_transforms)  # type: ignore
         if(self._is_static_detector):
-            batch[GazePointNavResNetNet.SEG_MASKS] = self._yolo_detector.predict(batch)
+            batch[self._agent.actor_critic.net.SEG_MASKS] = self._yolo_detector.predict(batch)
 
         if self._is_static_encoder:
             self._encoder = self._agent.actor_critic.visual_encoder
@@ -327,10 +326,10 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 ] = self._encoder(batch)
 
         if self._is_static_detector:
-            # if np.random.random() < 0.4:
-            with g_timer.avg_time("trainer.yolo_detector_step"):
-                self._masks = self._yolo_detector.predict(batch)
-            batch[GazePointNavResNetNet.SEG_MASKS]  = self._masks
+            if np.random.random() < 0.5:
+                with g_timer.avg_time("trainer.yolo_detector_step"):
+                    self._masks = self._yolo_detector.predict(batch)
+            batch[self._agent.actor_critic.net.SEG_MASKS]  = self._masks
             
         self._agent.rollouts.insert(
             next_observations=batch,

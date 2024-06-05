@@ -92,7 +92,7 @@ habitat_baselines:
           size: 120
           channels_last: True
           trans_keys:
-            # - head_rgb
+            - head_rgb
             - head_depth
             - head_panoptic
             - object_segmentation
@@ -113,7 +113,7 @@ habitat_baselines:
           width: 120
           channels_last: True
           trans_keys:
-            # - head_rgb
+            - head_rgb
             - head_depth
             - head_panoptic
             - object_segmentation
