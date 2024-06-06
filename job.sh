@@ -15,15 +15,15 @@
 export HABITAT_SIM_LOG=quiet
 export MAGNUM_LOG=quiet
 export PYTHONPATH=~/flash/home-robot/projects/:$PYTHONPATH
-
+unset HABITAT_ENV_DEBUG
 MAIN_ADDR=$(scontrol show hostnames "
 ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 export CUDA_LAUNCH_BLOCKING=1
 
-CHECKPOINT_DIR="Logs/checkpoints/yolo_og_new3_50_prob"
-TENSORBOARD_DIR="Logs/tensorLogs/gaze/yolo_og_new3_50_prob"
-LOG_DIR="Logs/logs/gaze/yolo_og_new3_50_prob.log"
+CHECKPOINT_DIR="Logs/checkpoints/yolo_sam_new3_50_prob"
+TENSORBOARD_DIR="Logs/tensorLogs/gaze/yolo_sam_new3_50_prob"
+LOG_DIR="Logs/logs/gaze/yolo_sam_new3_50_prob.log"
 
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
@@ -32,9 +32,9 @@ conda deactivate
 conda activate home-robot
 cd ~/flash/home-robot 
 
-srun python -um habitat_baselines.run \
-    --config-name=ovmm/rl_skill.yaml \
-    habitat_baselines.evaluate=False \
+srun python -um habitat_uncertainty.run \
+    --exp-config=projects/habitat_uncertainty/config/YOLOSAM_gaze_rl_skill.yaml \
+    --run-type=train \
     habitat_baselines.num_environments=32 \
     habitat_baselines.tensorboard_dir=${TENSORBOARD_DIR} \
     habitat_baselines.checkpoint_folder=${CHECKPOINT_DIR} \

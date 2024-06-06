@@ -213,7 +213,7 @@ class YOLOPerception(PerceptionModule):
         checkpoint_file: Optional[str] = MOBILE_SAM_CHECKPOINT_PATH,
         sem_gpu_id=0,
         verbose: bool = False,
-        confidence_threshold: Optional[float] = 0.02,
+        confidence_threshold: Optional[float] = 0.2,
         
     ):
         """Loads a YOLO model for object detection and instance segmentation
@@ -444,6 +444,7 @@ class GazeResNetEncoder(nn.Module):
                     nn.init.constant_(layer.bias, val=0)
 
     def forward(self, observations: Dict[str, torch.Tensor]) -> torch.Tensor:  # type: ignore
+        torch.cuda.empty_cache()
         if self.is_blind:
             return None
         
@@ -908,6 +909,7 @@ class GazePointNavResNetNet(Net):
         masks,
         rnn_build_seq_info: Optional[Dict[str, torch.Tensor]] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]:
+        torch.cuda.empty_cache()
         x = []
         aux_loss_state = {}
         if not self.is_blind:
@@ -1067,5 +1069,5 @@ class GazePointNavResNetNet(Net):
             out, rnn_hidden_states, masks, rnn_build_seq_info
         )
         aux_loss_state["rnn_output"] = out
-
+        torch.cuda.empty_cache()
         return out, rnn_hidden_states, aux_loss_state
