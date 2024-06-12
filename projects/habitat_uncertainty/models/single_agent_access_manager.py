@@ -45,7 +45,10 @@ class SingleAgentAccessManager(SingleAgentAccessMgr):
         """
         Default behavior for setting up and initializing the rollout storage.
         """
-
+        env_spec.observation_space.spaces.pop('head_rgb', None)
+        env_spec.observation_space.spaces.pop('yolo_start_receptacle_sensor', None)
+        env_spec.observation_space.spaces.pop('yolo_object_sensor', None)
+        # env_spec.observation_space.spaces.pop('yolo_segmentation_sensor', None)
         obs_space = get_rollout_obs_space(
             env_spec.observation_space, actor_critic, config
         )
@@ -96,17 +99,17 @@ def get_rollout_obs_space(obs_space, actor_critic, config):
                 **obs_space.spaces,
             }
         )
-    if not config.habitat_baselines.rl.ddppo.train_detector:
-        obs_space = spaces.Dict(
-            {
-                GazePointNavResNetNet.SEG_MASKS: spaces.Box(
-                    low=np.finfo(np.float32).min,
-                    high=np.finfo(np.float32).max,
-                    shape=[160, 120, 2],
-                    dtype=np.float32,
-                ),
-                **obs_space.spaces,
-            }
-        )
+    # if not config.habitat_baselines.rl.ddppo.train_detector:
+    #     obs_space = spaces.Dict(
+    #         {
+    #             GazePointNavResNetNet.SEG_MASKS: spaces.Box(
+    #                 low=np.finfo(np.float32).min,
+    #                 high=np.finfo(np.float32).max,
+    #                 shape=[160, 120, 2],
+    #                 dtype=np.float32,
+    #             ),
+    #             **obs_space.spaces,
+    #         }
+    #     )
     return obs_space
 

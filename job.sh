@@ -1,29 +1,28 @@
 #!/bin/bash
 #SBATCH --job-name=home-robot-yolo
-#SBATCH --output=Logs/slurmLogs/home_robo-ver-%j.out
-#SBATCH --error=Logs/slurmLogs/home_robo-ver-%j.err
+#SBATCH --output=Logs/slurmLogs/yolosam_fullres_100v_try3-ver-%j.out
+#SBATCH --error=Logs/slurmLogs/yolosam_fullres_100v_try3-ver-%j.err
 #SBATCH --nodes 1
 #SBATCH --cpus-per-task 10
 #SBATCH --ntasks-per-node 4
 #SBATCH --partition=overcap
 #SBATCH --gpus a40:4
 #SBATCH --qos="long"
-#SBATCH --exclude=spd-13,xaea-12
+#SBATCH --exclude=spd-13,xaea-12,ig-88,omgwth
 #SBATCH --requeue
 #SBATCH --signal=USR1@100
 
 export HABITAT_SIM_LOG=quiet
 export MAGNUM_LOG=quiet
 export PYTHONPATH=~/flash/home-robot/projects/:$PYTHONPATH
-unset HABITAT_ENV_DEBUG
+
 MAIN_ADDR=$(scontrol show hostnames "
 ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
-export CUDA_LAUNCH_BLOCKING=1
 
-CHECKPOINT_DIR="Logs/checkpoints/yolo_sam_new3_50_prob"
-TENSORBOARD_DIR="Logs/tensorLogs/gaze/yolo_sam_new3_50_prob"
-LOG_DIR="Logs/logs/gaze/yolo_sam_new3_50_prob.log"
+CHECKPOINT_DIR="Logs/checkpoints/yolosam_fullres_100v_try3"
+TENSORBOARD_DIR="Logs/tensorLogs/gaze/yolosam_fullres_100v_try3"
+LOG_DIR="Logs/logs/gaze/yolosam_fullres_100v_try3.log"
 
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh

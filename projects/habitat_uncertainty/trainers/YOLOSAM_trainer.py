@@ -74,7 +74,7 @@ from habitat_baselines import PPOTrainer
 from habitat.core.logging import logger
 import scipy.ndimage as ndi
 import matplotlib.pyplot as plt
-
+from nvitop import Device
 CLASSES = [
     "action_figure", "android_figure", "apple", "backpack", "baseballbat",
     "basket", "basketball", "bath_towel", "battery_charger", "board_game",
@@ -228,7 +228,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
         batch = batch_obs(observations, device=self.device)
         batch = apply_obs_transforms_batch(batch, self.obs_transforms)  # type: ignore
         if(self._is_static_detector):
-            batch[self._agent.actor_critic.net.SEG_MASKS] = self._yolo_detector.predict(batch)
+            batch["yolo_segmentation_sensor"] = self._yolo_detector.predict(batch)
 
         if self._is_static_encoder:
             self._encoder = self._agent.actor_critic.visual_encoder
@@ -239,8 +239,12 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 batch[
                     PointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY
                 ] = self._encoder(batch)
+        
+        self.rollout_observation_keys = set(self._agent.rollouts.buffers["observations"].keys())
+        # Create a new batch by including only those keys present in rollout_observation_keys
+        cleaned_batch = {key: value for key, value in batch.items() if key in self.rollout_observation_keys}
 
-        self._agent.rollouts.insert_first_observations(batch)
+        self._agent.rollouts.insert_first_observations(cleaned_batch)
 
         self.current_episode_reward = torch.zeros(self.envs.num_envs, 1)
         self.running_episode_stats = dict(
@@ -326,20 +330,178 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 ] = self._encoder(batch)
 
         if self._is_static_detector:
-            if np.random.random() < 0.5:
-                with g_timer.avg_time("trainer.yolo_detector_step"):
-                    self._masks = self._yolo_detector.predict(batch)
-            batch[self._agent.actor_critic.net.SEG_MASKS]  = self._masks
-            
-        self._agent.rollouts.insert(
-            next_observations=batch,
-            rewards=rewards,
-            next_masks=not_done_masks,
-            buffer_index=buffer_index,
-        )
+            # if np.random.random() < 0.5:
+            with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
+                self._masks = self._yolo_detector.predict(batch)
+
+            batch["yolo_segmentation_sensor"] = self._masks
+
+
+        # Create a new batch by including only those keys present in rollout_observation_keys
+        cleaned_batch = {key: value for key, value in batch.items() if key in self.rollout_observation_keys}
+        try:
+            self._agent.rollouts.insert(
+                next_observations=cleaned_batch,
+                rewards=rewards,
+                next_masks=not_done_masks,
+                buffer_index=buffer_index,
+            )
+        except Exception as e:
+            print(f"Error during rollouts insertion: {e}")
+        torch.cuda.empty_cache()
 
         self._agent.rollouts.advance_rollout(buffer_index)
 
         return env_slice.stop - env_slice.start
 
-    
+    @profiling_wrapper.RangeContext("train")
+    def train(self) -> None:
+        r"""Main method for training DD/PPO.
+
+        Returns:
+            None
+        """
+
+        resume_state = load_resume_state(self.config)
+        self._init_train(resume_state)
+
+        count_checkpoints = 0
+        prev_time = 0
+
+        if self._is_distributed:
+            torch.distributed.barrier()
+
+        resume_run_id = None
+        if resume_state is not None:
+            self._agent.load_state_dict(resume_state)
+
+            requeue_stats = resume_state["requeue_stats"]
+            self.num_steps_done = requeue_stats["num_steps_done"]
+            self.num_updates_done = requeue_stats["num_updates_done"]
+            self._last_checkpoint_percent = requeue_stats[
+                "_last_checkpoint_percent"
+            ]
+            count_checkpoints = requeue_stats["count_checkpoints"]
+            prev_time = requeue_stats["prev_time"]
+
+            self.running_episode_stats = requeue_stats["running_episode_stats"]
+            self.window_episode_stats.update(
+                requeue_stats["window_episode_stats"]
+            )
+            resume_run_id = requeue_stats.get("run_id", None)
+
+        with (
+            get_writer(
+                self.config,
+                resume_run_id=resume_run_id,
+                flush_secs=self.flush_secs,
+                purge_step=int(self.num_steps_done),
+            )
+            if rank0_only()
+            else contextlib.suppress()
+        ) as writer:
+            while not self.is_done():
+                profiling_wrapper.on_start_step()
+                profiling_wrapper.range_push("train update")
+
+                self._agent.pre_rollout()
+
+                if rank0_only() and self._should_save_resume_state():
+                    requeue_stats = dict(
+                        count_checkpoints=count_checkpoints,
+                        num_steps_done=self.num_steps_done,
+                        num_updates_done=self.num_updates_done,
+                        _last_checkpoint_percent=self._last_checkpoint_percent,
+                        prev_time=(time.time() - self.t_start) + prev_time,
+                        running_episode_stats=self.running_episode_stats,
+                        window_episode_stats=dict(self.window_episode_stats),
+                        run_id=writer.get_run_id(),
+                    )
+
+                    save_resume_state(
+                        dict(
+                            **self._agent.get_resume_state(),
+                            config=self.config,
+                            requeue_stats=requeue_stats,
+                        ),
+                        self.config,
+                    )
+
+                if EXIT.is_set():
+                    profiling_wrapper.range_pop()  # train update
+
+                    self.envs.close()
+
+                    requeue_job()
+
+                    return
+
+                self._agent.eval()
+                count_steps_delta = 0
+                profiling_wrapper.range_push("rollouts loop")
+
+                profiling_wrapper.range_push("_collect_rollout_step")
+                with g_timer.avg_time("trainer.rollout_collect"):
+                    for buffer_index in range(self._agent.nbuffers):
+                        self._compute_actions_and_step_envs(buffer_index)
+
+                    for step in range(self._ppo_cfg.num_steps):
+                        is_last_step = (
+                            self.should_end_early(step + 1)
+                            or (step + 1) == self._ppo_cfg.num_steps
+                        )
+
+                        for buffer_index in range(self._agent.nbuffers):
+                            count_steps_delta += (
+                                self._collect_environment_result(buffer_index)
+                            )
+
+                            if (buffer_index + 1) == self._agent.nbuffers:
+                                profiling_wrapper.range_pop()  # _collect_rollout_step
+
+                            if not is_last_step:
+                                if (buffer_index + 1) == self._agent.nbuffers:
+                                    profiling_wrapper.range_push(
+                                        "_collect_rollout_step"
+                                    )
+
+                                self._compute_actions_and_step_envs(
+                                    buffer_index
+                                )
+
+                        if is_last_step:
+                            break
+
+                profiling_wrapper.range_pop()  # rollouts loop
+                torch.cuda.empty_cache()
+                if self._is_distributed:
+                    self.num_rollouts_done_store.add("num_done", 1)
+
+                logger.info(f"Rollout step over. Now update losses")
+                losses = self._update_agent()
+                torch.cuda.empty_cache()
+                devices = Device.all()
+                # Log the initial memory usage
+                logger.info(f"GPU Memory - Used: {devices[0].memory_used_human()}, Free: {devices[0].memory_free_human()}")
+                self.num_updates_done += 1
+                losses = self._coalesce_post_step(
+                    losses,
+                    count_steps_delta,
+                )
+                torch.cuda.empty_cache()
+                self._training_log(writer, losses, prev_time)
+
+                # checkpoint model
+                if rank0_only() and self.should_checkpoint():
+                    self.save_checkpoint(
+                        f"ckpt.{count_checkpoints}.pth",
+                        dict(
+                            step=self.num_steps_done,
+                            wall_time=(time.time() - self.t_start) + prev_time,
+                        ),
+                    )
+                    count_checkpoints += 1
+
+                profiling_wrapper.range_pop()  # train update
+                torch.cuda.empty_cache()
+            self.envs.close()

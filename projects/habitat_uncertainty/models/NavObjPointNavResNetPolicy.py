@@ -6,6 +6,7 @@
 
 
 from collections import OrderedDict
+from re import search
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -57,6 +58,10 @@ from home_robot.core.interfaces import Observations
 from habitat.core.logging import logger
 from habitat_baselines.utils.timing import g_timer
 import cv2
+from ultralytics import SAM
+from nvitop import Device
+import time
+from torchvision import transforms
 PARENT_DIR = Path(__file__).resolve().parent
 MOBILE_SAM_CHECKPOINT_PATH = str(PARENT_DIR / "pretrained_wt" / "mobile_sam.pt")
 CLASSES = [
@@ -98,7 +103,7 @@ except ImportError:
 
 
 @baseline_registry.register_policy
-class GazePointNavResNetPolicy(NetPolicy):
+class YOLOSAMPointNavResNetPolicy(NetPolicy):
     def __init__(
         self,
         observation_space: spaces.Dict,
@@ -210,7 +215,7 @@ class YOLOPerception(PerceptionModule):
         checkpoint_file: Optional[str] = MOBILE_SAM_CHECKPOINT_PATH,
         sem_gpu_id=0,
         verbose: bool = False,
-        confidence_threshold: Optional[float] = 0.02,
+        confidence_threshold: Optional[float] = 0.2,
         
     ):
         """Loads a YOLO model for object detection and instance segmentation
@@ -232,7 +237,8 @@ class YOLOPerception(PerceptionModule):
             print(
                 f"Loading YOLO model from {yolo_model_id} and MobileSAM with checkpoint={checkpoint_file}"   
             )
-        self.model = YOLO(model='yolov8s-world.pt')
+        with torch.no_grad():
+            self.model = YOLO(model='yolov8s-world.pt')
         vocab = CLASSES
         self.model.set_classes(vocab)
         # Freeze the YOLO model's parameters
@@ -240,93 +246,96 @@ class YOLOPerception(PerceptionModule):
             param.requires_grad = False
 
         self.confidence_threshold = confidence_threshold
-
+        with torch.no_grad():
+            self.sam_model = SAM(checkpoint_file)
+            # Freeze the SAM model's parameters
+        for param in self.sam_model.parameters():
+            param.requires_grad = False
         self.model.cuda()
         torch.cuda.empty_cache()
 
-    def create_gaussian_mask(self, height, width, boxes, max_sigma=25):
-        if len(boxes) > 0:
-            # print("Detected")
-            boxes=boxes[0]
-            x_min, y_min, x_max, y_max = boxes
-            center = ((boxes[0] + boxes[2]) // 2, (boxes[1] + boxes[3]) // 2)    
-
-            size = (x_max - x_min, y_max - y_min)
-            sigma_x = min(size[0] / 6, max_sigma)
-            sigma_y = min(size[1] / 6, max_sigma)
-
-            y, x = np.ogrid[0:height, 0:width]
-            distance = np.sqrt((x - center[0])**2 / (2 * (sigma_x**2) + 1e-6) + (y - center[1])**2 / (2 * (sigma_y**2) + 1e-6))        
-            gaussian = np.exp(-distance)
-            return np.expand_dims(gaussian / gaussian.max(), axis=2) 
-        else:
-            # print("Nothing Detected")
-            return np.zeros((160, 120, 1))
-
-    def predict(
-        self,
-        obs: Observations,
-        depth_threshold: Optional[float] = None,
-        draw_instance_predictions: bool = True,
-    ) -> Observations:
-        """
-        Arguments:
-            obs.rgb: image of shape (H, W, 3) (in RGB order - Detic expects BGR)
-            obs.depth: depth frame of shape (H, W), used for depth filtering
-            depth_threshold: if specified, the depth threshold per instance
-
-        Returns:
-            obs.semantic: segmentation predictions of shape (H, W) with
-            indices in [0, num_sem_categories - 1]
-            obs.task_observations["semantic_frame"]: segmentation visualization
-            image of shape (H, W, 3)
-        """
+   
+    def predict(self, obs: Observations, depth_threshold: Optional[float] = None, draw_instance_predictions: bool = True) -> Observations:
         torch.cuda.empty_cache()
-        # start_time = time.time()  
-        nms_threshold=0.8
-            
-        images_tensor = obs["head_rgb"] 
-        obj_class_ids = obs["yolo_object_sensor"].cpu().numpy().flatten()
-        rec_class_ids = obs["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
-        batch_size = images_tensor.shape[0]
-        images = [images_tensor[i].cpu().numpy() for i in range(images_tensor.size(0))]   
-        search_list = np.concatenate((obj_class_ids, rec_class_ids)).tolist()
+        nms_threshold = 0.8
+        if("head_rgb" in obs):
+            images_tensor = obs["head_rgb"]
+            obj_class_ids = obs["yolo_object_sensor"].cpu().numpy().flatten()
+            rec_class_ids = obs["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
+        else:
+            return np.zeros_like(obs["yolo_segmenatation_sensor"])
 
+        images = [images_tensor[i].clone().detach().cpu().numpy() for i in range(images_tensor.size(0))]
+        search_list = np.concatenate((obj_class_ids, rec_class_ids)).tolist()
         height, width, _ = images[0].shape
-        results = list(self.model(images, classes=search_list, conf=self.confidence_threshold, iou=nms_threshold, stream=True, verbose=False, half =True))
-        obj_semantic_masks = []
-        rec_semantic_masks = []
+        with torch.no_grad():
+            results = list(self.model(images, classes=search_list, conf=self.confidence_threshold, iou=nms_threshold, stream=True, verbose=False, half =True))
+        obj_masks = []
+        rec_masks = []
 
         for idx, result in enumerate(results):
+            img = images[idx]
+            obj_class_id = obj_class_ids[idx]
+            rec_class_id = rec_class_ids[idx]
+            batch_boxes = result.boxes.xyxy.cpu().numpy()
             class_ids = result.boxes.cls.cpu().numpy()
-            input_boxes = result.boxes.xyxy.cpu().numpy()
 
-            obj_mask_idx = np.isin(class_ids, obj_class_ids[idx])
-            rec_mask_idx = np.isin(class_ids, rec_class_ids[idx])
+            obj_boxes = batch_boxes[class_ids == obj_class_id]
+            rec_boxes = batch_boxes[class_ids == rec_class_id]
+            # image= cv2.cvtColor(images[idx], cv2.COLOR_BGR2RGB)
+            # # Add the text for the target object
+            # cv2.putText(image, f"Target object: {CLASSES[obj_class_id]}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
 
-            obj_boxes = input_boxes[obj_mask_idx]
-            rec_boxes = input_boxes[rec_mask_idx]
+            # # Add the text for the target receptacle
+            # cv2.putText(image, f"Target Receptacle: {CLASSES[rec_class_id]}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1)
+            # cv2.imwrite('orig_image{}.png'.format(idx), image)
 
-            obj_semantic_mask = self.create_gaussian_mask(height, width, obj_boxes)
-            rec_semantic_mask = self.create_gaussian_mask(height, width, rec_boxes)
+            combined_boxes = np.vstack((obj_boxes, rec_boxes)) if len(obj_boxes) > 0 or len(rec_boxes) > 0 else None
+
+            obj_mask = np.zeros((160, 120, 1), dtype=np.float64)
+            rec_mask = np.zeros((160, 120, 1), dtype=np.float64)
             
-            # cv2.imwrite('obj_mask{}.png'.format(idx), obj_semantic_mask * 255)
-            # cv2.imwrite('rec_mask{}.png'.format(idx), rec_semantic_mask * 255)
-            # cv2.imwrite('orig_image{}.png'.format(idx), cv2.cvtColor(images[idx], cv2.COLOR_BGR2RGB) )
+            if combined_boxes is not None:
+                try:
+                    with torch.no_grad():
+                        devices = Device.all()
+                        # Log the initial memory usage
+                        logger.info(f"Before SAM GPU Memory - Used: {devices[0].memory_used_human()}, Free: {devices[0].memory_free_human()}")
+                        logger.info(f"No. of combined boxes: {len(combined_boxes)}")
+                        sam_outputs =(self.sam_model.predict(stream=True,source=result.orig_img, bboxes=combined_boxes, points=None, labels=None, verbose=False))
+                    sam_output = next(sam_outputs)
+                    result_masks = sam_output.masks
+                    masks_tensor = result_masks.data
 
+                    obj_mask = np.zeros((height, width, 1), dtype=np.float64)
+                    rec_mask = np.zeros((height, width, 1), dtype=np.float64)
 
-            obj_semantic_mask = cv2.resize(obj_semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
-            rec_semantic_mask = cv2.resize(rec_semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+                    for mask, class_id in zip(masks_tensor, class_ids):
+                        if class_id == obj_class_id:
+                            obj_mask += mask.cpu().numpy()[:, :, None]
+                        elif class_id == rec_class_id:
+                            rec_mask += mask.cpu().numpy()[:, :, None]
+                    
+                    obj_mask = cv2.resize(obj_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+                    obj_mask = np.expand_dims(obj_mask, axis=-1)
+                    rec_mask = cv2.resize(rec_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+                    rec_mask = np.expand_dims(rec_mask, axis=-1)
+                    del sam_outputs, result_masks
+                except Exception as e:
+                    logger.info(f"An error occurred at index {idx}:{e}")
+
+                    continue
+            obj_masks.append(obj_mask)
+            rec_masks.append(rec_mask)
             
-            obj_semantic_mask = np.expand_dims(obj_semantic_mask, axis=-1)
-            rec_semantic_mask = np.expand_dims(rec_semantic_mask, axis=-1)
-            obj_semantic_masks.append(obj_semantic_mask)
-            rec_semantic_masks.append(rec_semantic_mask)
+            # cv2.imwrite('obj_mask{}.png'.format(idx), obj_mask * 255)
+            # cv2.imwrite('rec_mask{}.png'.format(idx), rec_mask * 255)
+            
+            torch.cuda.empty_cache()
 
+        combined_masks = np.concatenate((np.array(obj_masks), np.array(rec_masks)), axis=-1)
+        del results, obj_masks, rec_masks, search_list
         torch.cuda.empty_cache()
-        obj_semantic_masks = np.array(obj_semantic_masks)
-        rec_semantic_masks = np.array(rec_semantic_masks)
-        combined_masks = np.concatenate((obj_semantic_masks, rec_semantic_masks), axis=-1)
         return combined_masks
     
 
@@ -344,9 +353,7 @@ class GazeResNetEncoder(nn.Module):
     ):
         super().__init__()
         self._segmentation = YOLOPerception()
-        for param in self._segmentation.model.parameters():
-            param.requires_grad = False
-        self.masks = torch.zeros((4, 160, 120, 2))  #to change to the batch size
+        self.masks = torch.zeros((32, 160, 120, 2))  #to change to the batch size
 
         self.no_downscaling = no_downscaling
         # Determine which visual observations are present
@@ -442,9 +449,9 @@ class GazeResNetEncoder(nn.Module):
                     nn.init.constant_(layer.bias, val=0)
 
     def forward(self, observations: Dict[str, torch.Tensor]) -> torch.Tensor:  # type: ignore
+        torch.cuda.empty_cache()
         if self.is_blind:
             return None
-        
         
         if (  # noqa: SIM401
                 "yolo_segmentation_sensor"
@@ -460,11 +467,12 @@ class GazeResNetEncoder(nn.Module):
         for k in self.visual_keys:
             obs_k = observations[k]
             #Make changes to the sensors as required by the GAZE skill
-            if(k == "object_segmentation"):
-                obs_k = self.masks[..., 0:1]
+            if(k == "ovmm_nav_goal_segmentation"):
+                obs_k = self.masks
 
-            if(k == "start_recep_segmentation"):
+            if(k == "receptacle_segmentation"):
                 obs_k = self.masks[..., 1:2]
+      
             # permute tensor to dimension [BATCH x CHANNEL x HEIGHT X WIDTH]
             obs_k = obs_k.permute(0, 3, 1, 2)
             if self.key_needs_rescaling[k] is not None:
@@ -482,6 +490,7 @@ class GazeResNetEncoder(nn.Module):
         x = self.running_mean_and_var(x)
         x = self.backbone(x)
         x = self.compression(x)
+        torch.cuda.empty_cache()
         return x
 
 
@@ -606,6 +615,7 @@ class GazePointNavResNetNet(Net):
     """
 
     PRETRAINED_VISUAL_FEATURES_KEY = "visual_features"
+    SEG_MASKS = "segmentation_masks"
     prev_action_embedding: nn.Module
 
     def __init__(
@@ -660,7 +670,7 @@ class GazePointNavResNetNet(Net):
                 ImageGoalSensor.cls_uuid,
                 InstanceImageGoalSensor.cls_uuid,
             }
-            fuse_keys = [k for k in fuse_keys if k not in goal_sensor_keys and k!="head_rgb" and k!="yolo_object_sensor" and k!="yolo_start_receptacle_sensor"]
+            fuse_keys = [k for k in fuse_keys if k not in goal_sensor_keys and k!="head_rgb" and k!="yolo_object_sensor" and k!="yolo_start_receptacle_sensor" and k!="yolo_segmentation_sensor"]
 
         self._fuse_keys_1d: List[str] = [
             k
@@ -895,6 +905,7 @@ class GazePointNavResNetNet(Net):
         masks,
         rnn_build_seq_info: Optional[Dict[str, torch.Tensor]] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]:
+        torch.cuda.empty_cache()
         x = []
         aux_loss_state = {}
         if not self.is_blind:
@@ -1054,5 +1065,5 @@ class GazePointNavResNetNet(Net):
             out, rnn_hidden_states, masks, rnn_build_seq_info
         )
         aux_loss_state["rnn_output"] = out
-
+        torch.cuda.empty_cache()
         return out, rnn_hidden_states, aux_loss_state

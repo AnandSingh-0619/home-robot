@@ -16,6 +16,7 @@ defaults:
     - yolo_object_sensor
     - yolo_start_receptacle_sensor
     - yolo_goal_receptacle_sensor
+    - yolo_segmentation_sensor
   - /benchmark/ovmm: gaze
   - /habitat_baselines: habitat_baselines_rl_config_base
   - /habitat/simulator/sim_sensors@habitat.simulator.agents.main_agent.sim_sensors.head_rgb_sensor: head_rgb_sensor
@@ -37,6 +38,7 @@ habitat:
       - yolo_object_sensor
       - yolo_start_receptacle_sensor
       # - yolo_goal_receptacle_sensor
+      - yolo_segmentation_sensor
       - object_embedding
       - joint
 
@@ -92,7 +94,7 @@ habitat_baselines:
           size: 120
           channels_last: True
           trans_keys:
-            - head_rgb
+            # - head_rgb
             - head_depth
             - head_panoptic
             - object_segmentation
@@ -113,7 +115,7 @@ habitat_baselines:
           width: 120
           channels_last: True
           trans_keys:
-            - head_rgb
+            # - head_rgb
             - head_depth
             - head_panoptic
             - object_segmentation

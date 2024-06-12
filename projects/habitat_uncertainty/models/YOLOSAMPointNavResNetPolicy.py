@@ -60,6 +60,8 @@ from habitat_baselines.utils.timing import g_timer
 import cv2
 from ultralytics import SAM
 from nvitop import Device
+import time
+from torchvision import transforms
 PARENT_DIR = Path(__file__).resolve().parent
 MOBILE_SAM_CHECKPOINT_PATH = str(PARENT_DIR / "pretrained_wt" / "mobile_sam.pt")
 CLASSES = [
@@ -235,7 +237,8 @@ class YOLOPerception(PerceptionModule):
             print(
                 f"Loading YOLO model from {yolo_model_id} and MobileSAM with checkpoint={checkpoint_file}"   
             )
-        self.model = YOLO(model='yolov8s-world.pt')
+        with torch.no_grad():
+            self.model = YOLO(model='yolov8s-world.pt')
         vocab = CLASSES
         self.model.set_classes(vocab)
         # Freeze the YOLO model's parameters
@@ -243,8 +246,9 @@ class YOLOPerception(PerceptionModule):
             param.requires_grad = False
 
         self.confidence_threshold = confidence_threshold
-        self.sam_model = SAM(checkpoint_file)
-        # Freeze the SAM model's parameters
+        with torch.no_grad():
+            self.sam_model = SAM(checkpoint_file)
+            # Freeze the SAM model's parameters
         for param in self.sam_model.parameters():
             param.requires_grad = False
         self.model.cuda()
@@ -253,23 +257,21 @@ class YOLOPerception(PerceptionModule):
    
     def predict(self, obs: Observations, depth_threshold: Optional[float] = None, draw_instance_predictions: bool = True) -> Observations:
         torch.cuda.empty_cache()
-        
         nms_threshold = 0.8
-        images_tensor = obs["head_rgb"]
-        obj_class_ids = obs["yolo_object_sensor"].cpu().numpy().flatten()
-        rec_class_ids = obs["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
-        # batch_size = images_tensor.shape[0]
-        # if(batch_size>32):
-        # logger.info(f"Current batch: {batch_size}")
-        # devices = Device.all()
-        # Log the initial memory usage
-        # logger.info(f"GPU Memory - Used: {devices[0].memory_used_human()}, Free: {devices[0].memory_free_human()}")
-        # logger.info(f"YOLO inference")
+        if("head_rgb" in obs):
+            images_tensor = obs["head_rgb"]
+            obj_class_ids = obs["yolo_object_sensor"].cpu().numpy().flatten()
+            rec_class_ids = obs["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
+        else:
+            return np.zeros_like(obs["yolo_segmenatation_sensor"])
+
         images = [images_tensor[i].clone().detach().cpu().numpy() for i in range(images_tensor.size(0))]
         search_list = np.concatenate((obj_class_ids, rec_class_ids)).tolist()
         height, width, _ = images[0].shape
-        results = list(self.model(images, classes=search_list, conf=self.confidence_threshold, iou=nms_threshold, stream=True, verbose=False, half =True))
-        
+        batch_size = images_tensor.shape[0]
+        logger.info(f"Batch size:{batch_size}")
+        with torch.no_grad():
+            results = list(self.model(images, classes=search_list, conf=self.confidence_threshold, iou=nms_threshold, stream=True, verbose=False, half =True))
         obj_masks = []
         rec_masks = []
 
@@ -296,28 +298,35 @@ class YOLOPerception(PerceptionModule):
             rec_mask = np.zeros((160, 120, 1), dtype=np.float64)
             
             if combined_boxes is not None:
-                # logger.info(f"mobileSAM inference")
-                sam_outputs = list(self.sam_model.predict(stream=True, source=img, bboxes=combined_boxes, points=None, labels=None, verbose=False))
-                sam_output = sam_outputs[0]
+                try:
+                    with torch.no_grad():
+                        devices = Device.all()
+                        # Log the initial memory usage
+                        # logger.info(f"Before SAM GPU Memory - Used: {devices[0].memory_used_human()}, Free: {devices[0].memory_free_human()}")
+                        # logger.info(f"No. of combined boxes: {len(combined_boxes)}")
+                        sam_outputs =(self.sam_model.predict(stream=True,source=result.orig_img, bboxes=combined_boxes, points=None, labels=None, verbose=False))
+                    sam_output = next(sam_outputs)
+                    result_masks = sam_output.masks
+                    masks_tensor = result_masks.data
 
-                # sam_output = next(sam_outputs)
-                result_masks = sam_output.masks.cpu().numpy()
+                    obj_mask = np.zeros((height, width, 1), dtype=np.float64)
+                    rec_mask = np.zeros((height, width, 1), dtype=np.float64)
 
-                obj_mask = np.zeros((height, width), dtype=np.float64)
-                rec_mask = np.zeros((height, width), dtype=np.float64)
+                    for mask, class_id in zip(masks_tensor, class_ids):
+                        if class_id == obj_class_id:
+                            obj_mask += mask.cpu().numpy()[:, :, None]
+                        elif class_id == rec_class_id:
+                            rec_mask += mask.cpu().numpy()[:, :, None]
+                    
+                    obj_mask = cv2.resize(obj_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+                    obj_mask = np.expand_dims(obj_mask, axis=-1)
+                    rec_mask = cv2.resize(rec_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+                    rec_mask = np.expand_dims(rec_mask, axis=-1)
+                    del sam_outputs, result_masks
+                except Exception as e:
+                    logger.info(f"An error occurred at index {idx}:{e}")
 
-                for mask, class_id in zip(result_masks, class_ids):
-                    if class_id == obj_class_id:
-                        obj_mask += mask.data.squeeze()
-                    elif class_id == rec_class_id:
-                        rec_mask += mask.data.squeeze()
-                
-                obj_mask = cv2.resize(obj_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
-                obj_mask = np.expand_dims(obj_mask, axis=-1)
-                rec_mask = cv2.resize(rec_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
-                rec_mask = np.expand_dims(rec_mask, axis=-1)
-                del sam_outputs, sam_output, result_masks
-            
+                    continue
             obj_masks.append(obj_mask)
             rec_masks.append(rec_mask)
             
@@ -328,6 +337,7 @@ class YOLOPerception(PerceptionModule):
 
         combined_masks = np.concatenate((np.array(obj_masks), np.array(rec_masks)), axis=-1)
         del results, obj_masks, rec_masks, search_list
+        logger.info(f"Masks size:{combined_masks.shape}")
         torch.cuda.empty_cache()
         return combined_masks
     
@@ -346,9 +356,7 @@ class GazeResNetEncoder(nn.Module):
     ):
         super().__init__()
         self._segmentation = YOLOPerception()
-        for param in self._segmentation.model.parameters():
-            param.requires_grad = False
-        self.masks = torch.zeros((4, 160, 120, 2))  #to change to the batch size
+        self.masks = torch.zeros((32, 160, 120, 2))  #to change to the batch size
 
         self.no_downscaling = no_downscaling
         # Determine which visual observations are present
@@ -449,20 +457,15 @@ class GazeResNetEncoder(nn.Module):
             return None
         
         if (  # noqa: SIM401
-                GazePointNavResNetNet.SEG_MASKS
+                "yolo_segmentation_sensor"
                 in observations
             ):
-                self.masks = observations[GazePointNavResNetNet.SEG_MASKS]
+                self.masks = observations["yolo_segmentation_sensor"]
         else:
-        # if np.random.random() < 0.4:
-        #YOLO Detection with Mobile SAM segmentations
             # with g_timer.avg_time("trainer.yolo_detector_step"):
             self.masks = self._segmentation.predict(observations)
             logger.info(f"Calling YOLO inference from visual encoder")
-        # if(self.masks.shape[0]>32):
-        
-        # obj_masks = self.masks[..., 0:1]
-        # rec_masks = self.masks[..., 1:2]
+
         cnn_input = []
         for k in self.visual_keys:
             obs_k = observations[k]
@@ -490,10 +493,6 @@ class GazeResNetEncoder(nn.Module):
         x = self.running_mean_and_var(x)
         x = self.backbone(x)
         x = self.compression(x)
-        # if(self.masks.shape[0]>32):
-        # devices = Device.all()
-        # Log the initial memory usage
-        # logger.info(f"GPU Memory - Used: {devices[0].memory_used_human()}, Free: {devices[0].memory_free_human()}") 
         torch.cuda.empty_cache()
         return x
 
@@ -674,7 +673,7 @@ class GazePointNavResNetNet(Net):
                 ImageGoalSensor.cls_uuid,
                 InstanceImageGoalSensor.cls_uuid,
             }
-            fuse_keys = [k for k in fuse_keys if k not in goal_sensor_keys and k!="head_rgb" and k!="yolo_object_sensor" and k!="yolo_start_receptacle_sensor"]
+            fuse_keys = [k for k in fuse_keys if k not in goal_sensor_keys and k!="head_rgb" and k!="yolo_object_sensor" and k!="yolo_start_receptacle_sensor" and k!="yolo_segmentation_sensor"]
 
         self._fuse_keys_1d: List[str] = [
             k

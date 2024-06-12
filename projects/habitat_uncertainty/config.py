@@ -20,6 +20,12 @@ from hydra.core.config_store import ConfigStore
 from hydra.plugins.search_path_plugin import SearchPathPlugin
 cs = ConfigStore.instance()
 
+##########################################################################
+# Sensors
+##########################################################################
+@dataclass
+class YOLOSensorConfig(LabSensorConfig):
+    type: str = "YOLOSensor"
 @dataclass
 class customDDPPOConfig(DDPPOConfig):
     """Decentralized distributed proximal policy optimization config"""
@@ -98,6 +104,13 @@ cs.store(
     group="habitat/task/lab_sensors",
     name="yolo_goal_receptacle_sensor",
     node=YOLOGoalReceptacleSensorConfig,
+)
+
+cs.store(
+    package="habitat.task.lab_sensors.yolo_segmentation_sensor",
+    group="habitat/task/lab_sensors",
+    name="yolo_segmentation_sensor",
+    node=YOLOSensorConfig,
 )
 
 class HabitatConfigPlugin(SearchPathPlugin):
