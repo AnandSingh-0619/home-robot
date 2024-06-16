@@ -137,51 +137,51 @@ class YOLOGoalReceptacleSensor(YOLOObjectSensor):
         )
 
 
-@registry.register_sensor
-class YOLOSensor(Sensor):
-    cls_uuid: str = "yolo_segmentation_sensor"
-    panoptic_uuid: str = "head_panoptic"
-    yolo_perception_instance = None
-    def __init__(
-        self,
-        sim,
-        config,
-        *args: Any,
-        **kwargs: Any,
-    ):
-        self._config = config
-        self._sim = sim
-        self._object_ids_start = self._sim.habitat_config.object_ids_start
-        self._resolution = (
-            sim.agents[0]
-            ._sensors[self.panoptic_uuid]
-            .specification()
-            .resolution
-        )
-        self.classes =149
-        super().__init__(config=config)
+# @registry.register_sensor
+# class YOLOSensor(Sensor):
+#     cls_uuid: str = "yolo_segmentation_sensor"
+#     panoptic_uuid: str = "head_panoptic"
+#     yolo_perception_instance = None
+#     def __init__(
+#         self,
+#         sim,
+#         config,
+#         *args: Any,
+#         **kwargs: Any,
+#     ):
+#         self._config = config
+#         self._sim = sim
+#         self._object_ids_start = self._sim.habitat_config.object_ids_start
+#         self._resolution = (
+#             sim.agents[0]
+#             ._sensors[self.panoptic_uuid]
+#             .specification()
+#             .resolution
+#         )
+#         self.classes =149
+#         super().__init__(config=config)
        
 
-    def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
-        return self.cls_uuid
+#     def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
+#         return self.cls_uuid
 
-    def _get_sensor_type(self, *args: Any, **kwargs: Any):
-        return SensorTypes.TENSOR
+#     def _get_sensor_type(self, *args: Any, **kwargs: Any):
+#         return SensorTypes.TENSOR
 
-    def _get_observation_space(self, *args, **kwargs):
-        return spaces.Box(
-            shape=(
-                160,
-                120,
-                2,
-            ),
-            low=0,
-            high=1,
-            dtype=np.uint8,
-        )
+#     def _get_observation_space(self, *args, **kwargs):
+#         return spaces.Box(
+#             shape=(
+#                 160,
+#                 120,
+#                 2,
+#             ),
+#             low=0,
+#             high=1,
+#             dtype=np.uint8,
+#         )
 
-    def get_observation(self, observations, *args, episode, task, **kwargs):
+#     def get_observation(self, observations, *args, episode, task, **kwargs):
 
             
-        segmentation_sensor = np.zeros((160,120,2), dtype=np.uint8)
-        return segmentation_sensor
+#         segmentation_sensor = np.zeros((160,120,2), dtype=np.uint8)
+#         return segmentation_sensor

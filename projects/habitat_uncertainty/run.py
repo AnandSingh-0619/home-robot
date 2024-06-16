@@ -13,7 +13,7 @@ from habitat_uncertainty.config import HabitatConfigPlugin
 
 from habitat_baselines.run import execute_exp
 from habitat_uncertainty.task.sensors import YOLOObjectSensor, YOLOStartReceptacleSensor, YOLOGoalReceptacleSensor
-from habitat_uncertainty.utils.YOLO_pred import YOLOPerception as YOLO_pred
+# from habitat_uncertainty.utils.YOLO_pred import YOLOPerception as YOLO_pred
 from habitat_uncertainty.trainers.gaze_ppo_trainer import GazePPOTrainer
 from habitat_uncertainty.trainers.YOLOSAM_trainer import YOLOSAMPPOTrainer
 from habitat_uncertainty.models.GazePointNavResNetPolicy import GazePointNavResNetPolicy

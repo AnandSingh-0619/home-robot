@@ -66,17 +66,17 @@ class SingleAgentAccessManager(SingleAgentAccessMgr):
         rollouts.to(device)
         return rollouts
     
-    def load_state_dict(self, state: Dict) -> None:
-        self._actor_critic.load_state_dict(state["state_dict"])
-        if self._updater is not None:
-            self._updater.load_state_dict(state)
-            if "lr_sched_state" in state:
-                # self._lr_scheduler.load_state_dict(state["lr_sched_state"])
+    # def load_state_dict(self, state: Dict) -> None:
+    #     self._actor_critic.load_state_dict(state["state_dict"])
+    #     if self._updater is not None:
+    #         self._updater.load_state_dict(state)
+    #         if "lr_sched_state" in state:
+    #             # self._lr_scheduler.load_state_dict(state["lr_sched_state"])
 
-                lr_sched_state = state["lr_sched_state"]
-                if isinstance(lr_sched_state, tuple):
-                    lr_sched_state = lr_sched_state[0]  # Assuming the relevant dictionary is at index 0
-                self._lr_scheduler.load_state_dict(lr_sched_state)
+    #             lr_sched_state = state["lr_sched_state"]
+    #             if isinstance(lr_sched_state, tuple):
+    #                 lr_sched_state = lr_sched_state[0]  # Assuming the relevant dictionary is at index 0
+    #             self._lr_scheduler.load_state_dict(lr_sched_state)
                 
 
    
@@ -99,17 +99,17 @@ def get_rollout_obs_space(obs_space, actor_critic, config):
                 **obs_space.spaces,
             }
         )
-    # if not config.habitat_baselines.rl.ddppo.train_detector:
-    #     obs_space = spaces.Dict(
-    #         {
-    #             GazePointNavResNetNet.SEG_MASKS: spaces.Box(
-    #                 low=np.finfo(np.float32).min,
-    #                 high=np.finfo(np.float32).max,
-    #                 shape=[160, 120, 2],
-    #                 dtype=np.float32,
-    #             ),
-    #             **obs_space.spaces,
-    #         }
-    #     )
+    if not config.habitat_baselines.rl.ddppo.train_detector:
+        obs_space = spaces.Dict(
+            {
+                actor_critic.net.SEG_MASKS: spaces.Box(
+                    low=np.finfo(np.float32).min,
+                    high=np.finfo(np.float32).max,
+                    shape=[160, 120, 2],
+                    dtype=np.float32,
+                ),
+                **obs_space.spaces,
+            }
+        )
     return obs_space
 

@@ -216,7 +216,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
             self._agent.updater.init_distributed(find_unused_params=False)  # type: ignore
         self._agent.post_init()
         self._is_static_detector = not self.config.habitat_baselines.rl.ddppo.train_detector
-        self._yolo_detector =self._agent.actor_critic.visual_encoder._segmentation
+        self._yolo_detector =self._agent.actor_critic.net.segmentation
 
         self._is_static_encoder = (
             not self.config.habitat_baselines.rl.ddppo.train_encoder
@@ -228,7 +228,8 @@ class YOLOSAMPPOTrainer(PPOTrainer):
         batch = batch_obs(observations, device=self.device)
         batch = apply_obs_transforms_batch(batch, self.obs_transforms)  # type: ignore
         if(self._is_static_detector):
-            batch["yolo_segmentation_sensor"] = self._yolo_detector.predict(batch)
+            masks = self._yolo_detector.predict(batch)
+            batch[self._agent.actor_critic.net.SEG_MASKS] = torch.tensor(masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device()))).detach().requires_grad_(False)
 
         if self._is_static_encoder:
             self._encoder = self._agent.actor_critic.visual_encoder
@@ -334,8 +335,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
             with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
                 self._masks = self._yolo_detector.predict(batch)
 
-            batch["yolo_segmentation_sensor"] = self._masks
-
+            batch[self._agent.actor_critic.net.SEG_MASKS] = torch.tensor(self._masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device()))).detach().requires_grad_(False)
 
         # Create a new batch by including only those keys present in rollout_observation_keys
         cleaned_batch = {key: value for key, value in batch.items() if key in self.rollout_observation_keys}
@@ -477,12 +477,9 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 if self._is_distributed:
                     self.num_rollouts_done_store.add("num_done", 1)
 
-                logger.info(f"Rollout step over. Now update losses")
+                # logger.info(f"Rollout step over. Now update losses")
                 losses = self._update_agent()
                 torch.cuda.empty_cache()
-                devices = Device.all()
-                # Log the initial memory usage
-                logger.info(f"GPU Memory - Used: {devices[0].memory_used_human()}, Free: {devices[0].memory_free_human()}")
                 self.num_updates_done += 1
                 losses = self._coalesce_post_step(
                     losses,
@@ -504,4 +501,6 @@ class YOLOSAMPPOTrainer(PPOTrainer):
 
                 profiling_wrapper.range_pop()  # train update
                 torch.cuda.empty_cache()
+                # logger.info(f"Losses updates. New rollout")
+
             self.envs.close()

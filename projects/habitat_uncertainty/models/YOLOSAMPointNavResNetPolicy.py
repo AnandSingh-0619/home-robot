@@ -252,24 +252,23 @@ class YOLOPerception(PerceptionModule):
         for param in self.sam_model.parameters():
             param.requires_grad = False
         self.model.cuda()
+        self.sam_model.cuda()
         torch.cuda.empty_cache()
 
    
     def predict(self, obs: Observations, depth_threshold: Optional[float] = None, draw_instance_predictions: bool = True) -> Observations:
         torch.cuda.empty_cache()
         nms_threshold = 0.8
-        if("head_rgb" in obs):
-            images_tensor = obs["head_rgb"]
-            obj_class_ids = obs["yolo_object_sensor"].cpu().numpy().flatten()
-            rec_class_ids = obs["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
-        else:
-            return np.zeros_like(obs["yolo_segmenatation_sensor"])
+        
+        images_tensor = obs["head_rgb"]
+        obj_class_ids = obs["yolo_object_sensor"].cpu().numpy().flatten()
+        rec_class_ids = obs["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
 
         images = [images_tensor[i].clone().detach().cpu().numpy() for i in range(images_tensor.size(0))]
         search_list = np.concatenate((obj_class_ids, rec_class_ids)).tolist()
         height, width, _ = images[0].shape
         batch_size = images_tensor.shape[0]
-        logger.info(f"Batch size:{batch_size}")
+
         with torch.no_grad():
             results = list(self.model(images, classes=search_list, conf=self.confidence_threshold, iou=nms_threshold, stream=True, verbose=False, half =True))
         obj_masks = []
@@ -300,11 +299,8 @@ class YOLOPerception(PerceptionModule):
             if combined_boxes is not None:
                 try:
                     with torch.no_grad():
-                        devices = Device.all()
-                        # Log the initial memory usage
-                        # logger.info(f"Before SAM GPU Memory - Used: {devices[0].memory_used_human()}, Free: {devices[0].memory_free_human()}")
-                        # logger.info(f"No. of combined boxes: {len(combined_boxes)}")
                         sam_outputs =(self.sam_model.predict(stream=True,source=result.orig_img, bboxes=combined_boxes, points=None, labels=None, verbose=False))
+                       
                     sam_output = next(sam_outputs)
                     result_masks = sam_output.masks
                     masks_tensor = result_masks.data
@@ -324,6 +320,9 @@ class YOLOPerception(PerceptionModule):
                     rec_mask = np.expand_dims(rec_mask, axis=-1)
                     del sam_outputs, result_masks
                 except Exception as e:
+                    devices = Device.all()
+                    # Log the initial memory usage
+                    logger.info(f"After SAM GPU Memory - Used: {devices[0].memory_used_human()}, Free: {devices[0].memory_free_human()}")
                     logger.info(f"An error occurred at index {idx}:{e}")
 
                     continue
@@ -337,7 +336,6 @@ class YOLOPerception(PerceptionModule):
 
         combined_masks = np.concatenate((np.array(obj_masks), np.array(rec_masks)), axis=-1)
         del results, obj_masks, rec_masks, search_list
-        logger.info(f"Masks size:{combined_masks.shape}")
         torch.cuda.empty_cache()
         return combined_masks
     
@@ -355,8 +353,6 @@ class GazeResNetEncoder(nn.Module):
         normalize_visual_inputs: bool = False,
     ):
         super().__init__()
-        self._segmentation = YOLOPerception()
-        self.masks = torch.zeros((32, 160, 120, 2))  #to change to the batch size
 
         self.no_downscaling = no_downscaling
         # Determine which visual observations are present
@@ -457,13 +453,13 @@ class GazeResNetEncoder(nn.Module):
             return None
         
         if (  # noqa: SIM401
-                "yolo_segmentation_sensor"
+                GazePointNavResNetNet.SEG_MASKS
                 in observations
             ):
-                self.masks = observations["yolo_segmentation_sensor"]
+                self.masks = observations[GazePointNavResNetNet.SEG_MASKS]
         else:
             # with g_timer.avg_time("trainer.yolo_detector_step"):
-            self.masks = self._segmentation.predict(observations)
+            self.masks = self.segmentation.predict(observations)
             logger.info(f"Calling YOLO inference from visual encoder")
 
         cnn_input = []
@@ -654,6 +650,38 @@ class GazePointNavResNetNet(Net):
         self._n_prev_action = 32
         rnn_input_size = self._n_prev_action  # test
 
+        logger.info(
+            "Previous action embedding number of parameters: {}".format(
+                sum(param.numel() for param in self.prev_action_embedding.parameters())
+            )
+        )
+        self.segmentation = None
+        
+        self.masks = torch.zeros((32, 160, 120, 2))  #to change to the batch size
+        self.segmentation = YOLOPerception(            
+            sem_gpu_id=0,
+            verbose=False,
+            confidence_threshold=0.2)
+        logger.info(
+            "YOLO number of parameters: {}".format(
+                sum(param.numel() for param in self.segmentation.model.parameters())
+            )
+        )
+        logger.info(
+            "YOLO trainable number of parameters: {}".format(
+                sum(param.numel() for param in self.segmentation.model.parameters() if param.requires_grad)
+            )
+        )
+        logger.info(
+            "SAM number of parameters: {}".format(
+                sum(param.numel() for param in self.segmentation.sam_model.parameters())
+            )
+        )
+        logger.info(
+            "SAM trainable number of parameters: {}".format(
+                sum(param.numel() for param in self.segmentation.sam_model.parameters() if param.requires_grad)
+            )
+        )
         # Only fuse the 1D state inputs. Other inputs are processed by the
         # visual encoder
         if fuse_keys is None:
@@ -737,7 +765,11 @@ class GazePointNavResNetNet(Net):
                 self._n_start_receptacles, 32
             )
             rnn_input_size += 32
-
+        logger.info(
+            "start_receptacles_embedding embedding number of parameters: {}".format(
+                sum(param.numel() for param in self.start_receptacles_embedding.parameters())
+            )
+        )
         if GoalReceptacleSensor.cls_uuid in observation_space.spaces:
             self._n_goal_receptacles = (
                 int(
@@ -870,14 +902,27 @@ class GazePointNavResNetNet(Net):
                     ),
                     nn.ReLU(True),
                 )
-
+        logger.info(
+            "Visual Features number of parameters: {}".format(
+                sum(param.numel() for param in self.visual_fc.parameters())
+            )
+        )
+        logger.info(
+            "Visual Encoder number of parameters: {}".format(
+                sum(param.numel() for param in self.visual_encoder.parameters())
+            )
+        )
         self.state_encoder = build_rnn_state_encoder(
             (0 if self.is_blind else self._hidden_size) + rnn_input_size,
             self._hidden_size,
             rnn_type=rnn_type,
             num_layers=num_recurrent_layers,
         )
-
+        logger.info(
+            "State Encoder number of parameters: {}".format(
+                sum(param.numel() for param in self.state_encoder.parameters())
+            )
+        )
         self.train()
 
     @property

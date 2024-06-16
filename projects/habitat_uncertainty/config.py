@@ -23,9 +23,9 @@ cs = ConfigStore.instance()
 ##########################################################################
 # Sensors
 ##########################################################################
-@dataclass
-class YOLOSensorConfig(LabSensorConfig):
-    type: str = "YOLOSensor"
+# @dataclass
+# class YOLOSensorConfig(LabSensorConfig):
+#     type: str = "YOLOSensor"
 @dataclass
 class customDDPPOConfig(DDPPOConfig):
     """Decentralized distributed proximal policy optimization config"""
@@ -106,12 +106,12 @@ cs.store(
     node=YOLOGoalReceptacleSensorConfig,
 )
 
-cs.store(
-    package="habitat.task.lab_sensors.yolo_segmentation_sensor",
-    group="habitat/task/lab_sensors",
-    name="yolo_segmentation_sensor",
-    node=YOLOSensorConfig,
-)
+# cs.store(
+#     package="habitat.task.lab_sensors.yolo_segmentation_sensor",
+#     group="habitat/task/lab_sensors",
+#     name="yolo_segmentation_sensor",
+#     node=YOLOSensorConfig,
+# )
 
 class HabitatConfigPlugin(SearchPathPlugin):
     def manipulate_search_path(self, search_path: ConfigSearchPath) -> None:
