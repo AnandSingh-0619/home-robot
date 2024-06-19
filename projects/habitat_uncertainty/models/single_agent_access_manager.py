@@ -25,7 +25,7 @@ from habitat_baselines.rl.ppo.policy import NetPolicy, Policy
 from habitat_baselines.rl.ppo.ppo import PPO
 from habitat_baselines.rl.ppo.updater import Updater
 from habitat_baselines.rl.ppo.single_agent_access_mgr import SingleAgentAccessMgr
-from habitat_uncertainty.models.GazePointNavResNetPolicy import GazePointNavResNetNet
+from habitat_uncertainty.models import *
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
@@ -66,17 +66,17 @@ class SingleAgentAccessManager(SingleAgentAccessMgr):
         rollouts.to(device)
         return rollouts
     
-    # def load_state_dict(self, state: Dict) -> None:
-    #     self._actor_critic.load_state_dict(state["state_dict"])
-    #     if self._updater is not None:
-    #         self._updater.load_state_dict(state)
-    #         if "lr_sched_state" in state:
-    #             # self._lr_scheduler.load_state_dict(state["lr_sched_state"])
+    def load_state_dict(self, state: Dict) -> None:
+        self._actor_critic.load_state_dict(state["state_dict"])
+        if self._updater is not None:
+            self._updater.load_state_dict(state)
+            if "lr_sched_state" in state:
+                # self._lr_scheduler.load_state_dict(state["lr_sched_state"])
 
-    #             lr_sched_state = state["lr_sched_state"]
-    #             if isinstance(lr_sched_state, tuple):
-    #                 lr_sched_state = lr_sched_state[0]  # Assuming the relevant dictionary is at index 0
-    #             self._lr_scheduler.load_state_dict(lr_sched_state)
+                lr_sched_state = state["lr_sched_state"]
+                if isinstance(lr_sched_state, tuple):
+                    lr_sched_state = lr_sched_state[0]  # Assuming the relevant dictionary is at index 0
+                self._lr_scheduler.load_state_dict(lr_sched_state)
                 
 
    

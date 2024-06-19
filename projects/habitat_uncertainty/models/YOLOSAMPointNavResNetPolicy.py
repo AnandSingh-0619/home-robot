@@ -701,7 +701,7 @@ class GazePointNavResNetNet(Net):
                 ImageGoalSensor.cls_uuid,
                 InstanceImageGoalSensor.cls_uuid,
             }
-            fuse_keys = [k for k in fuse_keys if k not in goal_sensor_keys and k!="head_rgb" and k!="yolo_object_sensor" and k!="yolo_start_receptacle_sensor" and k!="yolo_segmentation_sensor"]
+            fuse_keys = [k for k in fuse_keys if k not in goal_sensor_keys and k!="head_rgb" and k!="yolo_object_sensor" and k!="yolo_start_receptacle_sensor"]
 
         self._fuse_keys_1d: List[str] = [
             k

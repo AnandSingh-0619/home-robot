@@ -6,6 +6,7 @@
 
 
 from collections import OrderedDict
+from re import search
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 import numpy as np
@@ -57,6 +58,10 @@ from home_robot.core.interfaces import Observations
 from habitat.core.logging import logger
 from habitat_baselines.utils.timing import g_timer
 import cv2
+from ultralytics import SAM
+from nvitop import Device
+import time
+from torchvision import transforms
 PARENT_DIR = Path(__file__).resolve().parent
 MOBILE_SAM_CHECKPOINT_PATH = str(PARENT_DIR / "pretrained_wt" / "mobile_sam.pt")
 CLASSES = [
@@ -98,7 +103,7 @@ except ImportError:
 
 
 @baseline_registry.register_policy
-class GazePointNavResNetPolicy(NetPolicy):
+class HmapNavObjPointNavResNetPolicy(NetPolicy):
     def __init__(
         self,
         observation_space: spaces.Dict,
@@ -210,7 +215,7 @@ class YOLOPerception(PerceptionModule):
         checkpoint_file: Optional[str] = MOBILE_SAM_CHECKPOINT_PATH,
         sem_gpu_id=0,
         verbose: bool = False,
-        confidence_threshold: Optional[float] = 0.02,
+        confidence_threshold: Optional[float] = 0.2,
         
     ):
         """Loads a YOLO model for object detection and instance segmentation
@@ -232,7 +237,8 @@ class YOLOPerception(PerceptionModule):
             print(
                 f"Loading YOLO model from {yolo_model_id} and MobileSAM with checkpoint={checkpoint_file}"   
             )
-        self.model = YOLO(model='yolov8s-world.pt')
+        with torch.no_grad():
+            self.model = YOLO(model='yolov8s-world.pt')
         vocab = CLASSES
         self.model.set_classes(vocab)
         # Freeze the YOLO model's parameters
@@ -240,10 +246,16 @@ class YOLOPerception(PerceptionModule):
             param.requires_grad = False
 
         self.confidence_threshold = confidence_threshold
-
+        with torch.no_grad():
+            self.sam_model = SAM(checkpoint_file)
+            # Freeze the SAM model's parameters
+        for param in self.sam_model.parameters():
+            param.requires_grad = False
         self.model.cuda()
+        self.sam_model.cuda()
         torch.cuda.empty_cache()
 
+   
     def create_gaussian_mask(self, height, width, boxes, max_sigma=25):
         if len(boxes) > 0:
             # print("Detected")
@@ -438,6 +450,7 @@ class GazeResNetEncoder(nn.Module):
                     nn.init.constant_(layer.bias, val=0)
 
     def forward(self, observations: Dict[str, torch.Tensor]) -> torch.Tensor:  # type: ignore
+        torch.cuda.empty_cache()
         if self.is_blind:
             return None
         
@@ -455,11 +468,12 @@ class GazeResNetEncoder(nn.Module):
         for k in self.visual_keys:
             obs_k = observations[k]
             #Make changes to the sensors as required by the GAZE skill
-            if(k == "object_segmentation"):
-                obs_k = self.masks[..., 0:1]
+            if(k == "ovmm_nav_goal_segmentation"):
+                obs_k = self.masks
 
-            if(k == "start_recep_segmentation"):
+            if(k == "receptacle_segmentation"):
                 obs_k = self.masks[..., 1:2]
+      
             # permute tensor to dimension [BATCH x CHANNEL x HEIGHT X WIDTH]
             obs_k = obs_k.permute(0, 3, 1, 2)
             if self.key_needs_rescaling[k] is not None:
@@ -477,6 +491,7 @@ class GazeResNetEncoder(nn.Module):
         x = self.running_mean_and_var(x)
         x = self.backbone(x)
         x = self.compression(x)
+        torch.cuda.empty_cache()
         return x
 
 
@@ -636,7 +651,6 @@ class GazePointNavResNetNet(Net):
             )
         self._n_prev_action = 32
         rnn_input_size = self._n_prev_action  # test
-
         self.segmentation = None
         
         self.masks = torch.zeros((32, 160, 120, 2))  #to change to the batch size
@@ -898,6 +912,7 @@ class GazePointNavResNetNet(Net):
         masks,
         rnn_build_seq_info: Optional[Dict[str, torch.Tensor]] = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, Dict[str, torch.Tensor]]:
+        torch.cuda.empty_cache()
         x = []
         aux_loss_state = {}
         if not self.is_blind:
@@ -1057,5 +1072,5 @@ class GazePointNavResNetNet(Net):
             out, rnn_hidden_states, masks, rnn_build_seq_info
         )
         aux_loss_state["rnn_output"] = out
-
+        torch.cuda.empty_cache()
         return out, rnn_hidden_states, aux_loss_state

@@ -9,7 +9,7 @@
 #SBATCH --gpus a40:4
 #SBATCH --qos="long"
 #SBATCH --exclude=spd-13
-#SBATCH --requeue
+
 #SBATCH --signal=USR1@100
 
 export HABITAT_SIM_LOG=quiet

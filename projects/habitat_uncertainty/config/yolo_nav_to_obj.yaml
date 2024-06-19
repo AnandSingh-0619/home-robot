@@ -32,17 +32,13 @@ habitat:
       - head_rgb
       - head_depth
       - start_receptacle
-      - object_segmentation
-      - start_recep_segmentation
-      # - ovmm_nav_goal_segmentation
-      # - receptacle_segmentation
+      - ovmm_nav_goal_segmentation
+      - receptacle_segmentation
       - yolo_object_sensor
       - yolo_start_receptacle_sensor
-      - yolo_goal_receptacle_sensor
       - object_embedding
-      - joint
-      # - robot_start_gps
-      # - robot_start_compass
+      - robot_start_gps
+      - robot_start_compass
   simulator:
     agents:
       main_agent:
@@ -55,7 +51,7 @@ habitat:
 
 habitat_baselines:
   verbose: False
-  trainer_name: "ddppo_yolo"
+  trainer_name: "yolosam_ddppo"
   torch_gpu_id: 0
   tensorboard_dir: "tb"
   video_dir: "video_dir"
@@ -80,7 +76,7 @@ habitat_baselines:
 
   rl:
     policy:
-      name: "PointNavResNetPolicy"
+      name: "NavObjPointNavResNetPolicy"
       action_distribution_type: "categorical"
       no_downscaling: True
       action_dist:
@@ -166,6 +162,7 @@ habitat_baselines:
       train_encoder: True
       # Whether to reset the critic linear layer
       reset_critic: True
+      train_detector: False
 
       # Model parameters
       backbone: resnet18

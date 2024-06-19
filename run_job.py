@@ -21,7 +21,7 @@ common_name = args.common_name
 # Fixed directories
 checkpoint_dir_base = "Logs/checkpoints"
 tensorboard_dir_base = "Logs/tensorLogs"
-log_dir_base = "Logs/logs/gaze"
+log_dir_base = "Logs/logs/navObj"
 
 # Read the template
 with open(template_path, 'r') as file:

@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=home-robot-yolo
-#SBATCH --output=Logs/slurmLogs/yolosam_100_test_wsam_nokey-ver-%j.out
-#SBATCH --error=Logs/slurmLogs/yolosam_100_test_wsam_nokey-ver-%j.err
+#SBATCH --output=Logs/slurmLogs/home-home_robo-ver-%j.out
+#SBATCH --error=Logs/slurmLogs/home_robo-ver-%j.err
 #SBATCH --nodes 1
 #SBATCH --cpus-per-task 10
 #SBATCH --ntasks-per-node 4
@@ -21,9 +21,9 @@ ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 
 JOB_ID=${SLURM_JOB_ID}
-CHECKPOINT_DIR="Logs/checkpoints/yolosam_100_test_wsam_nokey_${MAIN_ADDR}_${JOB_ID}"
-TENSORBOARD_DIR="Logs/tensorLogs/gaze/yolosam_100_test_wsam_nokey_${MAIN_ADDR}_${JOB_ID}"
-LOG_DIR="Logs/logs/gaze/yolosam_100_test_wsam_nokey_${MAIN_ADDR}_${JOB_ID}.log"
+CHECKPOINT_DIR="Logs/checkpoints/navObj_og_${MAIN_ADDR}_${JOB_ID}"
+TENSORBOARD_DIR="Logs/tensorLogs/navObj_og_${MAIN_ADDR}_${JOB_ID}"
+LOG_DIR="Logs/logs/navObj/navObj_og_${MAIN_ADDR}_${JOB_ID}.log"
 
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
@@ -32,13 +32,13 @@ conda deactivate
 conda activate home-robot
 cd ~/flash/home-robot 
 
-srun python -um habitat_uncertainty.run \
-    --exp-config=projects/habitat_uncertainty/config/YOLOSAM_gaze_rl_skill.yaml \
-    --run-type=train \
-    habitat_baselines.num_environments=32 \
-    habitat_baselines.tensorboard_dir=${TENSORBOARD_DIR} \
-    habitat_baselines.checkpoint_folder=${CHECKPOINT_DIR} \
-    habitat_baselines.log_file=${LOG_DIR} \
-    habitat_baselines.load_resume_state_config=True \
-
+srun python -um habitat_baselines.run \
+   --config-name=ovmm/rl_discrete_skill.yaml \
+   habitat_baselines.evaluate=False \
+   benchmark/ovmm=nav_to_obj \
+   habitat_baselines.num_environments=32 \
+   habitat_baselines.tensorboard_dir=${TENSORBOARD_DIR} \
+   habitat_baselines.checkpoint_folder=${CHECKPOINT_DIR} \
+   habitat_baselines.log_file=${LOG_DIR} \
+   habitat_baselines.load_resume_state_config=True \
 

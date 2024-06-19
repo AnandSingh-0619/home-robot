@@ -16,7 +16,6 @@ defaults:
     - yolo_object_sensor
     - yolo_start_receptacle_sensor
     - yolo_goal_receptacle_sensor
-    # - yolo_segmentation_sensor
   - /benchmark/ovmm: gaze
   - /habitat_baselines: habitat_baselines_rl_config_base
   - /habitat/simulator/sim_sensors@habitat.simulator.agents.main_agent.sim_sensors.head_rgb_sensor: head_rgb_sensor
@@ -33,14 +32,13 @@ habitat:
       - head_rgb
       - head_depth
       - start_receptacle
-      - object_segmentation
-      - start_recep_segmentation
+      - ovmm_nav_goal_segmentation
+      - receptacle_segmentation
       - yolo_object_sensor
       - yolo_start_receptacle_sensor
-      # - yolo_goal_receptacle_sensor
-      # - yolo_segmentation_sensor
       - object_embedding
-      - joint
+      - robot_start_gps
+      - robot_start_compass
 
   simulator:
     agents:
@@ -79,8 +77,8 @@ habitat_baselines:
 
   rl:
     policy:
-      name: "GazePointNavResNetPolicy"
-      action_distribution_type: "gaussian"
+      name: "HmapNavObjPointNavResNetPolicy"
+      action_distribution_type: "categorical"
       no_downscaling: True
       action_dist:
         use_log_std: True
@@ -94,7 +92,7 @@ habitat_baselines:
           size: 120
           channels_last: True
           trans_keys:
-            # - head_rgb
+            - head_rgb
             - head_depth
             - head_panoptic
             - object_segmentation
@@ -115,7 +113,7 @@ habitat_baselines:
           width: 120
           channels_last: True
           trans_keys:
-            # - head_rgb
+            - head_rgb
             - head_depth
             - head_panoptic
             - object_segmentation

@@ -9,7 +9,7 @@
 #SBATCH --gpus a40:4
 #SBATCH --qos="long"
 #SBATCH --exclude=spd-13
-#SBATCH --requeue
+
 #SBATCH --signal=USR1@100
 
 export HABITAT_SIM_LOG=quiet
@@ -20,9 +20,9 @@ MAIN_ADDR=$(scontrol show hostnames "${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 
 JOB_ID=${SLURM_JOB_ID}
-CHECKPOINT_DIR="Logs/checkpoints/yolosam_100_test_wsam_nokey_test4_${MAIN_ADDR}_${JOB_ID}"
-TENSORBOARD_DIR="Logs/tensorLogs/yolosam_100_test_wsam_nokey_test4_${MAIN_ADDR}_${JOB_ID}"
-LOG_DIR="Logs/logs/gaze/yolosam_100_test_wsam_nokey_test4_${MAIN_ADDR}_${JOB_ID}.log"
+CHECKPOINT_DIR="Logs/checkpoints/yolosam_navObj_50_${MAIN_ADDR}_${JOB_ID}"
+TENSORBOARD_DIR="Logs/tensorLogs/yolosam_navObj_50_${MAIN_ADDR}_${JOB_ID}"
+LOG_DIR="Logs/logs/navObj/yolosam_navObj_50_${MAIN_ADDR}_${JOB_ID}.log"
 
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
@@ -32,7 +32,7 @@ conda activate home-robot
 cd ~/flash/home-robot 
 
 srun python -um habitat_uncertainty.run \
-    --exp-config=projects/habitat_uncertainty/config/YOLOSAM_gaze_rl_skill.yaml \
+    --exp-config=projects/habitat_uncertainty/config/yolo_nav_to_obj.yaml \
     --run-type=train \
     habitat_baselines.num_environments=32 \
     habitat_baselines.tensorboard_dir=${TENSORBOARD_DIR} \

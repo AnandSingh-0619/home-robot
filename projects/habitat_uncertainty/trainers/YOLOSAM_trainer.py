@@ -331,9 +331,9 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 ] = self._encoder(batch)
 
         if self._is_static_detector:
-            # if np.random.random() < 0.5:
-            with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
-                self._masks = self._yolo_detector.predict(batch)
+            if np.random.random() < 0.5:
+                with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
+                    self._masks = self._yolo_detector.predict(batch)
 
             batch[self._agent.actor_critic.net.SEG_MASKS] = torch.tensor(self._masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device()))).detach().requires_grad_(False)
 
