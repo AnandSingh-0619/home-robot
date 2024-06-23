@@ -16,7 +16,7 @@ defaults:
     - yolo_object_sensor
     - yolo_start_receptacle_sensor
     - yolo_goal_receptacle_sensor
-  - /benchmark/ovmm: gaze
+  - /benchmark/ovmm: nav_to_obj
   - /habitat_baselines: habitat_baselines_rl_config_base
   - /habitat/simulator/sim_sensors@habitat.simulator.agents.main_agent.sim_sensors.head_rgb_sensor: head_rgb_sensor
   - /habitat_baselines/rl/policy/obs_transforms:

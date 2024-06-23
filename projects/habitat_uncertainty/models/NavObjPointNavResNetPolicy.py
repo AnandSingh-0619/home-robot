@@ -467,7 +467,7 @@ class GazeResNetEncoder(nn.Module):
             obs_k = observations[k]
             #Make changes to the sensors as required by the GAZE skill
             if(k == "ovmm_nav_goal_segmentation"):
-                obs_k = self.masks
+                obs_k = self.masks[...,0:2]
 
             if(k == "receptacle_segmentation"):
                 obs_k = self.masks[..., 1:2]

@@ -28,6 +28,6 @@ conda deactivate
 conda activate home-robot
 cd ~/flash/home-robot/
 
-srun python projects/habitat_ovmm/eval_baselines_agent.py --start_episode=1 --end_episode=100
+srun python projects/habitat_ovmm/eval_baselines_agent.py --start_episode=1001 --end_episode=1199
 
 

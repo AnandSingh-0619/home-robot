@@ -473,7 +473,8 @@ class OpenVocabManipAgent(ObjectNavAgent):
             if pick_step == 0:
                 action = DiscreteNavigationAction.MANIPULATION_MODE
             elif pick_step < self.max_pick_attempts:
-                print("pick attempt", pick_step)
+                if self.verbose:
+                    print("pick attempt", pick_step)
                 # If we have not seen an object mask to try to grasp...
                 if not obs.task_observations["prev_grasp_success"]:
                     action = DiscreteNavigationAction.PICK_OBJECT

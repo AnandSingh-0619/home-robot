@@ -43,6 +43,35 @@ from home_robot.utils.constants import (
     MIN_DEPTH_REPLACEMENT_VALUE,
 )
 
+CLASSES = [
+    "action_figure", "android_figure", "apple", "backpack", "baseballbat",
+    "basket", "basketball", "bath_towel", "battery_charger", "board_game",
+    "book", "bottle", "bowl", "box", "bread", "bundt_pan", "butter_dish",
+    "c-clamp", "cake_pan", "can", "can_opener", "candle", "candle_holder",
+    "candy_bar", "canister", "carrying_case", "casserole", "cellphone", "clock",
+    "cloth", "credit_card", "cup", "cushion", "dish", "doll", "dumbbell", "egg",
+    "electric_kettle", "electronic_cable", "file_sorter", "folder", "fork",
+    "gaming_console", "glass", "hammer", "hand_towel", "handbag", "hard_drive",
+    "hat", "helmet", "jar", "jug", "kettle", "keychain", "knife", "ladle", "lamp",
+    "laptop", "laptop_cover", "laptop_stand", "lettuce", "lunch_box",
+    "milk_frother_cup", "monitor_stand", "mouse_pad", "multiport_hub",
+    "newspaper", "pan", "pen", "pencil_case", "phone_stand", "picture_frame",
+    "pitcher", "plant_container", "plant_saucer", "plate", "plunger", "pot",
+    "potato", "ramekin", "remote", "salt_and_pepper_shaker", "scissors",
+    "screwdriver", "shoe", "soap", "soap_dish", "soap_dispenser", "spatula",
+    "spectacles", "spicemill", "sponge", "spoon", "spray_bottle", "squeezer",
+    "statue", "stuffed_toy", "sushi_mat", "tape", "teapot", "tennis_racquet",
+    "tissue_box", "toiletry", "tomato", "toy_airplane", "toy_animal", "toy_bee",
+    "toy_cactus", "toy_construction_set", "toy_fire_truck", "toy_food",
+    "toy_fruits", "toy_lamp", "toy_pineapple", "toy_rattle", "toy_refrigerator",
+    "toy_sink", "toy_sofa", "toy_swing", "toy_table", "toy_vehicle", "tray",
+    "utensil_holder_cup", "vase", "video_game_cartridge", "watch", "watering_can",
+    "wine_bottle", "bathtub", "bed", "bench", "cabinet", "chair", "chest_of_drawers",
+    "couch", "counter", "filing_cabinet", "hamper", "serving_cart", "shelves",
+    "shoe_rack", "sink", "stand", "stool", "table", "toilet", "trunk", "wardrobe",
+    "washer_dryer"
+]
+
 random_generator = np.random.RandomState()
 
 
@@ -286,6 +315,27 @@ class PPOAgent(Agent):
                 obs.semantic == obs.task_observations["start_recep_goal"], -1
             ).astype(np.uint8)
             return np.concatenate([object_goal, start_recep_goal], axis=-1)
+        
+    def _get_object(self, obs: Observations) -> np.ndarray:
+        category_name = obs.task_observations["object_name"]
+        classes = CLASSES       
+        class_id = classes.index(category_name)
+
+        return np.array([class_id], dtype=np.int64,)
+
+    def _get_start_receptacle(self, obs: Observations) -> np.ndarray:
+        category_name = obs.task_observations["start_recep_name"]
+        classes = CLASSES       
+        class_id = classes.index(category_name)
+
+        return np.array([class_id], dtype=np.int64,)
+    
+    def _get_goal_receptacle(self, obs: Observations) -> np.ndarray:
+        category_name = obs.task_observations["place_recep_name"]
+        classes = CLASSES       
+        class_id = classes.index(category_name)
+
+        return np.array([class_id], dtype=np.int64,)
 
     def _get_receptacle_segmentation(self, obs: Observations) -> np.ndarray:
         rec_seg = obs.semantic
@@ -321,11 +371,7 @@ class PPOAgent(Agent):
         )
         hab_obs = OrderedDict(
             {
-                "rgb": np.array(obs.rgb),
-                "yolo_object_sensor": np.array(obs.task_observations["start_receptacle"]),
-                "yolo_start_receptacle_sensor": np.array(obs.task_observations["start_receptacle"]),
-                "yolo_goal_receptacle_sensor": np.array(obs.task_observations["goal_receptacle"]),
-
+                "head_rgb": np.array(obs.rgb),
                 "head_depth": np.expand_dims(normalized_depth, -1).astype(np.float32),
                 "object_embedding": obs.task_observations["object_embedding"],
                 "object_segmentation": np.expand_dims(
@@ -351,6 +397,13 @@ class PPOAgent(Agent):
             hab_obs["ovmm_nav_goal_segmentation"] = self._get_goal_segmentation(obs)
         if "receptacle_segmentation" in self.skill_obs_keys:
             hab_obs["receptacle_segmentation"] = self._get_receptacle_segmentation(obs)
+        if "yolo_object_sensor" in self.skill_obs_keys:
+            hab_obs["yolo_object_sensor"] = self._get_object(obs)
+        if "yolo_start_receptacle_sensor" in self.skill_obs_keys:
+            hab_obs["yolo_start_receptacle_sensor"] = self._get_start_receptacle(obs)
+        if "yolo_goal_receptacle_sensor" in self.skill_obs_keys:
+            hab_obs["yolo_goal_receptacle_sensor"] = self._get_goal_receptacle(obs)
+
         return hab_obs
 
     def act(

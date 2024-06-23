@@ -435,6 +435,10 @@ class GazeResNetEncoder(nn.Module):
                     size=rgb_size[0]
                 )
                 self.visual_transform.randomize_environments = False
+        # Initialize the segmentation attribute
+        self.segmentation = YOLOPerception(sem_gpu_id=0, verbose=False, confidence_threshold=0.2)
+        self.masks = torch.zeros((1, 160, 120, 2))  # Adjust to the batch size
+
 
     @property
     def is_blind(self):
@@ -461,15 +465,17 @@ class GazeResNetEncoder(nn.Module):
                 self.masks = observations[GazePointNavResNetNet.SEG_MASKS]
         else:
             # with g_timer.avg_time("trainer.yolo_detector_step"):
-            self.masks = self.segmentation.predict(observations)
+            masks = self.segmentation.predict(observations)
+            self.masks = torch.tensor(masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device()))).detach().requires_grad_(False)
             logger.info(f"Calling YOLO inference from visual encoder")
+
 
         cnn_input = []
         for k in self.visual_keys:
             obs_k = observations[k]
             #Make changes to the sensors as required by the GAZE skill
             if(k == "ovmm_nav_goal_segmentation"):
-                obs_k = self.masks
+                obs_k = self.masks[..., 0:2]
 
             if(k == "receptacle_segmentation"):
                 obs_k = self.masks[..., 1:2]
@@ -484,7 +490,7 @@ class GazeResNetEncoder(nn.Module):
                 obs_k = self.visual_transform(obs_k)
             cnn_input.append(obs_k)
 
-        x = torch.cat(cnn_input, dim=1)
+        x = torch.cat(cnn_input, dim=1).float()
         if not self.no_downscaling:
             x = F.avg_pool2d(x, 2)
 

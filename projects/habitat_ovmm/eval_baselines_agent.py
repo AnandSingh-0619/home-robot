@@ -19,7 +19,8 @@ from utils.config_utils import (
 from home_robot.agent.ovmm_agent.ovmm_agent import OpenVocabManipAgent
 from home_robot.agent.ovmm_agent.ovmm_exploration_agent import OVMMExplorationAgent
 from home_robot.agent.ovmm_agent.random_agent import RandomAgent
-
+from habitat_uncertainty.models.GazePointNavResNetPolicy import GazePointNavResNetPolicy
+from habitat_uncertainty.models.HmapNavObjPointNavResNetPolicy import HmapNavObjPointNavResNetPolicy
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"

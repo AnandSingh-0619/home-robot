@@ -12,7 +12,7 @@ defaults:
 habitat_baselines:
   rl:
     policy:
-        name: "PointNavResNetPolicy"
+        name: "GazePointNavResNetPolicy"
         no_downscaling: True
         action_distribution_type: "gaussian"
         action_dist:

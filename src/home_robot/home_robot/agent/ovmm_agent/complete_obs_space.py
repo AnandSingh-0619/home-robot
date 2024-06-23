@@ -123,5 +123,11 @@ def get_complete_obs_space(skill_config, baseline_config):
                 (1,),
                 np.int64,
             ),
+            "head_rgb": spaces.Box(
+                0.0,
+                255,
+                (skill_config.sensor_height, skill_config.sensor_width, 3),
+                np.float32,
+            ),
         }
     )
