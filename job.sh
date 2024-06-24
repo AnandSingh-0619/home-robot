@@ -21,9 +21,9 @@ ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 
 JOB_ID=${SLURM_JOB_ID}
-CHECKPOINT_DIR="Logs/checkpoints/navObj_ogv3_${MAIN_ADDR}_${JOB_ID}"
-TENSORBOARD_DIR="Logs/tensorLogs/navObj_ogv3_${MAIN_ADDR}_${JOB_ID}"
-LOG_DIR="Logs/logs/navObj/navObj_ogv3_${MAIN_ADDR}_${JOB_ID}.log"
+CHECKPOINT_DIR="Logs/checkpoints/gaze_corr_Detect_${MAIN_ADDR}_${JOB_ID}"
+TENSORBOARD_DIR="Logs/tensorLogs/gaze_corr_Detect_${MAIN_ADDR}_${JOB_ID}"
+LOG_DIR="Logs/logs/navObj/gaze_corr_Detect_${MAIN_ADDR}_${JOB_ID}.log"
 set -x
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
@@ -32,13 +32,11 @@ conda deactivate
 conda activate home-robot
 cd ~/flash/home-robot 
 
-srun python -um habitat_baselines.run \
-   --config-name=ovmm/rl_discrete_skill.yaml \
-   habitat_baselines.evaluate=False \
-   benchmark/ovmm=nav_to_obj \
-   habitat_baselines.tensorboard_dir=${TENSORBOARD_DIR} \
-   habitat_baselines.checkpoint_folder=${CHECKPOINT_DIR} \
-   habitat_baselines.log_file=${LOG_DIR} \
-   # habitat_baselines.load_resume_state_config=True \
-   # habitat_baselines.num_environments=32 \
-
+srun python -um habitat_uncertainty.run \
+    --exp-config=projects/habitat_uncertainty/config/YOLOSAM_gaze_rl_skill.yaml \
+    --run-type=train \
+    habitat_baselines.num_environments=32 \
+    habitat_baselines.tensorboard_dir=${TENSORBOARD_DIR} \
+    habitat_baselines.checkpoint_folder=${CHECKPOINT_DIR} \
+    habitat_baselines.log_file=${LOG_DIR} \
+    habitat_baselines.load_resume_state_config=True
