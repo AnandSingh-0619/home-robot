@@ -105,7 +105,7 @@ def get_rollout_obs_space(obs_space, actor_critic, config):
                 actor_critic.net.SEG_MASKS: spaces.Box(
                     low=np.finfo(np.float32).min,
                     high=np.finfo(np.float32).max,
-                    shape=[160, 120, 2],
+                    shape=[160, 120, 3],
                     dtype=np.float32,
                 ),
                 **obs_space.spaces,

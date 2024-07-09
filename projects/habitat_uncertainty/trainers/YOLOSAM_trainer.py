@@ -75,6 +75,7 @@ from habitat.core.logging import logger
 import scipy.ndimage as ndi
 import matplotlib.pyplot as plt
 from nvitop import Device
+import gc
 CLASSES = [
     "action_figure", "android_figure", "apple", "backpack", "baseballbat",
     "basket", "basketball", "bath_towel", "battery_charger", "board_game",
@@ -228,8 +229,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
         batch = batch_obs(observations, device=self.device)
         batch = apply_obs_transforms_batch(batch, self.obs_transforms)  # type: ignore
         if(self._is_static_detector):
-            masks = self._yolo_detector.predict(batch)
-            batch[self._agent.actor_critic.net.SEG_MASKS] = torch.tensor(masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device()))).detach().requires_grad_(False)
+            batch[self._agent.actor_critic.net.SEG_MASKS] = self._yolo_detector.predict(batch)
 
         if self._is_static_encoder:
             self._encoder = self._agent.actor_critic.visual_encoder
@@ -331,11 +331,11 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 ] = self._encoder(batch)
 
         if self._is_static_detector:
-            if np.random.random() < 0.5:
-                with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
-                    self._masks = self._yolo_detector.predict(batch)
+            # if np.random.random() < 0.5:
+            with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
+                self._masks = self._yolo_detector.predict(batch)
 
-            batch[self._agent.actor_critic.net.SEG_MASKS] = torch.tensor(self._masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device()))).detach().requires_grad_(False)
+            batch[self._agent.actor_critic.net.SEG_MASKS] = self._masks
 
         # Create a new batch by including only those keys present in rollout_observation_keys
         cleaned_batch = {key: value for key, value in batch.items() if key in self.rollout_observation_keys}
@@ -349,6 +349,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
         except Exception as e:
             print(f"Error during rollouts insertion: {e}")
         torch.cuda.empty_cache()
+        gc.collect()
 
         self._agent.rollouts.advance_rollout(buffer_index)
 

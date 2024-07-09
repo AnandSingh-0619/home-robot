@@ -22,6 +22,7 @@ from habitat_uncertainty.models.single_agent_access_manager import SingleAgentAc
 from habitat_uncertainty.models.YOLOSAMPointNavResNetPolicy import YOLOSAMPointNavResNetPolicy
 from habitat_uncertainty.models.NavObjPointNavResNetPolicy import NavObjPointNavResNetPolicy
 from habitat_uncertainty.models.HmapNavObjPointNavResNetPolicy import HmapNavObjPointNavResNetPolicy 
+from habitat_uncertainty.models.GHmapNavObjPointNavResNetPolicy import GHmapNavObjPointNavResNetPolicy
 def register_plugins():
     register_hydra_plugin(HabitatConfigPlugin)
 

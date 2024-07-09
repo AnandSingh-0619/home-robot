@@ -68,10 +68,10 @@ SKILLS:
 
   NAV_TO_OBJ:
     type: rl # heuristic (default) or rl
-    checkpoint_path: data/checkpoints/ovmm_baseline_home_robot_challenge_2023_v0.2/nav_to_obj.pth
+    checkpoint_path: data/checkpoints/eval_check/nav_to_obj_hmap2.pth
     rl_config: projects/habitat_ovmm/configs/agent/skills/nav_to_obj_rl.yaml
     gym_obs_keys:
-      # - head_rgb
+      - head_rgb
       - head_depth
       - object_embedding
       - ovmm_nav_goal_segmentation
@@ -79,8 +79,8 @@ SKILLS:
       - start_receptacle
       - robot_start_gps
       - robot_start_compass
-      # - yolo_object_sensor
-      # - yolo_start_receptacle_sensor
+      - yolo_object_sensor
+      - yolo_start_receptacle_sensor
     allowed_actions:
       # - base_velocity
       # - rearrange_stop

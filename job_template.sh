@@ -8,7 +8,7 @@
 #SBATCH --partition=overcap
 #SBATCH --gpus a40:4
 #SBATCH --qos="long"
-#SBATCH --exclude=spd-13
+#SBATCH --exclude=spd-13,xaea-12,ig-88,omgwth,baymax,qt-1
 
 #SBATCH --signal=USR1@100
 

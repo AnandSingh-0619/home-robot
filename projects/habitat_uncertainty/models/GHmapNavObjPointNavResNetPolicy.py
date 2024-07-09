@@ -95,6 +95,7 @@ CLASSES = [
     "washer_dryer"
 ]
 
+
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
@@ -105,7 +106,7 @@ except ImportError:
 
 
 @baseline_registry.register_policy
-class HmapNavObjPointNavResNetPolicy(NetPolicy):
+class GHmapNavObjPointNavResNetPolicy(NetPolicy):
     def __init__(
         self,
         observation_space: spaces.Dict,
@@ -248,13 +249,13 @@ class YOLOPerception(PerceptionModule):
             param.requires_grad = False
 
         self.confidence_threshold = confidence_threshold
-        # with torch.no_grad():
-        #     self.sam_model = SAM(checkpoint_file)
-        #     # Freeze the SAM model's parameters
-        # for param in self.sam_model.parameters():
-            # param.requires_grad = False
+        with torch.no_grad():
+            self.sam_model = SAM(checkpoint_file)
+            # Freeze the SAM model's parameters
+        for param in self.sam_model.parameters():
+            param.requires_grad = False
         self.model.cuda()
-        # self.sam_model.cuda()
+        self.sam_model.cuda()
         torch.cuda.empty_cache()
 
     def create_gaussian_mask(self, height, width, boxes, max_sigma=30):
@@ -275,6 +276,34 @@ class YOLOPerception(PerceptionModule):
         else:
             # print("Nothing Detected")
             return np.zeros((160, 120, 1))
+
+    def label_center_pixels(self, height, width, boxes, class_id, neighborhood_size=10):
+        if len(boxes) > 0:
+            box = boxes[0]
+            x_min, y_min, x_max, y_max = box
+            center_x = int((x_min + x_max) // 2)  # Explicitly cast to int
+            center_y = int((y_min + y_max) // 2)  # Explicitly cast to int
+
+            mask = np.zeros((height, width), dtype=np.float64)
+
+            # Label the center pixel and its neighboring pixels
+            for i in range(-neighborhood_size, neighborhood_size + 1):
+                for j in range(-neighborhood_size, neighborhood_size + 1):
+                    new_x = int(center_x + i)  # Explicitly cast to int
+                    new_y = int(center_y + j)  # Explicitly cast to int
+                    if 0 <= new_x < width and 0 <= new_y < height:
+                        mask[new_y, new_x] = class_id
+
+            return np.expand_dims(mask, axis=2)
+        else:
+            return np.zeros((height, width, 1))
+
+        
+    def update_receptacle_mask(self, all_rec_mask, rec_gaussian_mask):
+        mask_condition = all_rec_mask <= 5
+        all_rec_mask[mask_condition] = rec_gaussian_mask[mask_condition]
+        return all_rec_mask
+    
     def predict(
         self,
         obs: Observations,
@@ -302,13 +331,17 @@ class YOLOPerception(PerceptionModule):
         obj_class_ids = obs["yolo_object_sensor"].cpu().numpy().flatten()
         rec_class_ids = obs["yolo_start_receptacle_sensor"].cpu().numpy().flatten()
         batch_size = images_tensor.shape[0]
-        images = [images_tensor[i].cpu().numpy() for i in range(images_tensor.size(0))]   
-        search_list = np.concatenate((obj_class_ids, rec_class_ids)).tolist()
+        images = [images_tensor[i].cpu().numpy() for i in range(images_tensor.size(0))] 
+
+        start_receptacle_index = CLASSES.index("bathtub")
+        receptacle_class_indices = list(range(start_receptacle_index, len(CLASSES)))  
+        search_list = np.concatenate((obj_class_ids, receptacle_class_indices)).tolist()
 
         height, width, _ = images[0].shape
-        results = list(self.model(images, classes=search_list, conf=self.confidence_threshold, stream=True, verbose=False))
+        results = list(self.model(images, classes=search_list, conf=self.confidence_threshold,  iou=nms_threshold, stream=True, verbose=False))
         obj_semantic_masks = []
         rec_semantic_masks = []
+        all_rec_masks = []
 
         for idx, result in enumerate(results):
             class_ids = result.boxes.cls.cpu().numpy()
@@ -319,34 +352,11 @@ class YOLOPerception(PerceptionModule):
 
             obj_boxes = input_boxes[obj_mask_idx]
             rec_boxes = input_boxes[rec_mask_idx]
+            all_rec_boxes = input_boxes[np.isin(class_ids, receptacle_class_indices)]
 
             obj_semantic_mask = self.create_gaussian_mask(height, width, obj_boxes)
             rec_semantic_mask = self.create_gaussian_mask(height, width, rec_boxes)
             
-            # cv2.imwrite('obj_mask{}.png'.format(idx), obj_semantic_mask * 255)
-            # cv2.imwrite('rec_mask{}.png'.format(idx), rec_semantic_mask * 255)
-            # image= cv2.cvtColor(images[idx], cv2.COLOR_BGR2RGB)
-            # # Add the text for the target object
-            # cv2.putText(image, f"Target object: {CLASSES[obj_class_ids[idx]]}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 0, 0), 1)
-
-            # # Add the text for the target receptacle
-            # cv2.putText(image, f"Target Receptacle: {CLASSES[rec_class_ids[idx]]}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 0, 0), 1)
-  
-            # cv2.imwrite('orig_image{}.png'.format(idx), image )
-            # for img_idx in range(seg_tensor.shape[-1]):
-            #     # Extract the image from the tensor
-            #     image = seg_tensor[idx, :, :, img_idx].cpu().numpy()
-
-            #     # Normalize the image to the range [0, 255] if necessary
-            #     if image.max() <= 1:
-            #         image = image * 255
-
-            #     # Convert to uint8 type
-            #     image = image.astype(np.uint8)
-
-            #     # Save the image using OpenCV
-            #     cv2.imwrite(f'seg_mask_batch{idx}_img{img_idx}.png', image)
-
             obj_semantic_mask = cv2.resize(obj_semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
             rec_semantic_mask = cv2.resize(rec_semantic_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
             
@@ -355,11 +365,37 @@ class YOLOPerception(PerceptionModule):
             obj_semantic_masks.append(obj_semantic_mask)
             rec_semantic_masks.append(rec_semantic_mask)
             del obj_semantic_mask, rec_semantic_mask
+            # image= cv2.cvtColor(images[idx], cv2.COLOR_BGR2RGB)
+            # # Add the text for the target object
+            # cv2.putText(image, f"Target object: {CLASSES[obj_class_ids[idx]]}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 0, 0), 1)
+
+            # # Add the text for the target receptacle
+            # cv2.putText(image, f"Target Receptacle: {CLASSES[rec_class_ids[idx]]}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.35, (255, 0, 0), 1)
+  
+            # cv2.imwrite('og_image{}.png'.format(idx), image )
+            all_rec_mask = np.zeros((height, width, 1), dtype=np.float64)
+            if all_rec_boxes.size != 0:
+                for rec_box, class_id in zip(all_rec_boxes, class_ids):
+                    if class_id in receptacle_class_indices:
+                        id  = (class_id - start_receptacle_index+1) 
+                        rec_label_mask = self.label_center_pixels(height, width, [rec_box], class_id=id)
+                        all_rec_mask = self.update_receptacle_mask(all_rec_mask, rec_label_mask)
+
+
+            all_rec_mask = np.clip(all_rec_mask, 0, 255)
+            # normalized_mask = (all_rec_mask * 255 / all_rec_mask.max()).astype(np.uint8)
+            # color_map = cv2.applyColorMap(normalized_mask, cv2.COLORMAP_JET)
+            # cv2.imwrite('all_recep_mask{}.png'.format(idx), all_rec_mask)
+            all_rec_mask = cv2.resize(all_rec_mask, (120, 160), interpolation=cv2.INTER_NEAREST)
+            all_rec_mask = np.expand_dims(all_rec_mask, axis=-1)
+            all_rec_masks.append(all_rec_mask)
 
         torch.cuda.empty_cache()
         obj_semantic_masks = np.array(obj_semantic_masks)
         rec_semantic_masks = np.array(rec_semantic_masks)
-        combined_masks = np.concatenate((obj_semantic_masks, rec_semantic_masks), axis=-1)
+        all_rec_masks = np.array(all_rec_masks)
+
+        combined_masks = np.concatenate((obj_semantic_masks, rec_semantic_masks, all_rec_masks), axis=-1)
         del obj_semantic_masks, rec_semantic_masks, results
         gc.collect()
         combined_masks = torch.tensor(combined_masks, device=torch.device('cuda:{}'.format(torch.cuda.current_device()))).detach().requires_grad_(False)
@@ -501,7 +537,7 @@ class GazeResNetEncoder(nn.Module):
                 obs_k = self.masks[..., 0:2]
 
             if(k == "receptacle_segmentation"):
-                obs_k = self.masks[..., 1:2]
+                obs_k = self.masks[..., 2:3]
       
             # permute tensor to dimension [BATCH x CHANNEL x HEIGHT X WIDTH]
             obs_k = obs_k.permute(0, 3, 1, 2)

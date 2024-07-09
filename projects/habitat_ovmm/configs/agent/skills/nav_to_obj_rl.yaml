@@ -12,7 +12,7 @@ defaults:
 habitat_baselines:
   rl:
     policy:
-        name: "PointNavResNetPolicy"
+        name: "HmapNavObjPointNavResNetPolicy"
         action_distribution_type: "categorical"
         no_downscaling: True
         action_dist:
