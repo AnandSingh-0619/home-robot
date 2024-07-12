@@ -255,7 +255,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
         self.window_episode_stats = defaultdict(
             lambda: deque(maxlen=self._ppo_cfg.reward_window_size)
         )
-        self._masks = torch.zeros((self.config.habitat_baselines.num_environments, 160, 120, 2))
+        self._masks = torch.zeros((self.config.habitat_baselines.num_environments, 160, 120, 3))
         self.t_start = time.time()
    
     def _collect_environment_result(self, buffer_index: int = 0):
@@ -331,9 +331,9 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 ] = self._encoder(batch)
 
         if self._is_static_detector:
-            # if np.random.random() < 0.5:
-            with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
-                self._masks = self._yolo_detector.predict(batch)
+            if np.random.random() < 0.5:
+                with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
+                    self._masks = self._yolo_detector.predict(batch)
 
             batch[self._agent.actor_critic.net.SEG_MASKS] = self._masks
 

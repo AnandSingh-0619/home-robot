@@ -21,9 +21,9 @@ ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 
 JOB_ID=${SLURM_JOB_ID}
-CHECKPOINT_DIR="data/new_checkpoints/navObj_923992_ft_wrs_new/"
-TENSORBOARD_DIR="Logs/tensorLogs/navObj_923992_ft_wrs_new_${MAIN_ADDR}_${JOB_ID}"
-LOG_DIR="Logs/logs/navObj/navObj_923992_ft_wrs_new_${MAIN_ADDR}_${JOB_ID}.log"
+CHECKPOINT_DIR="data/new_checkpoints/navObj_923992_ft_wrs_50"
+TENSORBOARD_DIR="Logs/tensorLogs/nav_obj_ft_rs_50_${MAIN_ADDR}_${JOB_ID}"
+LOG_DIR="Logs/logs/navObj/nav_obj_ft_rs_50_${MAIN_ADDR}_${JOB_ID}.log"
 set -x
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
