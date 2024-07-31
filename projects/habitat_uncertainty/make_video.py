@@ -6,7 +6,7 @@ def make_video(image_folder, output_video, frame_rate=30):
     png_files = [file for file in files if file.endswith('.png')]
     images = []
     for i in range(len(png_files)):
-        filename = os.path.join(image_folder, f"snapshot_{i:03}.png")
+        filename = os.path.join(image_folder, f"image_0{i:04}.png")
         if os.path.isfile(filename):
             images.append(filename)
         else:
@@ -35,8 +35,8 @@ def make_video(image_folder, output_video, frame_rate=30):
     print(f"Video saved as {output_video}")
 
 if __name__ == "__main__":
-    image_folder = "datadump/images/eval_test_104/102816756_603"  # Change this to the path of your image folder
-    output_video = "output_video4.mp4"  # Change this to your desired output video file name
+    image_folder = "image_dump/14/"  # Change this to the path of your image folder
+    output_video = "output_video23.mp4"  # Change this to your desired output video file name
     frame_rate = 5  # Adjust the frame rate as needed
 
     make_video(image_folder, output_video, frame_rate)

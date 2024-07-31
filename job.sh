@@ -21,9 +21,9 @@ ${SLURM_JOB_NODELIST}" | head -n 1)
 export MAIN_ADDR
 
 JOB_ID=${SLURM_JOB_ID}
-CHECKPOINT_DIR="data/new_checkpoints/navObj_923992_ft_wrs_50"
-TENSORBOARD_DIR="Logs/tensorLogs/nav_obj_ft_rs_50_${MAIN_ADDR}_${JOB_ID}"
-LOG_DIR="Logs/logs/navObj/nav_obj_ft_rs_50_${MAIN_ADDR}_${JOB_ID}.log"
+CHECKPOINT_DIR="data/new_checkpoints/navObj_CLIP_attnp_${MAIN_ADDR}_${JOB_ID}"
+TENSORBOARD_DIR="Logs/tensorLogs/navObj_CLIP_attnp_${MAIN_ADDR}_${JOB_ID}"
+LOG_DIR="Logs/logs/navObj/navObj_CLIP_attnp_${MAIN_ADDR}_${JOB_ID}.log"
 set -x
 source ~/.bashrc
 source /nethome/asingh3064/flash/miniforge3/etc/profile.d/conda.sh
@@ -33,7 +33,7 @@ conda activate home-robot
 cd ~/flash/home-robot 
 
 srun python -um habitat_uncertainty.run \
-    --exp-config=projects/habitat_uncertainty/config/hmap_navobj_rl_skill.yaml \
+    --exp-config=projects/habitat_uncertainty/config/rl_skill.yaml \
     --run-type=train \
     habitat_baselines.num_environments=32 \
     habitat_baselines.tensorboard_dir=${TENSORBOARD_DIR} \

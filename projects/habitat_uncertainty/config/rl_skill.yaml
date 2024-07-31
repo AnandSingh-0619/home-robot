@@ -1,26 +1,13 @@
 # @package _global_
 
 defaults:
-  - /habitat/task/lab_sensors:
-    - joint_sensor
-    - joint_velocity_sensor
-    - start_receptacle_sensor
-    - ovmm_nav_goal_segmentation_sensor
-    - receptacle_segmentation_sensor
-    - object_embedding_sensor
-    - robot_start_gps_sensor
-    - robot_start_compass_sensor
-    - yolo_object_sensor
-    - yolo_start_receptacle_sensor
-    - yolo_goal_receptacle_sensor
   - /benchmark/ovmm: nav_to_obj
   - /habitat_baselines: habitat_baselines_rl_config_base
-  - /habitat/simulator/sim_sensors@habitat.simulator.agents.main_agent.sim_sensors.head_rgb_sensor: head_rgb_sensor
   - /habitat_baselines/rl/policy/obs_transforms:
     - resize_shortest_edge_base
     - center_cropper_base
-  # - /habitat/simulator/sim_sensors@habitat_baselines.eval.extra_sim_sensors.third_rgb_sensor: third_rgb_sensor
-
+  - /habitat/simulator/sim_sensors@habitat_baselines.eval.extra_sim_sensors.third_rgb_sensor: third_rgb_sensor
+  - /habitat/simulator/sim_sensors@habitat.simulator.agents.main_agent.sim_sensors.head_rgb_sensor: head_rgb_sensor
   - _self_
 
 habitat:
@@ -31,12 +18,9 @@ habitat:
       - start_receptacle
       - ovmm_nav_goal_segmentation
       - receptacle_segmentation
-      - yolo_object_sensor
-      - yolo_start_receptacle_sensor
       - object_embedding
       - robot_start_gps
       - robot_start_compass
-
   simulator:
     agents:
       main_agent:
@@ -49,9 +33,9 @@ habitat:
 
 habitat_baselines:
   verbose: False
-  trainer_name: "yolosam_ddppo"
+  trainer_name: "ddppo"
   torch_gpu_id: 0
-  writer_type: "wb "
+  writer_type: "wb"
   tensorboard_dir: "tb"
   video_dir: "video_dir"
   video_fps: 30
@@ -62,9 +46,9 @@ habitat_baselines:
   num_environments: 4
   checkpoint_folder: "data/new_checkpoints"
   num_updates: -1
-  total_num_steps: 10.0e8
-  log_interval: 1
-  num_checkpoints: 1000
+  total_num_steps: 4.0e8
+  log_interval: 10
+  num_checkpoints: 20
   # Force PyTorch to be single threaded as
   # this improves performance considerably
   force_torch_single_threaded: True
@@ -75,7 +59,7 @@ habitat_baselines:
 
   rl:
     policy:
-      name: "GHmapNavObjPointNavResNetPolicy"
+      name: "PreTrainVEPointNavResNetPolicy"
       action_distribution_type: "categorical"
       no_downscaling: True
       action_dist:
@@ -90,8 +74,8 @@ habitat_baselines:
           size: 120
           channels_last: True
           trans_keys:
-            # - head_rgb
-            # - head_depth
+            - head_rgb
+            - head_depth
             - head_panoptic
             - object_segmentation
             - receptacle_segmentation
@@ -111,8 +95,8 @@ habitat_baselines:
           width: 120
           channels_last: True
           trans_keys:
-            # - head_rgb
-            # - head_depth
+            - head_rgb
+            - head_depth
             - head_panoptic
             - object_segmentation
             - receptacle_segmentation
@@ -158,14 +142,11 @@ habitat_baselines:
       # Initialize just the visual encoder backbone with pretrained weights
       pretrained_encoder: False
       # Whether the visual encoder backbone will be trained.
-      train_encoder: True
+      train_encoder: False
       # Whether to reset the critic linear layer
       reset_critic: True
-      train_detector: False
 
       # Model parameters
-      backbone: resnet18
+      backbone: resnet50_clip_attenpool
       rnn_type: LSTM
       num_recurrent_layers: 2
-
-

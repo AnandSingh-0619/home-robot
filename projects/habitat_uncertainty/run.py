@@ -23,6 +23,7 @@ from habitat_uncertainty.models.YOLOSAMPointNavResNetPolicy import YOLOSAMPointN
 from habitat_uncertainty.models.NavObjPointNavResNetPolicy import NavObjPointNavResNetPolicy
 from habitat_uncertainty.models.HmapNavObjPointNavResNetPolicy import HmapNavObjPointNavResNetPolicy 
 from habitat_uncertainty.models.GHmapNavObjPointNavResNetPolicy import GHmapNavObjPointNavResNetPolicy
+from habitat_uncertainty.models.PreTrainVEPointNavResNetPolicy import PreTrainVEPointNavResNetPolicy
 def register_plugins():
     register_hydra_plugin(HabitatConfigPlugin)
 

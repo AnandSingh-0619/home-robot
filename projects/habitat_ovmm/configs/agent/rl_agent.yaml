@@ -68,7 +68,7 @@ SKILLS:
 
   NAV_TO_OBJ:
     type: rl # heuristic (default) or rl
-    checkpoint_path: data/checkpoints/eval_check/nav_to_obj_hmap2.pth
+    checkpoint_path: data/checkpoints/eval_check/nav_to_obj_hmap_923992.pth
     rl_config: projects/habitat_ovmm/configs/agent/skills/nav_to_obj_rl.yaml
     gym_obs_keys:
       - head_rgb

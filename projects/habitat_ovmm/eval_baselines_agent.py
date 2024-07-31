@@ -21,7 +21,8 @@ from home_robot.agent.ovmm_agent.ovmm_exploration_agent import OVMMExplorationAg
 from home_robot.agent.ovmm_agent.random_agent import RandomAgent
 from habitat_uncertainty.models.GazePointNavResNetPolicy import GazePointNavResNetPolicy
 from habitat_uncertainty.models.HmapNavObjPointNavResNetPolicy import HmapNavObjPointNavResNetPolicy
-from habitat_uncertainty.models.EvalHmapNavObjPointNavResNetPolicy import EvalHmapNavObjPointNavResNetPolicy
+from habitat_uncertainty.models.GHmapNavObjPointNavResNetPolicy import GHmapNavObjPointNavResNetPolicy
+
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"

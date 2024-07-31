@@ -38,6 +38,8 @@ Logs/slurmLogs/*.err
 Logs/slurmLogs/*.out
 Logs/tensorLogs/*
 Logs/checkpoints/
+wandb/*
+wandb
 # Archive files
 *.pkl
 *.pcd
@@ -98,3 +100,4 @@ tb/
 *.err
 *.out
 *.0
+*.wandb
