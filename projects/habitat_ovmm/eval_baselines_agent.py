@@ -22,6 +22,7 @@ from home_robot.agent.ovmm_agent.random_agent import RandomAgent
 from habitat_uncertainty.models.GazePointNavResNetPolicy import GazePointNavResNetPolicy
 from habitat_uncertainty.models.HmapNavObjPointNavResNetPolicy import HmapNavObjPointNavResNetPolicy
 from habitat_uncertainty.models.GHmapNavObjPointNavResNetPolicy import GHmapNavObjPointNavResNetPolicy
+from habitat_uncertainty.models.TrainedPointNavResNetPolicy import TrainedPointNavResNetPolicy
 
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -34,7 +35,7 @@ if __name__ == "__main__":
         "--evaluation_type",
         type=str,
         choices=["local", "local_vectorized", "remote"],
-        default="local",
+        default="local_vectorized",
     )
     parser.add_argument("--num_episodes", type=int, default=None)
     parser.add_argument(

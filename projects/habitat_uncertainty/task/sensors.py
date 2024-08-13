@@ -10,7 +10,7 @@ from typing import Any, Optional
 
 import numpy as np
 from gym import spaces
-
+import pickle
 from habitat.core.embodied_task import Measure
 from habitat.core.registry import registry
 from habitat.core.simulator import Sensor, SensorTypes
@@ -136,6 +136,41 @@ class YOLOGoalReceptacleSensor(YOLOObjectSensor):
             name_to_id_mapping="recep_category_to_recep_category_id",
         )
 
+@registry.register_sensor
+class RecepEmbeddingSensor(Sensor):
+    cls_uuid: str = "recep_embedding"
+
+    def __init__(
+        self,
+        sim,
+        config,
+        *args: Any,
+        **kwargs: Any,
+    ):
+        self._config = config
+        self._dimensionality = self._config.dimensionality
+        with open(config.embeddings_file, "rb") as f:
+            self._embeddings = pickle.load(f)
+
+        super().__init__(config=config)
+
+    def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
+        return self.cls_uuid
+
+    def _get_sensor_type(self, *args: Any, **kwargs: Any):
+        return SensorTypes.TENSOR
+
+    def _get_observation_space(self, *args, **kwargs):
+        return spaces.Box(
+            shape=(self._dimensionality,),
+            low=np.finfo(np.float32).min,
+            high=np.finfo(np.float32).max,
+            dtype=np.float32,
+        )
+
+    def get_observation(self, observations, *args, episode, **kwargs):
+        category_name = episode.start_recep_category
+        return self._embeddings[category_name]
 
 # @registry.register_sensor
 # class YOLOSensor(Sensor):

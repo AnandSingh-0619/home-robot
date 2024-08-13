@@ -129,5 +129,11 @@ def get_complete_obs_space(skill_config, baseline_config):
                 (skill_config.sensor_height, skill_config.sensor_width, 3),
                 np.float32,
             ),
+            "recep_embedding": spaces.Box(
+                np.finfo(np.float32).min,
+                np.finfo(np.float32).max,
+                (512,),
+                np.float32,
+            ),
         }
     )

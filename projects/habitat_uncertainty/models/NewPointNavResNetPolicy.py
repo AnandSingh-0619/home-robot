@@ -54,7 +54,7 @@ except ImportError:
 
 
 @baseline_registry.register_policy
-class PreTrainVEPointNavResNetPolicy(NetPolicy):
+class NewPointNavResNetPolicy(NetPolicy):
     def __init__(
         self,
         observation_space: spaces.Dict,
@@ -179,7 +179,7 @@ class ResNetEncoder(nn.Module):
         self.visual_keys = [
             k
             for k, v in observation_space.spaces.items()
-            if len(v.shape) > 1 and k != ImageGoalSensor.cls_uuid and k!="head_depth" and k!= "ovmm_nav_goal_segmentation" and k!= "receptacle_segmentation"
+            if len(v.shape) > 1 and k != ImageGoalSensor.cls_uuid and k!="head_rgb" #and k!= "ovmm_nav_goal_segmentation" and k!= "receptacle_segmentation"
         ]
         self.key_needs_rescaling = {k: None for k in self.visual_keys}
         for k, v in observation_space.spaces.items():
@@ -225,6 +225,7 @@ class ResNetEncoder(nn.Module):
                     / (final_spatial_h * final_spatial_w)
                 )
             )
+            self.adaptive_pool = nn.AdaptiveAvgPool2d((7, 7))
             self.compression = nn.Sequential(
                 nn.Conv2d(
                     self.backbone.final_channels,
@@ -237,10 +238,15 @@ class ResNetEncoder(nn.Module):
                 nn.ReLU(True),
             )
 
+            # self.output_shape = (
+            #     num_compression_channels,
+            #     final_spatial_h,
+            #     final_spatial_w,
+            # )
             self.output_shape = (
                 num_compression_channels,
-                final_spatial_h,
-                final_spatial_w,
+                7,
+                7,
             )
             rgb_keys = [k for k in observation_space.spaces if "rgb" in k]
             rgb_size = [
@@ -253,6 +259,7 @@ class ResNetEncoder(nn.Module):
                     size=rgb_size[0]
                 )
                 self.visual_transform.randomize_environments = False
+                       
 
     @property
     def is_blind(self):
@@ -290,7 +297,9 @@ class ResNetEncoder(nn.Module):
 
         x = self.running_mean_and_var(x)
         x = self.backbone(x)
+        x = self.adaptive_pool(x) 
         x = self.compression(x)
+
         return x
 
 
@@ -303,7 +312,7 @@ class ResNetCLIPEncoder(nn.Module):
         super().__init__()
 
         self.rgb = "head_rgb" in observation_space.spaces
-        self.depth = "head_depth" in observation_space.spaces
+        self.depth = "depth" in observation_space.spaces
 
         # Determine which visual observations are present
         self.visual_keys = [
@@ -347,13 +356,13 @@ class ResNetCLIPEncoder(nn.Module):
             elif pooling == "none":
                 self.backbone.attnpool = nn.Identity()
                 self.output_shape = (2048, 7, 7)
-            elif pooling == "avgpool":
-                self.backbone.attnpool = nn.Sequential(
-                    nn.AdaptiveAvgPool2d(output_size=(1, 1)), nn.Flatten()
-                )
-                self.output_shape = (2048,)
-            else:
-                self.output_shape = (1024,)
+            # elif pooling == "avgpool":
+            #     self.backbone.attnpool = nn.Sequential(
+            #         nn.AdaptiveAvgPool2d(output_size=(1, 1)), nn.Flatten()
+            #     )
+            #     self.output_shape = (2048,)
+            # else:
+            #     self.output_shape = (1024,)
 
             for param in self.backbone.parameters():
                 param.requires_grad = False
@@ -632,23 +641,14 @@ class PointNavResNetNet(Net):
                     if len(observation_space.spaces[k].shape) == 3
                 }
             )
-
-        if backbone.startswith("resnet50_clip"):
-            self.visual_encoder = ResNetCLIPEncoder(
+        self.visual_encoder = ResNetCLIPEncoder(
                 observation_space
                 if not force_blind_policy
                 else spaces.Dict({}),
-                pooling="avgpool" if "avgpool" in backbone else "attnpool",
+                pooling="none",
             )
-            if not self.visual_encoder.is_blind:
-                self.visual_fc = nn.Sequential(
-                    nn.Linear(
-                        self.visual_encoder.output_shape[0], hidden_size
-                    ),
-                    nn.ReLU(True),
-                )
-        else:
-            self.visual_encoder = ResNetEncoder(
+
+        self.depth_encoder = ResNetEncoder(
                 use_obs_space,
                 baseplanes=resnet_baseplanes,
                 ngroups=resnet_baseplanes // 2,
@@ -656,13 +656,46 @@ class PointNavResNetNet(Net):
                 no_downscaling=no_downscaling,
                 use_augmentations=use_augmentations,
                 normalize_visual_inputs=normalize_visual_inputs,
-            )
+        )
 
-            if not self.visual_encoder.is_blind:
-                self.visual_fc = nn.Sequential(
+        # if backbone.startswith("resnet50_clip"):
+        #     self.visual_encoder = ResNetCLIPEncoder(
+        #         observation_space
+        #         if not force_blind_policy
+        #         else spaces.Dict({}),
+        #         pooling="none",
+        #     )
+        #     if not self.visual_encoder.is_blind:
+        #         self.visual_fc = nn.Sequential(
+        #             nn.Linear(
+        #                 self.visual_encoder.output_shape[0], hidden_size
+        #             ),
+        #             nn.ReLU(True),
+        #         )
+        # else:
+        #     self.visual_encoder = ResNetEncoder(
+        #         use_obs_space,
+        #         baseplanes=resnet_baseplanes,
+        #         ngroups=resnet_baseplanes // 2,
+        #         make_backbone=getattr(resnet_gn if ovrl else resnet, backbone),
+        #         no_downscaling=no_downscaling,
+        #         use_augmentations=use_augmentations,
+        #         normalize_visual_inputs=normalize_visual_inputs,
+        #     )
+
+            # if not self.visual_encoder.is_blind:
+            #     self.visual_fc = nn.Sequential(
+            #         nn.Flatten(),
+            #         nn.Linear(
+            #             np.prod(self.visual_encoder.output_shape), hidden_size
+            #         ),
+            #         nn.ReLU(True),
+            #     )
+
+        self.final_visual_fc = nn.Sequential(
                     nn.Flatten(),
                     nn.Linear(
-                        np.prod(self.visual_encoder.output_shape), hidden_size
+                        105350, hidden_size
                     ),
                     nn.ReLU(True),
                 )
@@ -719,9 +752,15 @@ class PointNavResNetNet(Net):
             else:
                 visual_feats = self.visual_encoder(observations)
 
-            visual_feats = self.visual_fc(visual_feats)
-            aux_loss_state["perception_embed"] = visual_feats
-            x.append(visual_feats)
+            depth_feats = self.depth_encoder(observations)
+            # visual_feats = self.visual_fc(visual_feats)
+
+            concat_features = torch.cat((visual_feats, depth_feats), dim=1)
+
+            concat_features = self.final_visual_fc(concat_features)
+            ##
+            aux_loss_state["perception_embed"] = concat_features
+            x.append(concat_features)
 
         if len(self._fuse_keys_1d) != 0:
             fuse_states = torch.cat(

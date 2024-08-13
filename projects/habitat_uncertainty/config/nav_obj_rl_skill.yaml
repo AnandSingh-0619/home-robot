@@ -26,7 +26,7 @@ habitat:
     obs_keys:
       - head_rgb
       - head_depth
-      - start_receptacle
+      # - start_receptacle
       - ovmm_nav_goal_segmentation
       - receptacle_segmentation
       - recep_embedding
@@ -71,7 +71,7 @@ habitat_baselines:
 
   rl:
     policy:
-      name: "NewPointNavResNetPolicy"
+      name: "TrainedPointNavResNetPolicy"
       action_distribution_type: "categorical"
       no_downscaling: True
       action_dist:
@@ -154,7 +154,7 @@ habitat_baselines:
       # Initialize just the visual encoder backbone with pretrained weights
       pretrained_encoder: False
       # Whether the visual encoder backbone will be trained.
-      train_encoder: False
+      train_encoder: True
       # Whether to resets the critic linear layer
       reset_critic: True
 

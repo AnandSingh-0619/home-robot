@@ -2,12 +2,8 @@ import os
 
 # Define the parameters for start_episode and end_episode
 start_end_pairs = [
-    (1, 200),
-    (201, 400),
-    (401, 600),
-    (601, 800),
-    (801, 1000),
-    (1001, 1199)
+    (1, 100), (101, 200), (201, 300), (301, 400), (401, 500), (501, 600),
+    (601, 700), (701, 800), (801, 900), (901, 1000), (1001, 1199)
 ]
 
 # Read the template SLURM job script

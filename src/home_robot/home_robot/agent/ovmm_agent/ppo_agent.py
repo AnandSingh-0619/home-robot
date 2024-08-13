@@ -4,7 +4,7 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
-
+import pickle
 import copy
 import random
 from collections import OrderedDict
@@ -253,6 +253,10 @@ class PPOAgent(Agent):
         self.skill_start_gps = None
         self.skill_start_compass = None
 
+        embeddings_file = "clip_vit_recep_embeddings.pickle"
+        with open(embeddings_file, "rb") as f:
+                    self._embeddings = pickle.load(f)
+
     def reset(self) -> None:
         self.test_recurrent_hidden_states = torch.zeros(
             1,
@@ -349,6 +353,11 @@ class PPOAgent(Agent):
         seg_map[max_val] = 0
         rec_seg = seg_map[rec_seg]
         return rec_seg[..., np.newaxis].astype(np.int32)
+    
+
+    def _get_receptacle_embedding(self, obs: Observations) -> np.ndarray:
+        category_name = obs.task_observations["start_recep_name"]
+        return self._embeddings[category_name]
 
     def convert_to_habitat_obs_space(
         self, obs: Observations
@@ -403,7 +412,8 @@ class PPOAgent(Agent):
             hab_obs["yolo_start_receptacle_sensor"] = self._get_start_receptacle(obs)
         if "yolo_goal_receptacle_sensor" in self.skill_obs_keys:
             hab_obs["yolo_goal_receptacle_sensor"] = self._get_goal_receptacle(obs)
-
+        if "recep_embedding" in self.skill_obs_keys:
+            hab_obs["recep_embedding"]= self._get_receptacle_embedding(obs)
         return hab_obs
 
     def act(

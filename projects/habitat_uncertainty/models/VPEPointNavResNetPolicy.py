@@ -7,7 +7,7 @@
 
 from collections import OrderedDict
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
-
+import cv2
 import numpy as np
 import torch
 from gym import spaces
@@ -54,7 +54,7 @@ except ImportError:
 
 
 @baseline_registry.register_policy
-class PreTrainVEPointNavResNetPolicy(NetPolicy):
+class VPEPointNavResNetPolicy(NetPolicy):
     def __init__(
         self,
         observation_space: spaces.Dict,
@@ -179,7 +179,7 @@ class ResNetEncoder(nn.Module):
         self.visual_keys = [
             k
             for k, v in observation_space.spaces.items()
-            if len(v.shape) > 1 and k != ImageGoalSensor.cls_uuid and k!="head_depth" and k!= "ovmm_nav_goal_segmentation" and k!= "receptacle_segmentation"
+            if len(v.shape) > 1 and k != ImageGoalSensor.cls_uuid and k!="head_rgb" and k!= "ovmm_nav_goal_segmentation" and k!= "receptacle_segmentation"
         ]
         self.key_needs_rescaling = {k: None for k in self.visual_keys}
         for k, v in observation_space.spaces.items():
@@ -253,6 +253,7 @@ class ResNetEncoder(nn.Module):
                     size=rgb_size[0]
                 )
                 self.visual_transform.randomize_environments = False
+                       
 
     @property
     def is_blind(self):
@@ -291,6 +292,7 @@ class ResNetEncoder(nn.Module):
         x = self.running_mean_and_var(x)
         x = self.backbone(x)
         x = self.compression(x)
+
         return x
 
 
@@ -303,7 +305,7 @@ class ResNetCLIPEncoder(nn.Module):
         super().__init__()
 
         self.rgb = "head_rgb" in observation_space.spaces
-        self.depth = "head_depth" in observation_space.spaces
+        self.depth = "depth" in observation_space.spaces
 
         # Determine which visual observations are present
         self.visual_keys = [
@@ -365,6 +367,21 @@ class ResNetCLIPEncoder(nn.Module):
     @property
     def is_blind(self):
         return self._n_input_channels == 0
+    
+    def draw_red_circle(self, image: np.ndarray, mask: np.ndarray) -> np.ndarray:
+        """Draw a red circle on the image around the center of the given mask."""
+        y_indices, x_indices = np.where(mask)
+        if len(y_indices) == 0 or len(x_indices) == 0:
+            return image  # Return original image if mask is empty
+
+        center_y = (min(y_indices) + max(y_indices)) // 2
+        center_x = (min(x_indices) + max(x_indices)) // 2
+        
+        # Calculate radius as half the maximum dimension of the bounding box
+        radius = max(max(y_indices) - min(y_indices), max(x_indices) - min(x_indices)) // 2
+        
+        cv2.circle(image, (center_x, center_y), radius, (0, 0, 255), 2)
+        return image
 
     def forward(self, observations: Dict[str, torch.Tensor]) -> torch.Tensor:  # type: ignore
         if self.is_blind:
@@ -376,6 +393,28 @@ class ResNetCLIPEncoder(nn.Module):
             rgb_observations = rgb_observations.permute(
                 0, 3, 1, 2
             )  # BATCH x CHANNEL x HEIGHT X WIDTH
+            rgb_observations = rgb_observations.clone().cpu().numpy()
+
+            # Process target object and receptacle segmentation masks
+            target_segmentation = observations["ovmm_nav_goal_segmentation"]
+            target_object_mask = target_segmentation[:, :, :, 0]
+            target_receptacle_mask = target_segmentation[:, :, :, 1]
+
+            # Add red circle to RGB images
+            for i in range(rgb_observations.shape[0]):
+                rgb_image = rgb_observations[i].transpose(1, 2, 0)  # CHANNEL x HEIGHT x WIDTH to HEIGHT x WIDTH x CHANNEL
+                if target_object_mask[i].sum() > 0:
+                    rgb_image = self.draw_red_circle(rgb_image, target_object_mask[i].cpu().numpy())
+
+                if target_receptacle_mask[i].sum() > 0:
+                    rgb_image = self.draw_red_circle(rgb_image, target_receptacle_mask[i].cpu().numpy())
+
+                cv2.imwrite( f'rgb_with_circles_{i}.png', rgb_image)
+
+                rgb_observations[i] = rgb_image.transpose(2, 0, 1)  # HEIGHT x WIDTH x CHANNEL to CHANNEL x HEIGHT x WIDTH
+            rgb_observations = torch.tensor(rgb_observations).int().to(observations["head_rgb"].device)
+            
+
             rgb_observations = torch.stack(
                 [self.preprocess(rgb_image) for rgb_image in rgb_observations]
             )  # [BATCH x CHANNEL x HEIGHT X WIDTH] in torch.float32
@@ -632,6 +671,19 @@ class PointNavResNetNet(Net):
                     if len(observation_space.spaces[k].shape) == 3
                 }
             )
+        self.rgb_encoder = ResNetCLIPEncoder(
+                observation_space
+                if not force_blind_policy
+                else spaces.Dict({}),
+                pooling="attnpool",
+            )
+        if not self.rgb_encoder.is_blind:
+                self.rgb_fc = nn.Sequential(
+                    nn.Linear(
+                        self.rgb_encoder.output_shape[0], hidden_size
+                    ),
+                    nn.ReLU(True),
+                )
 
         if backbone.startswith("resnet50_clip"):
             self.visual_encoder = ResNetCLIPEncoder(
@@ -666,6 +718,8 @@ class PointNavResNetNet(Net):
                     ),
                     nn.ReLU(True),
                 )
+
+        self.final_visual_fc = nn.Linear(hidden_size * 2, hidden_size)
 
         self.state_encoder = build_rnn_state_encoder(
             (0 if self.is_blind else self._hidden_size) + rnn_input_size,
@@ -713,15 +767,22 @@ class PointNavResNetNet(Net):
                 PointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY
                 in observations
             ):
-                visual_feats = observations[
+                rgb_feats = observations[
                     PointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY
                 ]
             else:
-                visual_feats = self.visual_encoder(observations)
+                rgb_feats = self.rgb_encoder(observations)
+
+            visual_feats = self.visual_encoder(observations)
 
             visual_feats = self.visual_fc(visual_feats)
-            aux_loss_state["perception_embed"] = visual_feats
-            x.append(visual_feats)
+            rgb_feats = self.rgb_fc(rgb_feats)
+            #Concat visual feat and rgb feat and make final visual feats
+            comb_visual_feats = torch.cat((visual_feats, rgb_feats), dim=1) 
+            comb_visual_feats = self.final_visual_fc(comb_visual_feats)
+            ##
+            aux_loss_state["perception_embed"] = comb_visual_feats
+            x.append(comb_visual_feats)
 
         if len(self._fuse_keys_1d) != 0:
             fuse_states = torch.cat(
