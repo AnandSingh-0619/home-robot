@@ -5,7 +5,7 @@
 #SBATCH --nodes 1
 #SBATCH --cpus-per-task 10
 #SBATCH --ntasks-per-node 1
-#SBATCH --partition=overcap
+#SBATCH --partition=kira-lab
 #SBATCH --gpus a40:1
 #SBATCH --qos="long"
 #SBATCH --exclude=spd-13

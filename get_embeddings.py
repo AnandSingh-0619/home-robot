@@ -51,30 +51,30 @@ objects = ["action_figure", "android_figure", "apple", "backpack", "baseballbat"
     "utensil_holder_cup", "vase", "video_game_cartridge", "watch", "watering_can",
     "wine_bottle"]
 
-def get_embedding(s):
-    inputs = tokenizer(s, return_tensors="pt")
-    outputs = model(**inputs)
+# def get_embedding(s):
+#     inputs = tokenizer(s, return_tensors="pt")
+#     outputs = model(**inputs)
 
-    last_hidden_states = outputs.last_hidden_state
-    return last_hidden_states[0, 0].detach().numpy()
+#     last_hidden_states = outputs.last_hidden_state
+#     return last_hidden_states[0, 0].detach().numpy()
 
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-model, preprocess = clip.load("ViT-B/32", device)
+# device = "cuda" if torch.cuda.is_available() else "cpu"
+# model, preprocess = clip.load("ViT-B/32", device)
 
-# Prepare the inputs
-text_inputs = torch.cat(
-    [clip.tokenize(f"a photo of a {c}") for c in receptacles]
-).to(device)
-save_path = "clip_vit_recep_embeddings.pickle"
+# # Prepare the inputs
+# text_inputs = torch.cat(
+#     [clip.tokenize(f"a photo of a {c}") for c in receptacles]
+# ).to(device)
+# save_path = "clip_vit_recep_embeddings.pickle"
 
-# Get CLIP embeddings
-with torch.no_grad():
-    text_features = model.encode_text(text_inputs)
-embeddings = {
-    o: t for o, t in zip(receptacles, text_features.detach().cpu().numpy())
-}
-pickle.dump(embeddings, open(save_path, "wb"))
+# # Get CLIP embeddings
+# with torch.no_grad():
+#     text_features = model.encode_text(text_inputs)
+# embeddings = {
+#     o: t for o, t in zip(receptacles, text_features.detach().cpu().numpy())
+# }
+# pickle.dump(embeddings, open(save_path, "wb"))
 
 
 # embeddings_file = "clip_embeddings.pickle"
@@ -99,3 +99,12 @@ pickle.dump(embeddings, open(save_path, "wb"))
 
 # # Print the similarity score
 # print(f"Similarity between the precomputed embedding and the object name '{category_name}': {similarity.item()}")
+
+
+with open("clip_recep_embeddings.pickle", "rb") as f:
+    embeddings = pickle.load(f)
+
+# Check the embedding size
+for key, value in embeddings.items():
+    print(f"Object: {key}, Embedding Shape: {value.shape}")
+    break 

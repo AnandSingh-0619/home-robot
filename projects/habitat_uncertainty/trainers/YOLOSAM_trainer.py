@@ -217,7 +217,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
             self._agent.updater.init_distributed(find_unused_params=False)  # type: ignore
         self._agent.post_init()
         self._is_static_detector = not self.config.habitat_baselines.rl.ddppo.train_detector
-        self._yolo_detector =self._agent.actor_critic.net.segmentation
+        self._yolo_detector =self._agent.actor_critic.net.depth_encoder.segmentation
 
         self._is_static_encoder = (
             not self.config.habitat_baselines.rl.ddppo.train_encoder
@@ -331,9 +331,9 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 ] = self._encoder(batch)
 
         if self._is_static_detector:
-            # if np.random.random() < 0.5:
-            with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
-                self._masks = self._yolo_detector.predict(batch)
+            if np.random.random() < 0.5:
+                with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
+                    self._masks = self._yolo_detector.predict(batch)
 
             batch[self._agent.actor_critic.net.SEG_MASKS] = self._masks
 
@@ -390,6 +390,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 requeue_stats["window_episode_stats"]
             )
             resume_run_id = requeue_stats.get("run_id", None)
+        # resume_run_id = None
 
         with (
             get_writer(

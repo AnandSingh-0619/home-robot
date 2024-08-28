@@ -79,9 +79,15 @@ class YOLOGoalReceptacleSensorConfig(YOLOObjectSensorConfig):
 @dataclass
 class RecepEmbeddingSensorConfig(LabSensorConfig):
     type: str = "RecepEmbeddingSensor"
-    embeddings_file: str = "data/objects/clip_vit_recep_embeddings.pickle"
-    dimensionality: int = 512
+    embeddings_file: str = "data/objects/clip_recep_embeddings.pickle"
+    dimensionality: int = 1024
 
+    
+@dataclass
+class NewObjectEmbeddingSensorConfig(LabSensorConfig):
+    type: str = "NewObjectEmbeddingSensor"
+    embeddings_file: str = "data/objects/clip_embeddings.pickle"
+    dimensionality: int = 1024
 
 # -----------------------------------------------------------------------------
 # Register configs in the Hydra ConfigStore
@@ -118,6 +124,12 @@ cs.store(
     group="habitat/task/lab_sensors",
     name="recep_embedding_sensor",
     node=RecepEmbeddingSensorConfig,
+)
+cs.store(
+    package="habitat.task.lab_sensors.new_object_embedding_sensor",
+    group="habitat/task/lab_sensors",
+    name="new_object_embedding_sensor",
+    node=NewObjectEmbeddingSensorConfig,
 )
 # cs.store(
 #     package="habitat.task.lab_sensors.yolo_segmentation_sensor",

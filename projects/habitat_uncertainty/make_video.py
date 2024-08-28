@@ -35,8 +35,8 @@ def make_video(image_folder, output_video, frame_rate=30):
     print(f"Video saved as {output_video}")
 
 if __name__ == "__main__":
-    image_folder = "image_dump/14/"  # Change this to the path of your image folder
-    output_video = "output_video23.mp4"  # Change this to your desired output video file name
+    image_folder = "datadump/images/eval_test_114/102816756_599/"  # Change this to the path of your image folder
+    output_video = "output_video24.mp4"  # Change this to your desired output video file name
     frame_rate = 5  # Adjust the frame rate as needed
 
     make_video(image_folder, output_video, frame_rate)

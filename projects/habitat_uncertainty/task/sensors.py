@@ -172,6 +172,43 @@ class RecepEmbeddingSensor(Sensor):
         category_name = episode.start_recep_category
         return self._embeddings[category_name]
 
+
+
+@registry.register_sensor
+class NewObjectEmbeddingSensor(Sensor):
+    cls_uuid: str = "new_object_embedding_sensor"
+
+    def __init__(
+        self,
+        sim,
+        config,
+        *args: Any,
+        **kwargs: Any,
+    ):
+        self._config = config
+        self._dimensionality = self._config.dimensionality
+        with open(config.embeddings_file, "rb") as f:
+            self._embeddings = pickle.load(f)
+
+        super().__init__(config=config)
+
+    def _get_uuid(self, *args: Any, **kwargs: Any) -> str:
+        return self.cls_uuid
+
+    def _get_sensor_type(self, *args: Any, **kwargs: Any):
+        return SensorTypes.TENSOR
+
+    def _get_observation_space(self, *args, **kwargs):
+        return spaces.Box(
+            shape=(self._dimensionality,),
+            low=np.finfo(np.float32).min,
+            high=np.finfo(np.float32).max,
+            dtype=np.float32,
+        )
+
+    def get_observation(self, observations, *args, episode, **kwargs):
+        category_name = episode.object_category
+        return self._embeddings[category_name]
 # @registry.register_sensor
 # class YOLOSensor(Sensor):
 #     cls_uuid: str = "yolo_segmentation_sensor"

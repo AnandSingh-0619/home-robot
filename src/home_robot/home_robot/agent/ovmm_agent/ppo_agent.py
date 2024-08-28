@@ -42,7 +42,7 @@ from home_robot.utils.constants import (
     MAX_DEPTH_REPLACEMENT_VALUE,
     MIN_DEPTH_REPLACEMENT_VALUE,
 )
-
+import cv2
 CLASSES = [
     "action_figure", "android_figure", "apple", "backpack", "baseballbat",
     "basket", "basketball", "bath_towel", "battery_charger", "board_game",
@@ -253,9 +253,12 @@ class PPOAgent(Agent):
         self.skill_start_gps = None
         self.skill_start_compass = None
 
-        embeddings_file = "clip_vit_recep_embeddings.pickle"
+        embeddings_file = "clip_recep_embeddings.pickle"
         with open(embeddings_file, "rb") as f:
                     self._embeddings = pickle.load(f)
+        object_embeddings_file = "clip_embeddings.pickle"
+        with open(object_embeddings_file, "rb") as f:
+                    self._objectEmbeddings = pickle.load(f)
 
     def reset(self) -> None:
         self.test_recurrent_hidden_states = torch.zeros(
@@ -359,6 +362,10 @@ class PPOAgent(Agent):
         category_name = obs.task_observations["start_recep_name"]
         return self._embeddings[category_name]
 
+    def _get_new_object_embedding(self, obs: Observations) -> np.ndarray:
+        category_name = obs.task_observations["object_name"]
+        return self._objectEmbeddings[category_name]
+
     def convert_to_habitat_obs_space(
         self, obs: Observations
     ) -> "OrderedDict[str, Any]":
@@ -414,6 +421,8 @@ class PPOAgent(Agent):
             hab_obs["yolo_goal_receptacle_sensor"] = self._get_goal_receptacle(obs)
         if "recep_embedding" in self.skill_obs_keys:
             hab_obs["recep_embedding"]= self._get_receptacle_embedding(obs)
+        if "new_object_embedding_sensor" in self.skill_obs_keys:
+            hab_obs["new_object_embedding_sensor"]= self._get_new_object_embedding(obs)
         return hab_obs
 
     def act(

@@ -11,6 +11,7 @@ defaults:
     - robot_start_gps_sensor
     - robot_start_compass_sensor
     - recep_embedding_sensor
+    - new_object_embedding_sensor
   - /habitat: habitat_config_base
   - /habitat_baselines: habitat_baselines_rl_config_base
   - /habitat_baselines/rl/policy/obs_transforms:
@@ -22,7 +23,7 @@ defaults:
 habitat_baselines:
   rl:
     policy:
-        name: "TrainedPointNavResNetPolicy"
+        name: "ComPointNavResNetPolicy"
         action_distribution_type: "categorical"
         no_downscaling: True
         action_dist:
@@ -36,7 +37,7 @@ habitat_baselines:
             size: 120
             channels_last: True
             trans_keys:
-              - head_rgb
+              # - head_rgb
               - head_depth
               - ovmm_nav_goal_segmentation
               - receptacle_segmentation
@@ -49,7 +50,7 @@ habitat_baselines:
             width: 120
             channels_last: True
             trans_keys:
-              - head_rgb
+              # - head_rgb
               - head_depth
               - ovmm_nav_goal_segmentation
               - receptacle_segmentation
@@ -108,3 +109,9 @@ habitat:
     agents:
       main_agent:
         articulated_agent_type: "StretchRobot"
+        sim_sensors:
+          head_rgb_sensor:
+            height: 320
+            width: 240
+            # hfov: 42
+            position: [0, 1.31, 0]

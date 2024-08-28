@@ -68,16 +68,16 @@ SKILLS:
 
   NAV_TO_OBJ:
     type: rl # heuristic (default) or rl
-    checkpoint_path: data/checkpoints/eval_check/navObj_CLIP_RES_megabot_936142/latest.pth
+    checkpoint_path: data/checkpoints/eval_check/navObj_942052/ckpt.2.pth
     rl_config: projects/habitat_ovmm/configs/agent/skills/nav_to_obj_rl.yaml
     gym_obs_keys:
       - head_rgb
       - head_depth
-      - object_embedding
+      - new_object_embedding_sensor
       - recep_embedding
       - ovmm_nav_goal_segmentation
       - receptacle_segmentation
-      # - start_receptacle
+      - start_receptacle
       - robot_start_gps
       - robot_start_compass
       # - yolo_object_sensor

@@ -7,10 +7,13 @@ defaults:
     - start_receptacle_sensor
     - ovmm_nav_goal_segmentation_sensor
     - receptacle_segmentation_sensor
-    - object_embedding_sensor
+    - new_object_embedding_sensor
     - robot_start_gps_sensor
     - robot_start_compass_sensor
     - recep_embedding_sensor
+    - yolo_object_sensor
+    - yolo_start_receptacle_sensor
+    - yolo_goal_receptacle_sensor
 
   - /benchmark/ovmm: nav_to_obj
   - /habitat_baselines: habitat_baselines_rl_config_base
@@ -30,9 +33,11 @@ habitat:
       - ovmm_nav_goal_segmentation
       - receptacle_segmentation
       - recep_embedding
-      - object_embedding
+      - new_object_embedding_sensor
       - robot_start_gps
       - robot_start_compass
+      - yolo_object_sensor
+      - yolo_start_receptacle_sensor
   simulator:
     agents:
       main_agent:
@@ -45,7 +50,7 @@ habitat:
 
 habitat_baselines:
   verbose: False
-  trainer_name: "ddppo"
+  trainer_name: "yolosam_ddppo"
   torch_gpu_id: 0
   writer_type: "wb"
   tensorboard_dir: "tb"
@@ -71,7 +76,7 @@ habitat_baselines:
 
   rl:
     policy:
-      name: "ComPointNavResNetPolicy"
+      name: "YOLOv8CompPointNavResNetPolicy"
       action_distribution_type: "categorical"
       no_downscaling: True
       action_dist:
@@ -87,7 +92,7 @@ habitat_baselines:
           channels_last: True
           trans_keys:
             # - head_rgb
-            - head_depth
+            # - head_depth
             - head_panoptic
             - object_segmentation
             - receptacle_segmentation
@@ -108,7 +113,7 @@ habitat_baselines:
           channels_last: True
           trans_keys:
             # - head_rgb
-            - head_depth
+            # - head_depth
             - head_panoptic
             - object_segmentation
             - receptacle_segmentation
@@ -157,7 +162,7 @@ habitat_baselines:
       train_encoder: False
       # Whether to resets the critic linear layer
       reset_critic: True
-
+      train_detector: False
       # Model parameters
       # backbone: resnet50_clip_attnpool
       # backbone: resnet50_clip_avgpool

@@ -23,6 +23,7 @@ from habitat_uncertainty.models.GazePointNavResNetPolicy import GazePointNavResN
 from habitat_uncertainty.models.HmapNavObjPointNavResNetPolicy import HmapNavObjPointNavResNetPolicy
 from habitat_uncertainty.models.GHmapNavObjPointNavResNetPolicy import GHmapNavObjPointNavResNetPolicy
 from habitat_uncertainty.models.TrainedPointNavResNetPolicy import TrainedPointNavResNetPolicy
+from habitat_uncertainty.models.ComPointNavResNetPolicy import ComPointNavResNetPolicy
 
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"

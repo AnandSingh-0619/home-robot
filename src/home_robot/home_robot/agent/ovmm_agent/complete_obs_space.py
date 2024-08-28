@@ -14,6 +14,9 @@ def get_complete_obs_space(skill_config, baseline_config):
     This avoids needing to use the habitat configs to import the observation space on hardware.
     TODO: Find way to import observation space from regular YAML configs to avoid this hardcoding.
     """
+    val= 512
+    if "recep_embedding" in skill_config.gym_obs_keys:
+        val = 1024
     return spaces.dict.Dict(
         {
             "is_holding": spaces.Box(0.0, 1.0, (1,), np.float32),
@@ -32,7 +35,7 @@ def get_complete_obs_space(skill_config, baseline_config):
             "object_embedding": spaces.Box(
                 np.finfo(np.float32).min,
                 np.finfo(np.float32).max,
-                (512,),
+                (val,),
                 np.float32,
             ),
             "relative_resting_position": spaces.Box(
@@ -132,7 +135,13 @@ def get_complete_obs_space(skill_config, baseline_config):
             "recep_embedding": spaces.Box(
                 np.finfo(np.float32).min,
                 np.finfo(np.float32).max,
-                (512,),
+                (val,),
+                np.float32,
+            ),
+            "new_object_embedding_sensor": spaces.Box(
+                np.finfo(np.float32).min,
+                np.finfo(np.float32).max,
+                (1024,),
                 np.float32,
             ),
         }
