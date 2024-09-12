@@ -1,2 +1,1 @@
 *.ipynb filter=strip-notebook-output
-# slurm_logs/* filter=lfs diff=lfs merge=lfs -text
