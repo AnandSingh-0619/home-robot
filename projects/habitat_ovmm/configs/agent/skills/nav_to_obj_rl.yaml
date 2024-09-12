@@ -12,6 +12,8 @@ defaults:
     - robot_start_compass_sensor
     - recep_embedding_sensor
     - new_object_embedding_sensor
+    - yolo_object_sensor
+    - yolo_start_receptacle_sensor
   - /habitat: habitat_config_base
   - /habitat_baselines: habitat_baselines_rl_config_base
   - /habitat_baselines/rl/policy/obs_transforms:

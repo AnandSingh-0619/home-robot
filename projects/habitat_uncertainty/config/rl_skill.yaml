@@ -11,6 +11,7 @@ defaults:
     - robot_start_gps_sensor
     - robot_start_compass_sensor
     - recep_embedding_sensor
+    - new_object_embedding_sensor
 
   - /benchmark/ovmm: nav_to_obj
   - /habitat_baselines: habitat_baselines_rl_config_base
@@ -30,7 +31,7 @@ habitat:
       - ovmm_nav_goal_segmentation
       - receptacle_segmentation
       - recep_embedding
-      - object_embedding
+      - new_object_embedding_sensor
       - robot_start_gps
       - robot_start_compass
   simulator:
@@ -71,7 +72,7 @@ habitat_baselines:
 
   rl:
     policy:
-      name: "ComPointNavResNetPolicy"
+      name: "CompDropPointNavResNetPolicy"
       action_distribution_type: "categorical"
       no_downscaling: True
       action_dist:

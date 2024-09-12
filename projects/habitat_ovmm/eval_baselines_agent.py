@@ -24,6 +24,7 @@ from habitat_uncertainty.models.HmapNavObjPointNavResNetPolicy import HmapNavObj
 from habitat_uncertainty.models.GHmapNavObjPointNavResNetPolicy import GHmapNavObjPointNavResNetPolicy
 from habitat_uncertainty.models.TrainedPointNavResNetPolicy import TrainedPointNavResNetPolicy
 from habitat_uncertainty.models.ComPointNavResNetPolicy import ComPointNavResNetPolicy
+from habitat_uncertainty.models.YOLOv8CompPointNavResNetPolicy import YOLOv8CompPointNavResNetPolicy
 
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -36,7 +37,7 @@ if __name__ == "__main__":
         "--evaluation_type",
         type=str,
         choices=["local", "local_vectorized", "remote"],
-        default="local_vectorized",
+        default="local",
     )
     parser.add_argument("--num_episodes", type=int, default=None)
     parser.add_argument(

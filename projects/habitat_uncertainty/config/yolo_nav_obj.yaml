@@ -76,7 +76,7 @@ habitat_baselines:
 
   rl:
     policy:
-      name: "YOLOv8CompPointNavResNetPolicy"
+      name: "YOLOv8GTPointNavResNetPolicy"
       action_distribution_type: "categorical"
       no_downscaling: True
       action_dist:
