@@ -140,7 +140,7 @@ def main():
     # Parse arguments to read folder_name and exp_name
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--folder_name", type=str, default="datadump/results/eval_hssd_0710/"
+        "--folder_name", type=str, default="datadump/results/mini_eval_test/"
     )
     parser.add_argument("--exp_name", type=str, default=None)
     args = parser.parse_args()
