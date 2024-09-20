@@ -99,7 +99,7 @@ def get_rollout_obs_space(obs_space, actor_critic, config):
                 **obs_space.spaces,
             }
         )
-    if not config.habitat_baselines.rl.ddppo.train_detector:
+    if config.habitat_baselines.rl.ddppo.use_detector:
         obs_space = spaces.Dict(
             {
                 actor_critic.net.SEG_MASKS: spaces.Box(

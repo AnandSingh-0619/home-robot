@@ -114,6 +114,8 @@ class HabitatOpenVocabManipEnv(HabitatEnv):
     def reset(self):
         habitat_obs = self.habitat_env.reset()
         self._last_habitat_obs = habitat_obs
+        action=2
+        obs=self.habitat_env.env.env.habitat_env.step(action)
         self._last_obs = self._preprocess_obs(habitat_obs)
         if self.visualize:
             self.visualizer.reset()

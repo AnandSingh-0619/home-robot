@@ -14,6 +14,10 @@ from habitat_baselines.config.default_structured_configs import (
     RLConfig,
     VERConfig,
     AuxLossConfig,
+    ActionDistributionConfig,
+    ObsTransformConfig,
+    HierarchicalPolicyConfig,  
+    MISSING,  
 )
 from hydra.core.config_search_path import ConfigSearchPath
 from hydra.core.config_store import ConfigStore
@@ -26,6 +30,32 @@ cs = ConfigStore.instance()
 # @dataclass
 # class YOLOSensorConfig(LabSensorConfig):
 #     type: str = "YOLOSensor"
+
+@dataclass
+class CustomPolicyConfig(PolicyConfig):
+    name: str = "PointNavResNetPolicy"
+    action_distribution_type: str = "categorical"  # or 'gaussian'
+    # If the list is empty, all keys will be included.
+    # For gaussian action distribution:
+    action_dist: ActionDistributionConfig = ActionDistributionConfig()
+    obs_transforms: Dict[str, ObsTransformConfig] = field(default_factory=dict)
+    hierarchical_policy: HierarchicalPolicyConfig = MISSING
+    ovrl: bool = False
+    no_downscaling: bool = False
+    use_augmentations: bool = False
+    deterministic_actions: bool = False
+    use_yolo: bool = False
+    yolo_model_id: str="yolov8s-world.pt"
+    verbose: bool=True
+    save_images: bool=False
+    save_path: str = "image_dump/19"
+    mask_rgb: bool=False
+    num_env: int=32
+    use_visual_encoder: bool=True
+    use_depth_encoder: bool=True
+    combine_encoders: bool=True
+    
+        
 @dataclass
 class customDDPPOConfig(DDPPOConfig):
     """Decentralized distributed proximal policy optimization config"""
@@ -42,7 +72,7 @@ class customDDPPOConfig(DDPPOConfig):
     reset_critic: bool = True
     force_distributed: bool = False
     normalize_visual_inputs: bool = False
-    train_detector: bool = False
+    use_detector: bool = False
 
 @dataclass
 class customAgentAccessMgrConfig(AgentAccessMgrConfig):
@@ -54,7 +84,7 @@ class customRLConfig(RLConfig):
 
     agent: customAgentAccessMgrConfig = customAgentAccessMgrConfig()
     preemption: PreemptionConfig = PreemptionConfig()
-    policy: PolicyConfig = PolicyConfig()
+    policy: CustomPolicyConfig = CustomPolicyConfig()
     ppo: PPOConfig = PPOConfig()
     ddppo: customDDPPOConfig = customDDPPOConfig()
     ver: VERConfig = VERConfig()

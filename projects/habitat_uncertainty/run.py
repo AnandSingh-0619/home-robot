@@ -35,7 +35,7 @@ from habitat_uncertainty.models.YOLOv8CompPointNavResNetPolicy import YOLOv8Comp
 from habitat_uncertainty.models.YoloONNXPointNavResNetPolicy import YoloONNXPointNavResNetPolicy
 from habitat_uncertainty.models.YOLOv8GTPointNavResNetPolicy import YOLOv8GTPointNavResNetPolicy
 from habitat_uncertainty.models.CompnoRGBPointNavResNetPolicy import CompnoRGBPointNavResNetPolicy
-from habitat_uncertainty.models.CompDropPointNavResNetPolicy import CompDropPointNavResNetPolicy
+from habitat_uncertainty.models.YoloPointNavResNetPolicy import YoloPointNavResNetPolicy
 def register_plugins():
     register_hydra_plugin(HabitatConfigPlugin)
 

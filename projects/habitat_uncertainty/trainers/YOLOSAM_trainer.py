@@ -216,7 +216,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
         if self._is_distributed:
             self._agent.updater.init_distributed(find_unused_params=False)  # type: ignore
         self._agent.post_init()
-        self._is_static_detector = not self.config.habitat_baselines.rl.ddppo.train_detector
+        self._use_ovod = self.config.habitat_baselines.rl.ddppo.use_detector
         self._yolo_detector =self._agent.actor_critic.net.depth_encoder.segmentation
 
         self._is_static_encoder = (
@@ -228,7 +228,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
         observations = self.envs.post_step(observations)
         batch = batch_obs(observations, device=self.device)
         batch = apply_obs_transforms_batch(batch, self.obs_transforms)  # type: ignore
-        if(self._is_static_detector):
+        if(self._use_ovod):
             batch[self._agent.actor_critic.net.SEG_MASKS] = self._yolo_detector.predict(batch)
 
         if self._is_static_encoder:
@@ -330,10 +330,9 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                     PointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY
                 ] = self._encoder(batch)
 
-        if self._is_static_detector:
-            if np.random.random() < 0.5:
-                with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
-                    self._masks = self._yolo_detector.predict(batch)
+        if self._use_ovod:
+            with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
+                self._masks = self._yolo_detector.predict(batch)
 
             batch[self._agent.actor_critic.net.SEG_MASKS] = self._masks
 
