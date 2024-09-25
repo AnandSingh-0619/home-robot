@@ -12,59 +12,15 @@ from habitat.config.default_structured_configs import register_hydra_plugin
 from habitat_baselines.run import execute_exp
 from habitat_uncertainty import config
 from habitat_uncertainty.config import HabitatConfigPlugin
-from habitat_uncertainty.models.CompnoRGBPointNavResNetPolicy import (
-    CompnoRGBPointNavResNetPolicy,
-)
-from habitat_uncertainty.models.ComPointNavResNetPolicy import ComPointNavResNetPolicy
-from habitat_uncertainty.models.GazePointNavResNetPolicy import GazePointNavResNetPolicy
-from habitat_uncertainty.models.GHmapNavObjPointNavResNetPolicy import (
-    GHmapNavObjPointNavResNetPolicy,
-)
-from habitat_uncertainty.models.HmapNavObjPointNavResNetPolicy import (
-    HmapNavObjPointNavResNetPolicy,
-)
-from habitat_uncertainty.models.NavObjPointNavResNetPolicy import (
-    NavObjPointNavResNetPolicy,
-)
-from habitat_uncertainty.models.NewPointNavResNetPolicy import NewPointNavResNetPolicy
-from habitat_uncertainty.models.NewSizePointNavResNetPolicy import (
-    NewSizePointNavResNetPolicy,
-)
-from habitat_uncertainty.models.NoCoPointNavResNetPolicy import NoCoPointNavResNetPolicy
-from habitat_uncertainty.models.PreTrainVEPointNavResNetPolicy import (
-    PreTrainVEPointNavResNetPolicy,
-)
 from habitat_uncertainty.models.single_agent_access_manager import (
     SingleAgentAccessManager,
 )
-from habitat_uncertainty.models.TrainedPointNavResNetPolicy import (
-    TrainedPointNavResNetPolicy,
-)
-from habitat_uncertainty.models.VPEPointNavResNetPolicy import VPEPointNavResNetPolicy
-from habitat_uncertainty.models.YOLOComPointNavResNetPolicy import (
-    YOLOComPointNavResNetPolicy,
-)
-from habitat_uncertainty.models.YoloONNXPointNavResNetPolicy import (
-    YoloONNXPointNavResNetPolicy,
-)
 from habitat_uncertainty.models.YoloPointNavResNetPolicy import YoloPointNavResNetPolicy
-from habitat_uncertainty.models.YOLOSAMPointNavResNetPolicy import (
-    YOLOSAMPointNavResNetPolicy,
-)
-from habitat_uncertainty.models.YOLOv8CompPointNavResNetPolicy import (
-    YOLOv8CompPointNavResNetPolicy,
-)
-from habitat_uncertainty.models.YOLOv8GTPointNavResNetPolicy import (
-    YOLOv8GTPointNavResNetPolicy,
-)
 from habitat_uncertainty.task.sensors import (
     YOLOGoalReceptacleSensor,
     YOLOObjectSensor,
     YOLOStartReceptacleSensor,
 )
-
-# from habitat_uncertainty.utils.YOLO_pred import YOLOPerception as YOLO_pred
-from habitat_uncertainty.trainers.gaze_ppo_trainer import GazePPOTrainer
 from habitat_uncertainty.trainers.Yolo_trainer import YOLOPPOTrainer
 
 
