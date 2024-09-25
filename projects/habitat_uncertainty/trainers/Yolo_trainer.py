@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 import contextlib
+import gc
 import os
 import random
 import time
@@ -12,22 +13,21 @@ from collections import defaultdict, deque
 from typing import Any, Dict, List, Optional, Set
 
 import hydra
+import matplotlib.pyplot as plt
 import numpy as np
+import scipy.ndimage as ndi
 import torch
 import tqdm
-from omegaconf import OmegaConf
-
 from habitat import VectorEnv, logger
 from habitat.config import read_write
 from habitat.config.default import get_agent_config
+from habitat.core.logging import logger
 from habitat.gym.gym_definitions import make_gym_from_config
 from habitat.tasks.rearrange.rearrange_sensors import GfxReplayMeasure
 from habitat.tasks.rearrange.utils import write_gfx_replay
 from habitat.utils import profiling_wrapper
-from habitat.utils.visualizations.utils import (
-    observations_to_image,
-    overlay_frame,
-)
+from habitat.utils.visualizations.utils import observations_to_image, overlay_frame
+from habitat_baselines import PPOTrainer
 from habitat_baselines.common import VectorEnvFactory
 from habitat_baselines.common.base_trainer import BaseRLTrainer
 from habitat_baselines.common.baseline_registry import baseline_registry
@@ -37,10 +37,7 @@ from habitat_baselines.common.obs_transformers import (
     apply_obs_transforms_obs_space,
     get_active_obs_transforms,
 )
-from habitat_baselines.common.tensorboard_utils import (
-    TensorboardWriter,
-    get_writer,
-)
+from habitat_baselines.common.tensorboard_utils import TensorboardWriter, get_writer
 from habitat_baselines.rl.ddppo.algo import DDPPO  # noqa: F401.
 from habitat_baselines.rl.ddppo.ddp_utils import (
     EXIT,
@@ -70,44 +67,165 @@ from habitat_baselines.utils.info_dict import (
     extract_scalars_from_infos,
 )
 from habitat_baselines.utils.timing import g_timer
-from habitat_baselines import PPOTrainer
-from habitat.core.logging import logger
-import scipy.ndimage as ndi
-import matplotlib.pyplot as plt
 from nvitop import Device
-import gc
+from omegaconf import OmegaConf
+
 CLASSES = [
-    "action_figure", "android_figure", "apple", "backpack", "baseballbat",
-    "basket", "basketball", "bath_towel", "battery_charger", "board_game",
-    "book", "bottle", "bowl", "box", "bread", "bundt_pan", "butter_dish",
-    "c-clamp", "cake_pan", "can", "can_opener", "candle", "candle_holder",
-    "candy_bar", "canister", "carrying_case", "casserole", "cellphone", "clock",
-    "cloth", "credit_card", "cup", "cushion", "dish", "doll", "dumbbell", "egg",
-    "electric_kettle", "electronic_cable", "file_sorter", "folder", "fork",
-    "gaming_console", "glass", "hammer", "hand_towel", "handbag", "hard_drive",
-    "hat", "helmet", "jar", "jug", "kettle", "keychain", "knife", "ladle", "lamp",
-    "laptop", "laptop_cover", "laptop_stand", "lettuce", "lunch_box",
-    "milk_frother_cup", "monitor_stand", "mouse_pad", "multiport_hub",
-    "newspaper", "pan", "pen", "pencil_case", "phone_stand", "picture_frame",
-    "pitcher", "plant_container", "plant_saucer", "plate", "plunger", "pot",
-    "potato", "ramekin", "remote", "salt_and_pepper_shaker", "scissors",
-    "screwdriver", "shoe", "soap", "soap_dish", "soap_dispenser", "spatula",
-    "spectacles", "spicemill", "sponge", "spoon", "spray_bottle", "squeezer",
-    "statue", "stuffed_toy", "sushi_mat", "tape", "teapot", "tennis_racquet",
-    "tissue_box", "toiletry", "tomato", "toy_airplane", "toy_animal", "toy_bee",
-    "toy_cactus", "toy_construction_set", "toy_fire_truck", "toy_food",
-    "toy_fruits", "toy_lamp", "toy_pineapple", "toy_rattle", "toy_refrigerator",
-    "toy_sink", "toy_sofa", "toy_swing", "toy_table", "toy_vehicle", "tray",
-    "utensil_holder_cup", "vase", "video_game_cartridge", "watch", "watering_can",
-    "wine_bottle", "bathtub", "bed", "bench", "cabinet", "chair", "chest_of_drawers",
-    "couch", "counter", "filing_cabinet", "hamper", "serving_cart", "shelves",
-    "shoe_rack", "sink", "stand", "stool", "table", "toilet", "trunk", "wardrobe",
-    "washer_dryer"
+    "action_figure",
+    "android_figure",
+    "apple",
+    "backpack",
+    "baseballbat",
+    "basket",
+    "basketball",
+    "bath_towel",
+    "battery_charger",
+    "board_game",
+    "book",
+    "bottle",
+    "bowl",
+    "box",
+    "bread",
+    "bundt_pan",
+    "butter_dish",
+    "c-clamp",
+    "cake_pan",
+    "can",
+    "can_opener",
+    "candle",
+    "candle_holder",
+    "candy_bar",
+    "canister",
+    "carrying_case",
+    "casserole",
+    "cellphone",
+    "clock",
+    "cloth",
+    "credit_card",
+    "cup",
+    "cushion",
+    "dish",
+    "doll",
+    "dumbbell",
+    "egg",
+    "electric_kettle",
+    "electronic_cable",
+    "file_sorter",
+    "folder",
+    "fork",
+    "gaming_console",
+    "glass",
+    "hammer",
+    "hand_towel",
+    "handbag",
+    "hard_drive",
+    "hat",
+    "helmet",
+    "jar",
+    "jug",
+    "kettle",
+    "keychain",
+    "knife",
+    "ladle",
+    "lamp",
+    "laptop",
+    "laptop_cover",
+    "laptop_stand",
+    "lettuce",
+    "lunch_box",
+    "milk_frother_cup",
+    "monitor_stand",
+    "mouse_pad",
+    "multiport_hub",
+    "newspaper",
+    "pan",
+    "pen",
+    "pencil_case",
+    "phone_stand",
+    "picture_frame",
+    "pitcher",
+    "plant_container",
+    "plant_saucer",
+    "plate",
+    "plunger",
+    "pot",
+    "potato",
+    "ramekin",
+    "remote",
+    "salt_and_pepper_shaker",
+    "scissors",
+    "screwdriver",
+    "shoe",
+    "soap",
+    "soap_dish",
+    "soap_dispenser",
+    "spatula",
+    "spectacles",
+    "spicemill",
+    "sponge",
+    "spoon",
+    "spray_bottle",
+    "squeezer",
+    "statue",
+    "stuffed_toy",
+    "sushi_mat",
+    "tape",
+    "teapot",
+    "tennis_racquet",
+    "tissue_box",
+    "toiletry",
+    "tomato",
+    "toy_airplane",
+    "toy_animal",
+    "toy_bee",
+    "toy_cactus",
+    "toy_construction_set",
+    "toy_fire_truck",
+    "toy_food",
+    "toy_fruits",
+    "toy_lamp",
+    "toy_pineapple",
+    "toy_rattle",
+    "toy_refrigerator",
+    "toy_sink",
+    "toy_sofa",
+    "toy_swing",
+    "toy_table",
+    "toy_vehicle",
+    "tray",
+    "utensil_holder_cup",
+    "vase",
+    "video_game_cartridge",
+    "watch",
+    "watering_can",
+    "wine_bottle",
+    "bathtub",
+    "bed",
+    "bench",
+    "cabinet",
+    "chair",
+    "chest_of_drawers",
+    "couch",
+    "counter",
+    "filing_cabinet",
+    "hamper",
+    "serving_cart",
+    "shelves",
+    "shoe_rack",
+    "sink",
+    "stand",
+    "stool",
+    "table",
+    "toilet",
+    "trunk",
+    "wardrobe",
+    "washer_dryer",
 ]
 
-@baseline_registry.register_trainer(name="yolosam_ddppo")
-@baseline_registry.register_trainer(name="yolosam_ppo")
-class YOLOSAMPPOTrainer(PPOTrainer):
+
+@baseline_registry.register_trainer(name="yolo_ddppo")
+@baseline_registry.register_trainer(name="yolo_ppo")
+class YOLOPPOTrainer(PPOTrainer):
     r"""Trainer class for PPO algorithm
     Paper: https://arxiv.org/abs/1707.06347.
     """
@@ -121,7 +239,6 @@ class YOLOSAMPPOTrainer(PPOTrainer):
     def __init__(self, config=None):
         super().__init__(config)
 
-    
     def _init_train(self, resume_state=None):
         if resume_state is None:
             resume_state = load_resume_state(self.config)
@@ -154,9 +271,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
 
             with read_write(self.config):
                 self.config.habitat_baselines.torch_gpu_id = local_rank
-                self.config.habitat.simulator.habitat_sim_v0.gpu_device_id = (
-                    local_rank
-                )
+                self.config.habitat.simulator.habitat_sim_v0.gpu_device_id = local_rank
                 # Multiply by the number of simulators to make sure they also get unique seeds
                 self.config.habitat.seed += (
                     torch.distributed.get_rank()
@@ -186,9 +301,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
             if non_scalar_metric_root in self.config.habitat.task.measurements:
                 with read_write(self.config):
                     OmegaConf.set_struct(self.config, False)
-                    self.config.habitat.task.measurements.pop(
-                        non_scalar_metric_root
-                    )
+                    self.config.habitat.task.measurements.pop(non_scalar_metric_root)
                     OmegaConf.set_struct(self.config, True)
                 if self.config.habitat_baselines.verbose:
                     logger.info(
@@ -217,7 +330,10 @@ class YOLOSAMPPOTrainer(PPOTrainer):
             self._agent.updater.init_distributed(find_unused_params=False)  # type: ignore
         self._agent.post_init()
         self._use_ovod = self.config.habitat_baselines.rl.ddppo.use_detector
-        self._yolo_detector =self._agent.actor_critic.net.depth_encoder.segmentation
+        if self._use_ovod:
+            self._yolo_detector = (
+                self._agent.actor_critic.net.depth_encoder.segmentation
+            )
 
         self._is_static_encoder = (
             not self.config.habitat_baselines.rl.ddppo.train_encoder
@@ -228,8 +344,10 @@ class YOLOSAMPPOTrainer(PPOTrainer):
         observations = self.envs.post_step(observations)
         batch = batch_obs(observations, device=self.device)
         batch = apply_obs_transforms_batch(batch, self.obs_transforms)  # type: ignore
-        if(self._use_ovod):
-            batch[self._agent.actor_critic.net.SEG_MASKS] = self._yolo_detector.predict(batch)
+        if self._use_ovod:
+            batch[self._agent.actor_critic.net.SEG_MASKS] = self._yolo_detector.predict(
+                batch
+            )
 
         if self._is_static_encoder:
             self._encoder = self._agent.actor_critic.visual_encoder
@@ -237,13 +355,19 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 self._encoder is not None
             ), "Visual encoder is not specified for this actor"
             with inference_mode():
-                batch[
-                    PointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY
-                ] = self._encoder(batch)
-        
-        self.rollout_observation_keys = set(self._agent.rollouts.buffers["observations"].keys())
+                batch[PointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY] = self._encoder(
+                    batch
+                )
+
+        self.rollout_observation_keys = set(
+            self._agent.rollouts.buffers["observations"].keys()
+        )
         # Create a new batch by including only those keys present in rollout_observation_keys
-        cleaned_batch = {key: value for key, value in batch.items() if key in self.rollout_observation_keys}
+        cleaned_batch = {
+            key: value
+            for key, value in batch.items()
+            if key in self.rollout_observation_keys
+        }
 
         self._agent.rollouts.insert_first_observations(cleaned_batch)
 
@@ -255,9 +379,11 @@ class YOLOSAMPPOTrainer(PPOTrainer):
         self.window_episode_stats = defaultdict(
             lambda: deque(maxlen=self._ppo_cfg.reward_window_size)
         )
-        self._masks = torch.zeros((self.config.habitat_baselines.num_environments, 160, 120, 3))
+        self._masks = torch.zeros(
+            (self.config.habitat_baselines.num_environments, 160, 120, 3)
+        )
         self.t_start = time.time()
-   
+
     def _collect_environment_result(self, buffer_index: int = 0):
         num_envs = self.envs.num_envs
         env_slice = slice(
@@ -271,9 +397,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                 for index_env in range(env_slice.start, env_slice.stop)
             ]
 
-            observations, rewards_l, dones, infos = [
-                list(x) for x in zip(*outputs)
-            ]
+            observations, rewards_l, dones, infos = [list(x) for x in zip(*outputs)]
 
         with g_timer.avg_time("trainer.update_stats"):
             observations = self.envs.post_step(observations)
@@ -320,15 +444,13 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                     )
                 self.running_episode_stats[k][env_slice] += v.where(done_masks, v.new_zeros(()))  # type: ignore
 
-            self.current_episode_reward[env_slice].masked_fill_(
-                done_masks, 0.0
-            )
+            self.current_episode_reward[env_slice].masked_fill_(done_masks, 0.0)
 
         if self._is_static_encoder:
             with inference_mode(), g_timer.avg_time("trainer.visual_features"):
-                batch[
-                    PointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY
-                ] = self._encoder(batch)
+                batch[PointNavResNetNet.PRETRAINED_VISUAL_FEATURES_KEY] = self._encoder(
+                    batch
+                )
 
         if self._use_ovod:
             with torch.no_grad(), g_timer.avg_time("trainer.yolo_detector_step"):
@@ -337,7 +459,11 @@ class YOLOSAMPPOTrainer(PPOTrainer):
             batch[self._agent.actor_critic.net.SEG_MASKS] = self._masks
 
         # Create a new batch by including only those keys present in rollout_observation_keys
-        cleaned_batch = {key: value for key, value in batch.items() if key in self.rollout_observation_keys}
+        cleaned_batch = {
+            key: value
+            for key, value in batch.items()
+            if key in self.rollout_observation_keys
+        }
         try:
             self._agent.rollouts.insert(
                 next_observations=cleaned_batch,
@@ -378,16 +504,12 @@ class YOLOSAMPPOTrainer(PPOTrainer):
             requeue_stats = resume_state["requeue_stats"]
             self.num_steps_done = requeue_stats["num_steps_done"]
             self.num_updates_done = requeue_stats["num_updates_done"]
-            self._last_checkpoint_percent = requeue_stats[
-                "_last_checkpoint_percent"
-            ]
+            self._last_checkpoint_percent = requeue_stats["_last_checkpoint_percent"]
             count_checkpoints = requeue_stats["count_checkpoints"]
             prev_time = requeue_stats["prev_time"]
 
             self.running_episode_stats = requeue_stats["running_episode_stats"]
-            self.window_episode_stats.update(
-                requeue_stats["window_episode_stats"]
-            )
+            self.window_episode_stats.update(requeue_stats["window_episode_stats"])
             resume_run_id = requeue_stats.get("run_id", None)
         # resume_run_id = None
 
@@ -453,8 +575,8 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                         )
 
                         for buffer_index in range(self._agent.nbuffers):
-                            count_steps_delta += (
-                                self._collect_environment_result(buffer_index)
+                            count_steps_delta += self._collect_environment_result(
+                                buffer_index
                             )
 
                             if (buffer_index + 1) == self._agent.nbuffers:
@@ -466,9 +588,7 @@ class YOLOSAMPPOTrainer(PPOTrainer):
                                         "_collect_rollout_step"
                                     )
 
-                                self._compute_actions_and_step_envs(
-                                    buffer_index
-                                )
+                                self._compute_actions_and_step_envs(buffer_index)
 
                         if is_last_step:
                             break

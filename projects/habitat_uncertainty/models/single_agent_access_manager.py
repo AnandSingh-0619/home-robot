@@ -4,14 +4,10 @@ import gym.spaces as spaces
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.optim.lr_scheduler import LambdaLR
-
 from habitat import logger
 from habitat_baselines.common.baseline_registry import baseline_registry
 from habitat_baselines.common.env_spec import EnvironmentSpec
-from habitat_baselines.common.rollout_storage import (  # noqa: F401.
-    RolloutStorage,
-)
+from habitat_baselines.common.rollout_storage import RolloutStorage  # noqa: F401.
 from habitat_baselines.common.storage import Storage
 from habitat_baselines.rl.ddppo.policy import (  # noqa: F401.
     PointNavResNetNet,
@@ -23,16 +19,17 @@ from habitat_baselines.rl.hrl.hierarchical_policy import (  # noqa: F401.
 from habitat_baselines.rl.ppo.agent_access_mgr import AgentAccessMgr
 from habitat_baselines.rl.ppo.policy import NetPolicy, Policy
 from habitat_baselines.rl.ppo.ppo import PPO
-from habitat_baselines.rl.ppo.updater import Updater
 from habitat_baselines.rl.ppo.single_agent_access_mgr import SingleAgentAccessMgr
+from habitat_baselines.rl.ppo.updater import Updater
 from habitat_uncertainty.models import *
+from torch.optim.lr_scheduler import LambdaLR
+
 if TYPE_CHECKING:
     from omegaconf import DictConfig
 
 
 @baseline_registry.register_agent_access_mgr
 class SingleAgentAccessManager(SingleAgentAccessMgr):
-   
     def _create_storage(
         self,
         num_envs: int,
@@ -65,7 +62,7 @@ class SingleAgentAccessManager(SingleAgentAccessMgr):
         )
         rollouts.to(device)
         return rollouts
-    
+
     def load_state_dict(self, state: Dict) -> None:
         self._actor_critic.load_state_dict(state["state_dict"])
         if self._updater is not None:
@@ -75,11 +72,12 @@ class SingleAgentAccessManager(SingleAgentAccessMgr):
 
                 lr_sched_state = state["lr_sched_state"]
                 if isinstance(lr_sched_state, tuple):
-                    lr_sched_state = lr_sched_state[0]  # Assuming the relevant dictionary is at index 0
+                    lr_sched_state = lr_sched_state[
+                        0
+                    ]  # Assuming the relevant dictionary is at index 0
                 self._lr_scheduler.load_state_dict(lr_sched_state)
-                
 
-   
+
 def get_rollout_obs_space(obs_space, actor_critic, config):
     """
     Helper to get the observation space for the rollout storage when using a
@@ -100,16 +98,16 @@ def get_rollout_obs_space(obs_space, actor_critic, config):
             }
         )
     if config.habitat_baselines.rl.ddppo.use_detector:
+        detector = actor_critic.net.depth_encoder.segmentation
         obs_space = spaces.Dict(
             {
                 actor_critic.net.SEG_MASKS: spaces.Box(
                     low=np.finfo(np.float32).min,
                     high=np.finfo(np.float32).max,
-                    shape=[160, 120, 3],
+                    shape=detector.output_shape,
                     dtype=np.float32,
                 ),
                 **obs_space.spaces,
             }
         )
     return obs_space
-
