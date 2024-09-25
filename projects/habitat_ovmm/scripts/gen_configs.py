@@ -82,14 +82,14 @@ if __name__ == "__main__":
         "--base-config-path",
         type=str,
         help="path to base config",
-        default="projects/habitat_ovmm/configs/agent/hssd_eval.yaml",
+        default="projects/habitat_ovmm/configs/env/eval.yaml",
     )
     parser.add_argument(
         "--save-folder",
         type=str,
         help="path to store the configs",
         default=os.path.join(
-            "projects/habitat_ovmm/configs/agent/generated",
+            "projects/habitat_ovmm/configs/env/generated",
             time.strftime("%m%d-%H%M%S"),
         ),
     )
