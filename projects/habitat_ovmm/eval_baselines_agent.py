@@ -6,6 +6,7 @@
 
 import argparse
 import os
+from habitat_uncertainty.task.sensors import YOLOObjectSensor, YOLOStartReceptacleSensor, YOLOGoalReceptacleSensor
 
 from evaluator import OVMMEvaluator
 from utils.config_utils import (
@@ -18,6 +19,12 @@ from utils.config_utils import (
 from home_robot.agent.ovmm_agent.ovmm_agent import OpenVocabManipAgent
 from home_robot.agent.ovmm_agent.ovmm_exploration_agent import OVMMExplorationAgent
 from home_robot.agent.ovmm_agent.random_agent import RandomAgent
+from habitat_uncertainty.models.GazePointNavResNetPolicy import GazePointNavResNetPolicy
+from habitat_uncertainty.models.HmapNavObjPointNavResNetPolicy import HmapNavObjPointNavResNetPolicy
+from habitat_uncertainty.models.GHmapNavObjPointNavResNetPolicy import GHmapNavObjPointNavResNetPolicy
+from habitat_uncertainty.models.TrainedPointNavResNetPolicy import TrainedPointNavResNetPolicy
+from habitat_uncertainty.models.ComPointNavResNetPolicy import ComPointNavResNetPolicy
+from habitat_uncertainty.models.YOLOv8CompPointNavResNetPolicy import YOLOv8CompPointNavResNetPolicy
 
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -42,7 +49,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--baseline_config_path",
         type=str,
-        default="projects/habitat_ovmm/configs/agent/heuristic_agent.yaml",
+        default="projects/habitat_ovmm/configs/agent/rl_agent.yaml",
         help="Path to config yaml",
     )
     parser.add_argument(
@@ -57,6 +64,18 @@ if __name__ == "__main__":
         default="baseline",
         choices=["baseline", "random", "explore"],
         help="Agent to evaluate",
+    )
+    parser.add_argument(
+        "--start_episode",
+        type=int,
+        default=1,
+        help="Start episode of the range to evaluate",
+    )
+    parser.add_argument(
+        "--end_episode",
+        type=int,
+        default=100,
+        help="End episode of the range to evaluate",
     )
     parser.add_argument(
         "--force_step",
@@ -77,10 +96,13 @@ if __name__ == "__main__":
         help="Modify config options from command line",
     )
     args = parser.parse_args()
-
+    episode_ids = list(range(args.start_episode, args.end_episode + 1))
+    overrides = [
+        f"habitat.dataset.episode_ids={episode_ids}"
+    ]
     # get habitat config
     habitat_config, _ = get_habitat_config(
-        args.habitat_config_path, overrides=args.overrides
+        args.habitat_config_path, overrides= overrides
     )
 
     # get baseline config

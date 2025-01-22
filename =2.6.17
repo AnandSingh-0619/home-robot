@@ -1,0 +1,42 @@
+Channels:
+ - conda-forge
+ - nvidia
+ - pytorch
+ - aihabitat
+ - pyg
+ - pytorch3d
+Platform: linux-64
+Collecting package metadata (repodata.json): ...working... done
+Solving environment: ...working... done
+
+## Package Plan ##
+
+  environment location: /srv/cvmlp-lab/flash1/asingh3064/envs/home-robo-yolo
+
+  added / updated specs:
+    - pinocchio
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    eigenpy-3.4.0              |   py39hb1babde_0         1.7 MB  conda-forge
+    hpp-fcl-2.4.4              |   py39h359ec1e_0         1.4 MB  conda-forge
+    pinocchio-2.7.0            |   py39hd3d7af6_1         3.9 MB  conda-forge
+    ------------------------------------------------------------
+                                           Total:         7.0 MB
+
+The following packages will be UPDATED:
+
+  eigenpy                              3.3.0-py39hb1babde_0 --> 3.4.0-py39hb1babde_0 
+  hpp-fcl                              2.4.1-py39h359ec1e_0 --> 2.4.4-py39h359ec1e_0 
+  pinocchio                            2.7.0-py39hd3d7af6_0 --> 2.7.0-py39hd3d7af6_1 
+
+
+Proceed ([y]/n)? 
+
+Downloading and Extracting Packages: ...working... done
+Preparing transaction: ...working... done
+Verifying transaction: ...working... done
+Executing transaction: ...working... done

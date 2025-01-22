@@ -37,12 +37,16 @@ SKILLS:
     checkpoint_path: data/checkpoints/ovmm_baseline_home_robot_challenge_2023_v0.2/gaze_at_obj.pth
     rl_config: projects/habitat_ovmm/configs/agent/skills/gaze_rl.yaml # with continuous actions
     gym_obs_keys:
+      # - head_rgb
       - head_depth
       - object_embedding
       - object_segmentation
       - start_receptacle
       - start_recep_segmentation
       - joint
+      # - yolo_object_sensor
+      # - yolo_start_receptacle_sensor
+      # - yolo_goal_receptacle_sensor
     allowed_actions:
       - arm_action
       - base_velocity
@@ -64,16 +68,21 @@ SKILLS:
 
   NAV_TO_OBJ:
     type: rl # heuristic (default) or rl
-    checkpoint_path: data/checkpoints/ovmm_baseline_home_robot_challenge_2023_v0.2/nav_to_obj.pth
+    checkpoint_path: data/checkpoints/eval_check/navObj_942052/ckpt.7.pth
     rl_config: projects/habitat_ovmm/configs/agent/skills/nav_to_obj_rl.yaml
     gym_obs_keys:
+      - head_rgb
       - head_depth
-      - object_embedding
+      # - object_embedding
+      - new_object_embedding_sensor
+      - recep_embedding
       - ovmm_nav_goal_segmentation
       - receptacle_segmentation
       - start_receptacle
       - robot_start_gps
       - robot_start_compass
+      # - yolo_object_sensor
+      # - yolo_start_receptacle_sensor
     allowed_actions:
       # - base_velocity
       # - rearrange_stop
