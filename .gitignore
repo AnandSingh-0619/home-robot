@@ -28,12 +28,24 @@ datadump/
 !/src/home_robot/home_robot/datasets
 data/
 /models/
-
+/slurm_logs/
+slurm_logs/
+slurm_logs/*err
+slurm_logs/*out
+Logs/
+Logs/*
+Logs/slurmLogs/*.err
+Logs/slurmLogs/*.out
+Logs/tensorLogs/*
+Logs/checkpoints/
+wandb/*
+wandb
 # Archive files
 *.pkl
 *.pcd
 *.zip
-
+*.err
+*.out
 # Visualizations
 *.ogv
 *.pcd
@@ -82,3 +94,11 @@ projects/habitat_ovmm/configs/agent/generated/*
 
 # Emacs
 *~
+train.log
+*.log
+tb/
+*.err
+*.out
+*.0
+*.wandb
+*.onnx
